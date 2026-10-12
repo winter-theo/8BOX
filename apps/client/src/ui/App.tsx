@@ -1,5 +1,6 @@
 import { useSessionStore } from '../store/session';
 import { ConnectionBanner } from './ConnectionBanner';
+import { DevInfo } from './DevInfo';
 import { DevLogin } from './DevLogin';
 import { LanguageSelect } from './LanguageSelect';
 import { PhaserGame } from './PhaserGame';
@@ -12,6 +13,7 @@ export function App() {
     <>
       <PhaserGame />
       <ConnectionBanner />
+      <DevInfo />
       {status === 'idle' && <DevLogin />}
       {status === 'rejected' && <RejectedScreen />}
       <LanguageSelect />

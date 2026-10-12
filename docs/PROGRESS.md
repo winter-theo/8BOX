@@ -8,7 +8,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] 2. Serveur : intérêt (chunks à abonner / libérer selon le viewport), diffusion par tick, `tileUpdate` ; tests
 - [x] 3. Client : `EventBus`, `ChunkCache` (chunks reçus, `tileUpdate`), branchement dans `GameClient` ; tests
 - [x] 4. Client : `assets/registry.ts` et palette (atlas si présent, sinon placeholders dessinés)
-- [ ] 5. Rendu du sol par chunk (texture par chunk, sans couture), caméra de debug (flèches, zoom entier), infos dev
+- [x] 5. Rendu du sol par chunk (texture par chunk, sans couture), caméra de debug (flèches, zoom entier), infos dev
 - [ ] 6. Critères d'acceptation, clôture, PR et fusion
 
 ## À valider par l'humain

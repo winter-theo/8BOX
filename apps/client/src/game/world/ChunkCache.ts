@@ -30,6 +30,10 @@ export class ChunkCache {
     return this.chunks.size;
   }
 
+  all(): IterableIterator<Chunk> {
+    return this.chunks.values();
+  }
+
   get(layer: number, cx: number, cy: number): Chunk | undefined {
     return this.chunks.get(key(layer, cx, cy));
   }

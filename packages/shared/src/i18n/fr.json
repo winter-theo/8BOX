@@ -24,6 +24,12 @@
       "reload": "Recharger",
       "back": "Retour"
     },
+    "dev": {
+      "chunks_one": "{{count}} chunk chargé",
+      "chunks_other": "{{count}} chunks chargés",
+      "camera": "caméra : {{x}}, {{y}}",
+      "controls": "Flèches : se déplacer · + / - ou molette : zoom"
+    },
     "language": {
       "label": "Langue",
       "fr": "Français",
