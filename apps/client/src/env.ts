@@ -1,4 +1,5 @@
 import { PROTOCOL_VERSION } from '@8box/shared';
+import { lagFromQuery } from './urlOptions';
 
 const DEFAULT_SERVER_URL = 'http://localhost:3000';
 
@@ -18,3 +19,6 @@ function protocolVersionToSend(): number {
 }
 
 export const PROTOCOL_VERSION_SENT = protocolVersionToSend();
+
+/** Dev only: simulated latency (`?lag=150` in the page URL). */
+export const SIMULATED_LAG_MS = import.meta.env.DEV ? lagFromQuery(window.location.search) : 0;

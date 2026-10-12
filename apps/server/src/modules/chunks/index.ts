@@ -41,6 +41,7 @@ export const chunksModule: GameModule = {
           debugCamera: undefined,
         };
         states.set(session, state);
+        session.chunks = state.subscriptions;
       }
       return state;
     };

@@ -3,11 +3,13 @@ import { chunksModule } from './chunks';
 import { debugModule } from './debug';
 import { movementModule } from './movement';
 import { playersModule } from './players';
+import { snapshotsModule } from './snapshots';
 
 /** Every module of the game server. They are initialized in dependency order. */
 export const MODULES: readonly GameModule[] = [
   playersModule,
   movementModule,
   chunksModule,
+  snapshotsModule,
   debugModule,
 ];

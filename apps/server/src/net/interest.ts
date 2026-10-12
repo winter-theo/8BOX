@@ -93,6 +93,11 @@ export class ChunkSubscriptions {
     return this.subscribed.has(chunkKey(ref));
   }
 
+  /** The subscribed chunks. */
+  chunks(): IterableIterator<ChunkRef> {
+    return this.subscribed.values();
+  }
+
   /**
    * Follows the view: returns the chunks to send now (the nearest first, at most `maxAdds`; the others
    * come on the next calls) and the chunks to release (beyond the unload margin).
@@ -138,4 +143,24 @@ export class ChunkSubscriptions {
     }
     return { add, remove };
   }
+}
+
+/**
+ * Entities a client sees: those in the chunks it receives, except its own player. A client never learns
+ * about entities outside its chunks.
+ */
+export function entitiesInChunks(
+  chunks: Iterable<ChunkRef>,
+  inChunk: (ref: ChunkRef) => ReadonlySet<number>,
+  self?: number,
+): number[] {
+  const visible: number[] = [];
+  for (const ref of chunks) {
+    for (const entity of inChunk(ref)) {
+      if (entity !== self) {
+        visible.push(entity);
+      }
+    }
+  }
+  return visible;
 }

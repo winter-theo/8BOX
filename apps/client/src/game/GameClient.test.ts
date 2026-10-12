@@ -6,6 +6,7 @@ import {
   encodeMessage,
   loadContent,
   NET,
+  PLAYER,
   PROTOCOL_VERSION,
   parseClientMessage,
   type ServerMessage,
@@ -243,7 +244,7 @@ describe('GameClient world streaming', () => {
     expect(state().debugCamera).toBeNull();
   });
 
-  it('sends the held direction once per input interval, and nothing while still', () => {
+  it('sends the held direction at once, then once per input interval, nothing while still', () => {
     const client = createClient();
     client.connect('Ana');
     lastSocket().open();
@@ -261,55 +262,104 @@ describe('GameClient world streaming', () => {
     expect(inputs()).toEqual([
       { t: 'input', seq: 0, dir: 3 },
       { t: 'input', seq: 1, dir: 3 },
-      { t: 'input', seq: 2, dir: 0 },
+      { t: 'input', seq: 2, dir: 3 },
+      { t: 'input', seq: 3, dir: 0 },
     ]);
   });
 
-  it('stops sending inputs and removes the player when the connection is lost', () => {
-    let despawned = 0;
-    bus.on('player.despawned', () => despawned++);
+  it('predicts the player at once, glides between steps and reconciles with snapshots', () => {
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+    lastSocket().receive(encodeChunk(new Chunk(0, 16, 16), content));
+    welcome();
+    expect(client.localView()).toEqual({
+      entity: 1,
+      x: 512.5,
+      y: 512.5,
+      facing: 'down',
+      moving: false,
+    });
+    const step = (PLAYER.speedTilesPerSecond * NET.clientInputIntervalMs) / 1000;
+
+    bus.emit('input.direction', { dir: 3 }); // Right, sent and predicted now.
+    expect(client.localView()).toMatchObject({ x: 512.5, facing: 'right', moving: true });
+    clock = NET.clientInputIntervalMs / 2;
+    expect(client.localView()?.x).toBeCloseTo(512.5 + step / 2);
+    clock = NET.clientInputIntervalMs;
+    expect(client.localView()?.x).toBeCloseTo(512.5 + step);
+
+    // The server agrees: nothing moves.
+    const snapshot = (x: number) =>
+      lastSocket().receive({
+        t: 'snapshot',
+        tick: 7,
+        ackSeq: 0,
+        you: { x, y: 512.5, facing: 'right' },
+        entities: [],
+      });
+    snapshot(512.5 + step);
+    expect(client.localView()?.x).toBeCloseTo(512.5 + step);
+
+    // The server corrects a little: no jump, then the drawing reaches the server position.
+    snapshot(512.6);
+    expect(client.localView()?.x).toBeCloseTo(512.5 + step);
+    clock += 2000;
+    expect(client.localView()?.x).toBeCloseTo(512.6);
+  });
+
+  it('does not predict into chunks it has not received', () => {
     const client = createClient();
     client.connect('Ana');
     lastSocket().open();
     welcome();
-    expect(client.player).toMatchObject({ x: SPAWN.x, y: SPAWN.y, facing: 'down' });
-    bus.emit('input.direction', { dir: 1 });
+
+    bus.emit('input.direction', { dir: 3 });
+    vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
+    clock = 1000;
+
+    // It reaches the edge of its own tile, not the unknown tile beyond.
+    const view = client.localView();
+    expect(view?.x).toBeCloseTo(513 - PLAYER.hitboxSizeTiles / 2);
+    expect(view).toMatchObject({ facing: 'right', moving: false });
+  });
+
+  it('delays messages both ways with a simulated latency (dev)', () => {
+    const client = new GameClient({
+      serverUrl: 'http://localhost:3000',
+      content,
+      bus,
+      lagMs: 100,
+      createSocket: (url) => {
+        const socket = new FakeSocket(url);
+        sockets.push(socket);
+        return socket as unknown as WebSocket;
+      },
+      now: () => clock,
+    });
+    client.connect('Ana');
+    lastSocket().open();
+    expect(lastSocket().sent).toEqual([]);
+    vi.advanceTimersByTime(50);
+    expect(lastSocket().sent.map((m) => m.t)).toEqual(['hello']);
+
+    welcome();
+    expect(state().status).toBe('connecting');
+    vi.advanceTimersByTime(50);
+    expect(state().status).toBe('online');
+  });
+
+  it('stops sending inputs and forgets the player when the connection is lost', () => {
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+    welcome();
     const socket = lastSocket();
     socket.drop();
+    bus.emit('input.direction', { dir: 1 });
     vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
 
     expect(socket.sent.filter((message) => message.t === 'input')).toEqual([]);
-    expect(client.player).toBeUndefined();
-    expect(despawned).toBe(1);
-  });
-
-  it('passes the player position of each snapshot to Phaser', () => {
-    const moves: unknown[] = [];
-    bus.on('player.moved', (move) => moves.push(move));
-    const client = createClient();
-    client.connect('Ana');
-    lastSocket().open();
-    welcome();
-
-    lastSocket().receive({
-      t: 'snapshot',
-      tick: 7,
-      ackSeq: 3,
-      you: { x: 513, y: 512.5, facing: 'right' },
-    });
-
-    expect(moves).toEqual([{ x: 513, y: 512.5, facing: 'right' }]);
-  });
-
-  it('tells Phaser where the player spawned', () => {
-    const spawns: unknown[] = [];
-    bus.on('player.spawned', ({ entity, position }) => spawns.push({ entity, position }));
-    const client = createClient();
-    client.connect('Ana');
-    lastSocket().open();
-
-    welcome();
-
-    expect(spawns).toEqual([{ entity: expect.any(Number), position: SPAWN }]);
+    expect(client.localView()).toBeUndefined();
   });
 });

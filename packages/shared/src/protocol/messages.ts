@@ -156,7 +156,27 @@ export interface TileUpdateMessage {
   tile: string | null;
 }
 
-/** Sent every tick: the state of the player (other entities come with step 08). */
+/** Kinds of entities in the world. */
+export type EntityKind = 'player' | 'groundItem' | 'monster';
+
+/** How an entity is drawn: standing or walking. */
+export type EntityAnim = 'idle' | 'walk';
+
+/** An entity a client sees, as a snapshot carries it. */
+export interface EntityState {
+  /** Only valid while the entity stays in view (ids are never reused during a server run). */
+  id: number;
+  kind: EntityKind;
+  /** Feet position, in tiles. */
+  x: number;
+  y: number;
+  facing: Facing;
+  anim: EntityAnim;
+  /** Display name (players), only in the first snapshot where the entity appears for this client. */
+  name?: string;
+}
+
+/** Sent every tick: the player of this session and the entities in its chunks. */
 export interface SnapshotMessage {
   t: 'snapshot';
   /** Server tick. */
@@ -165,6 +185,10 @@ export interface SnapshotMessage {
   ackSeq: number;
   /** The player of this session: feet position in tiles, and facing. */
   you: { x: number; y: number; facing: Facing };
+  /** The other entities in the chunks this client receives. */
+  entities: EntityState[];
+  /** Entities that left this client's view since the last snapshot: forget them. */
+  gone?: number[];
 }
 
 export type ServerMessage =

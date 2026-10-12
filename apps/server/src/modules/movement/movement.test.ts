@@ -7,10 +7,9 @@ import {
   loadContent,
   PLAYER,
   PROTOCOL_VERSION,
-  type SnapshotMessage,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
-import { connectFakeClient, createTestContext, type FakeClient } from '../../core/testing';
+import { connectFakeClient, createTestContext } from '../../core/testing';
 import { World } from '../../world/World';
 import { chunksModule } from '../chunks';
 import { playersModule } from '../players';
@@ -40,13 +39,9 @@ function setup() {
   return { ...test, dt, spawn, client, entity, position };
 }
 
-function lastSnapshot(client: FakeClient): SnapshotMessage | undefined {
-  return client.received.findLast((message) => message.t === 'snapshot');
-}
-
 describe('movement module', () => {
   it('walks at the walking speed, one input per tick', () => {
-    const { client, tick, spawn, position, dt } = setup();
+    const { ctx, client, tick, spawn, entity, position, dt } = setup();
 
     for (let seq = 0; seq < 20; seq++) {
       client.send({ t: 'input', seq, dir: RIGHT });
@@ -55,10 +50,12 @@ describe('movement module', () => {
 
     expect(position().x).toBeCloseTo(spawn.x + SPEED * 20 * dt);
     expect(position().y).toBe(spawn.y);
-    expect(lastSnapshot(client)).toMatchObject({
-      ackSeq: 19,
-      you: { x: position().x, y: spawn.y, facing: 'right' },
-    });
+    expect(ctx.entities.get(entity, 'facing')).toBe('right');
+    expect(ctx.entities.get(entity, 'anim')).toBe('walk');
+    expect(ctx.entities.get(entity, 'inputAck')).toBe(19);
+
+    tick(); // No input this tick: standing.
+    expect(ctx.entities.get(entity, 'anim')).toBe('idle');
   });
 
   it('does not go faster when inputs are flooded', () => {
@@ -105,7 +102,7 @@ describe('movement module', () => {
   });
 
   it('ignores repeated and late inputs', () => {
-    const { client, tick, spawn, position, dt } = setup();
+    const { ctx, client, tick, spawn, entity, position, dt } = setup();
 
     client.send({ t: 'input', seq: 5, dir: RIGHT });
     client.send({ t: 'input', seq: 5, dir: RIGHT });
@@ -113,7 +110,7 @@ describe('movement module', () => {
     tick(3);
 
     expect(position().x).toBeCloseTo(spawn.x + SPEED * dt);
-    expect(lastSnapshot(client)?.ackSeq).toBe(5);
+    expect(ctx.entities.get(entity, 'inputAck')).toBe(5);
   });
 
   it('keeps the spatial index up to date when the player changes chunk', () => {
@@ -132,19 +129,6 @@ describe('movement module', () => {
     expect(chunkCoord(position().x)).toBe(startChunk.cx - 1);
     expect(ctx.entities.inChunk(startChunk).has(entity)).toBe(false);
     expect(ctx.entities.inChunk({ ...startChunk, cx: startChunk.cx - 1 }).has(entity)).toBe(true);
-  });
-
-  it('sends a snapshot every tick, with ackSeq -1 before any input', () => {
-    const { client, tick, spawn } = setup();
-
-    tick(2);
-
-    const snapshots = client.received.filter((message) => message.t === 'snapshot');
-    expect(snapshots).toHaveLength(2);
-    expect(snapshots[1]).toMatchObject({
-      ackSeq: -1,
-      you: { x: spawn.x, y: spawn.y, facing: 'down' },
-    });
   });
 
   it('makes the streamed chunks follow the player', () => {

@@ -15,6 +15,7 @@
     "format": "biome check --write .",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "tools:map": "tsx apps/server/src/tools/map.ts",
+    "tools:bots": "tsx apps/server/src/tools/bots.ts",
     "tools:tiles": "tsx apps/client/scripts/tilesPreview.ts"
   },
   "devDependencies": {

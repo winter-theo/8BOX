@@ -33,6 +33,12 @@ export const NET = {
    * dropped so that a client sending too fast gains neither speed nor lag, in inputs.
    */
   maxQueuedInputs: 4,
+  /** Client prediction: a server correction farther than this is applied at once, in tiles. */
+  predictionSnapTiles: 2,
+  /** Client prediction: time for a small correction to fade to about a third, in ms. */
+  predictionSmoothingMs: 80,
+  /** Other entities are drawn this far in the past, between two received snapshots, in ms. */
+  interpolationDelayMs: 100,
   /** Ignored messages (invalid or over the limit) tolerated per window before disconnecting, in messages. */
   maxViolations: 50,
   /** Window of the violation count, in ms. */
