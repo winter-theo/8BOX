@@ -1,5 +1,6 @@
+import { chunkCoord } from '@8box/shared';
 import type { EventBus } from './events';
-import { type ChunkRef, chunkCoord, type Position, SpatialIndex } from './spatial';
+import { type ChunkRef, type Position, SpatialIndex } from './spatial';
 
 export type { Position } from './spatial';
 

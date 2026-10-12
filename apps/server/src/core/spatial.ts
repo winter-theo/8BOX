@@ -1,4 +1,4 @@
-import { WORLD } from '@8box/shared';
+import { chunkCoord } from '@8box/shared';
 
 /** Position in the world: layer index and tile coordinates (tile units, fractional). */
 export interface Position {
@@ -11,11 +11,6 @@ export interface ChunkRef {
   layer: number;
   cx: number;
   cy: number;
-}
-
-/** Chunk coordinate containing a tile coordinate. */
-export function chunkCoord(tile: number): number {
-  return Math.floor(tile / WORLD.chunkSizeTiles);
 }
 
 function cellKey(layer: number, cx: number, cy: number): string {
