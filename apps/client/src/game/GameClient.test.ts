@@ -296,6 +296,7 @@ describe('GameClient world streaming', () => {
       tick: 7,
       ackSeq: 3,
       you: { x: 513, y: 512.5, facing: 'right' },
+      entities: [],
     });
 
     expect(moves).toEqual([{ x: 513, y: 512.5, facing: 'right' }]);

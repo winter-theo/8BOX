@@ -1,4 +1,4 @@
-import { chunkCoord, type Facing } from '@8box/shared';
+import { chunkCoord, type EntityAnim, type EntityKind, type Facing } from '@8box/shared';
 import type { EventBus } from './events';
 import { type ChunkRef, type Position, SpatialIndex } from './spatial';
 
@@ -6,8 +6,8 @@ export type { Position } from './spatial';
 
 export type EntityId = number;
 
-/** Kinds of entities. Later steps add `animal`, `npc`… */
-export type EntityType = 'player' | 'groundItem' | 'monster';
+/** Kinds of entities (shared with the clients). Later steps add `animal`, `npc`… */
+export type EntityType = EntityKind;
 
 /**
  * Catalogue of the entity components (name → data). Each step adds the components of its systems here
@@ -20,6 +20,10 @@ export interface Components {
   player: { name: string };
   /** Last direction moved in (aim and hits). */
   facing: Facing;
+  /** How clients draw it: walking while it moves. */
+  anim: EntityAnim;
+  /** `seq` of the last movement input applied (player entities). */
+  inputAck: number;
 }
 
 /**

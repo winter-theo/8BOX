@@ -5,7 +5,7 @@ import {
   type MovementWorld,
   stepMovement,
 } from '@8box/shared';
-import type { EntityId } from '../../core/entities';
+import type { Components, EntityId } from '../../core/entities';
 import type { GameModule, ServerContext } from '../../core/module';
 
 interface QueuedInput extends MovementInput {
@@ -17,8 +17,17 @@ interface InputQueue {
   inputs: QueuedInput[];
   /** Highest `seq` received: older or repeated inputs are ignored. */
   lastSeq: number;
-  /** `seq` of the last input applied, -1 before the first one. */
-  ackSeq: number;
+}
+
+function setIfChanged<K extends 'facing' | 'anim'>(
+  ctx: ServerContext,
+  entity: EntityId,
+  name: K,
+  value: Components[K],
+): void {
+  if (ctx.entities.get(entity, name) !== value) {
+    ctx.entities.set(entity, name, value);
+  }
 }
 
 /** Movement view of a layer of the server world (outside the map is solid). */
@@ -34,7 +43,7 @@ function movementWorld(ctx: ServerContext, layer: LayerId): MovementWorld {
  * server applies at most one input per tick and per player, each worth one tick of walking, so
  * sending faster never moves faster: extra inputs wait, and beyond `maxQueuedInputs` the oldest are
  * dropped. Moving the position also moves the entity in the spatial index, and the chunks module
- * streams around it. Every tick, each client gets a `snapshot` of its player.
+ * streams around it. Sets the `facing`, `anim` and `inputAck` components that snapshots carry.
  */
 export const movementModule: GameModule = {
   id: 'movement',
@@ -58,7 +67,7 @@ export const movementModule: GameModule = {
       }
       let queue = queues.get(entity);
       if (!queue) {
-        queue = { inputs: [], lastSeq: -1, ackSeq: -1 };
+        queue = { inputs: [], lastSeq: -1 };
         queues.set(entity, queue);
       }
       if (seq <= queue.lastSeq) {
@@ -82,7 +91,11 @@ export const movementModule: GameModule = {
         for (const [entity, queue] of queues) {
           const input = queue.inputs.shift();
           const position = ctx.entities.get(entity, 'position');
-          if (!input || !position) {
+          if (!position) {
+            continue;
+          }
+          if (!input) {
+            setIfChanged(ctx, entity, 'anim', 'idle');
             continue;
           }
           const facing = ctx.entities.get(entity, 'facing') ?? 'down';
@@ -93,38 +106,13 @@ export const movementModule: GameModule = {
             worldOf(position.layer as LayerId),
             ctx.config.player,
           );
-          if (next.x !== position.x || next.y !== position.y) {
+          const moved = next.x !== position.x || next.y !== position.y;
+          if (moved) {
             ctx.entities.set(entity, 'position', { layer: position.layer, x: next.x, y: next.y });
           }
-          if (next.facing !== facing) {
-            ctx.entities.set(entity, 'facing', next.facing);
-          }
-          queue.ackSeq = input.seq;
-        }
-      },
-    });
-
-    ctx.systems.add({
-      name: 'movement: snapshots',
-      phase: 'net',
-      run: () => {
-        const tick = ctx.scheduler.currentTick;
-        for (const session of ctx.net.allSessions()) {
-          const entity = session.state === 'playing' ? session.player?.entity : undefined;
-          const position = entity === undefined ? undefined : ctx.entities.get(entity, 'position');
-          if (entity === undefined || !position) {
-            continue;
-          }
-          ctx.net.send(session, {
-            t: 'snapshot',
-            tick,
-            ackSeq: queues.get(entity)?.ackSeq ?? -1,
-            you: {
-              x: position.x,
-              y: position.y,
-              facing: ctx.entities.get(entity, 'facing') ?? 'down',
-            },
-          });
+          setIfChanged(ctx, entity, 'facing', next.facing);
+          setIfChanged(ctx, entity, 'anim', moved ? 'walk' : 'idle');
+          ctx.entities.set(entity, 'inputAck', input.seq);
         }
       },
     });

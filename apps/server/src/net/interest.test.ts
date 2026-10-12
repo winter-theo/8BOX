@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { ChunkSubscriptions, chunkKey, chunksInView, type InterestOptions } from './interest';
+import {
+  ChunkSubscriptions,
+  chunkKey,
+  chunksInView,
+  entitiesInChunks,
+  type InterestOptions,
+} from './interest';
 
 const OPTIONS: InterestOptions = {
   tileSizePx: 8,
@@ -101,5 +107,25 @@ describe('ChunkSubscriptions', () => {
 
     expect(mine.remove).toHaveLength(16);
     expect(mine.add.every((ref) => ref.layer === -1)).toBe(true);
+  });
+});
+
+describe('entitiesInChunks', () => {
+  const cells = new Map<string, ReadonlySet<number>>([
+    ['0:1:1', new Set([1, 2])],
+    ['0:1:2', new Set([3])],
+    ['0:9:9', new Set([4])],
+  ]);
+  const inChunk = (ref: { layer: number; cx: number; cy: number }) =>
+    cells.get(chunkKey(ref)) ?? new Set<number>();
+
+  it('lists the entities of the given chunks only, without the client player', () => {
+    const chunks = [
+      { layer: 0, cx: 1, cy: 1 },
+      { layer: 0, cx: 1, cy: 2 },
+    ];
+    expect(entitiesInChunks(chunks, inChunk, 2).sort()).toEqual([1, 3]);
+    expect(entitiesInChunks(chunks, inChunk)).not.toContain(4);
+    expect(entitiesInChunks([], inChunk)).toEqual([]);
   });
 });

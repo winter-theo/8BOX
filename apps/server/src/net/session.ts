@@ -1,5 +1,6 @@
 import type { ClientMessageType, WorldPosition } from '@8box/shared';
 import type { EntityId } from '../core/entities';
+import type { ChunkSubscriptions } from './interest';
 import type { TokenBucket } from './rateLimit';
 
 /** What a session needs from its connection (a WebSocket, or a fake one in tests). */
@@ -27,6 +28,8 @@ export class Session {
   name: string | undefined;
   /** Set by the module that spawns the player when the session is authenticated. */
   player: SessionPlayer | undefined;
+  /** Chunks this client receives; set by the module that streams the world. */
+  chunks: ChunkSubscriptions | undefined;
   /** Round trip time measured by the heartbeat, in ms. */
   latencyMs: number | undefined;
   /** Time the unanswered heartbeat ping was sent, in ms. */
