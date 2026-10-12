@@ -12,6 +12,7 @@ import { EntityLayer } from '../world/EntityLayer';
 import { GroundLayer } from '../world/GroundLayer';
 import { LocalPlayer } from '../world/LocalPlayer';
 import { ObjectLayer } from '../world/ObjectLayer';
+import { RemotePlayers } from '../world/RemotePlayers';
 import { SpriteTextures } from '../world/SpriteTextures';
 
 /** The game world: ground and objects of the streamed chunks, entities sorted with them, and the camera. */
@@ -30,6 +31,7 @@ export class WorldScene extends Phaser.Scene {
     const objects = new ObjectLayer(this, textures, content);
     const entities = new EntityLayer(this, textures);
     const localPlayer = new LocalPlayer(entities);
+    const remotePlayers = new RemotePlayers(entities);
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -57,6 +59,7 @@ export class WorldScene extends Phaser.Scene {
     this.onFrame = (timeMs, deltaMs) => {
       debugCamera?.update(deltaMs);
       // The player of this client, where the prediction puts it; the camera follows it.
+      remotePlayers.update(gameClient.remoteViews(), timeMs);
       const sprite = localPlayer.update(gameClient.localView(), timeMs);
       if (sprite !== playerSprite) {
         playerSprite = sprite;

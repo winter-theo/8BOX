@@ -15,6 +15,7 @@ import { useSessionStore } from '../store/session';
 import type { ClientEventBus } from './events';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
 import { ChunkCache } from './world/ChunkCache';
+import { RemoteEntities, type RemoteView } from './world/RemoteEntities';
 
 export function toWebSocketUrl(serverUrl: string): string {
   const url = new URL('/ws', serverUrl);
@@ -43,6 +44,8 @@ export interface GameClientOptions {
 export class GameClient {
   /** Chunks received from the server. */
   readonly chunks: ChunkCache;
+  /** The other entities, from the snapshots. */
+  private readonly remotes = new RemoteEntities(1000 / NET.tickRateHz);
   private readonly createSocket: (url: string) => WebSocket;
   private readonly now: () => number;
   private socket: WebSocket | undefined;
@@ -96,6 +99,11 @@ export class GameClient {
   /** Where to draw the player of this client now (predicted); undefined when not in the world. */
   localView(): LocalView | undefined {
     return this.local?.view(this.now());
+  }
+
+  /** Where to draw the other entities now (smoothly, a little in the past). */
+  remoteViews(): RemoteView[] {
+    return this.remotes.views(this.now());
   }
 
   /** Joins the game with a dev name. */
@@ -158,6 +166,7 @@ export class GameClient {
       }
       case 'snapshot':
         this.local?.snapshot(message.ackSeq, message.you, this.now());
+        this.remotes.update(message.tick, message.entities, message.gone, this.now());
         this.syncUiSoon();
         return;
       case 'pong':
@@ -204,6 +213,7 @@ export class GameClient {
   private goOffline(): void {
     this.online = false;
     this.local = undefined;
+    this.remotes.clear();
     this.stopPing();
     clearInterval(this.inputTimer);
     this.inputTimer = undefined;
