@@ -5,7 +5,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ## En cours
 **Étape 02 — Serveur : boucle, modules, entités, événements** (démarrée le 2026-10-11)
 - [x] 1. Boucle à pas fixe (`core/loop.ts`), rattrapage borné, mesure du tick, tests
-- [ ] 2. Planificateur (`core/scheduler.ts`) : tâches périodiques et différées en ticks, tests
+- [x] 2. Planificateur (`core/scheduler.ts`) : tâches périodiques et différées en ticks, tests
 - [ ] 3. `EntityStore` (`core/entities.ts`) et index spatial par couche et chunk, tests
 - [ ] 4. Catalogue d'événements serveur et bus (`core/events.ts`)
 - [ ] 5. Modules (`core/module.ts`) : `GameModule`, ordre par dépendances, systèmes par phase, `ServerContext`, tests
