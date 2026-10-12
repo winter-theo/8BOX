@@ -47,8 +47,84 @@ body,
   background: #4ade80;
 }
 
-.connection-banner--offline .connection-banner__dot {
+.connection-banner--connecting .connection-banner__dot,
+.connection-banner--reconnecting .connection-banner__dot {
   background: #f87171;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 40%);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 360px);
+  padding: 24px;
+  border-radius: 12px;
+  background: #262635;
+  color: #f4f4f4;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 50%);
+}
+
+.panel h1 {
+  margin: 0;
+  font-family: monospace;
+  font-size: 32px;
+  text-align: center;
+}
+
+.panel p {
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field input {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 8px;
+  background: #1b1b24;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+
+.hint {
+  opacity: 0.7;
+}
+
+.hint--error {
+  color: #f87171;
+  opacity: 1;
+}
+
+.panel button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  background: #4ade80;
+  color: #1b1b24;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.panel button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .language-select {

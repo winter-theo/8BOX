@@ -1,8 +1,6 @@
 import { contentSizes } from '@8box/shared';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { SERVER_URL } from './env';
-import { startConnection } from './game/connection';
 import { content } from './game/content';
 import { initI18n } from './i18n';
 import { App } from './ui/App';
@@ -18,8 +16,6 @@ if (!rootElement) {
 if (import.meta.env.DEV) {
   console.info('[8box] content loaded', contentSizes(content));
 }
-
-startConnection(SERVER_URL);
 
 createRoot(rootElement).render(
   <StrictMode>

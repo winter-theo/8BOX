@@ -1,9 +1,28 @@
 {
   "ui": {
+    "game": {
+      "title": "8Box"
+    },
     "connection": {
+      "connecting": "Connexion…",
       "online": "Connecté",
-      "offline": "Hors ligne",
-      "protocol": "protocole {{version}}"
+      "reconnecting": "Hors ligne · reconnexion…",
+      "ping": "{{ms}} ms"
+    },
+    "login": {
+      "devMode": "Mode développement : choisis un pseudo pour jouer.",
+      "name": "Pseudo",
+      "nameRules": "3 à 16 caractères : lettres, chiffres ou _",
+      "play": "Jouer"
+    },
+    "rejected": {
+      "outdated": "Une nouvelle version du jeu est disponible.",
+      "devAuthDisabled": "La connexion de développement est désactivée sur ce serveur.",
+      "invalidName": "Ce pseudo n'est pas valide.",
+      "replaced": "Ce pseudo vient de se connecter ailleurs (un autre onglet ?).",
+      "unavailable": "Le serveur ne peut pas accueillir de joueur pour le moment.",
+      "reload": "Recharger",
+      "back": "Retour"
     },
     "language": {
       "label": "Langue",
