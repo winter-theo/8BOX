@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRng, hashSeed } from './rng';
+import { createRng, hashCoords, hashSeed, parseSeed } from './rng';
 
 function sequence(seed: number, length = 20): number[] {
   const rng = createRng(seed);
@@ -68,5 +68,31 @@ describe('hashSeed', () => {
   it('is stable and distinguishes texts', () => {
     expect(hashSeed('8box')).toBe(hashSeed('8box'));
     expect(hashSeed('8box')).not.toBe(hashSeed('8Box'));
+  });
+});
+
+describe('hashCoords', () => {
+  it('is stable, in [0, 1) and spread out', () => {
+    expect(hashCoords(7, 10, 20)).toBe(hashCoords(7, 10, 20));
+    expect(hashCoords(7, 10, 20)).not.toBe(hashCoords(8, 10, 20));
+    expect(hashCoords(7, 10, 20)).not.toBe(hashCoords(7, 20, 10));
+    let sum = 0;
+    for (let x = 0; x < 100; x++) {
+      for (let y = 0; y < 100; y++) {
+        const value = hashCoords(7, x, y);
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThan(1);
+        sum += value;
+      }
+    }
+    expect(sum / 10_000).toBeCloseTo(0.5, 1);
+  });
+});
+
+describe('parseSeed', () => {
+  it('keeps numbers and hashes texts', () => {
+    expect(parseSeed('42')).toBe(42);
+    expect(parseSeed(' 42 ')).toBe(42);
+    expect(parseSeed('forest')).toBe(hashSeed('forest'));
   });
 });

@@ -5,7 +5,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ## En cours
 **Étape 04 — Génération du monde de surface** (démarrée le 2026-10-11, branche `step/04-generation-surface`)
 - [x] 1. `shared/world` : types (couche, coordonnées, index de case), `Chunk` (3 `Uint16Array` + `meta`), codes de case
-- [ ] 2. Générateur de surface par chunk (simplex + hachage seedé) : eau, plages, rivières, prairies, forêt, clairière ; tests
+- [x] 2. Générateur de surface par chunk (simplex + hachage seedé) : eau, plages, rivières, prairies, forêt, clairière ; tests
 - [ ] 3. Serveur `world/World.ts` : génération au démarrage, `getTile` / `setTile` (chunk sale), `WORLD_SEED`, spawn
 - [ ] 4. Outil `pnpm tools:map [seed] [fichier.png]`, réglage visuel de la génération, mesure du temps
 - [ ] 5. Critères d'acceptation, clôture, PR et fusion

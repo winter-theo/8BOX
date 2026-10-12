@@ -15,6 +15,7 @@ import { PLAYER } from './player';
 import { SURVIVAL } from './survival';
 import { TIME } from './time';
 import { WORLD } from './world';
+import { WORLDGEN } from './worldgen';
 
 export { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from './units';
 export {
@@ -35,6 +36,7 @@ export {
   SURVIVAL,
   TIME,
   WORLD,
+  WORLDGEN,
 };
 
 /** Every config section, e.g. `CONFIG.player.speedTilesPerSecond` (the server context exposes it). */
@@ -56,6 +58,7 @@ export const CONFIG = {
   survival: SURVIVAL,
   time: TIME,
   world: WORLD,
+  worldgen: WORLDGEN,
 } as const;
 
 /** Literal types widened (`20` → `number`), so another config (tests) can be passed. */

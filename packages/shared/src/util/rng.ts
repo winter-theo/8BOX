@@ -60,3 +60,20 @@ export function hashSeed(text: string): number {
   }
   return hash >>> 0;
 }
+
+/**
+ * Deterministic random value in [0, 1) for a tile: same seed and coordinates → same value, without
+ * any state. Lets a chunk be generated alone, whatever the order.
+ */
+export function hashCoords(seed: number, x: number, y: number): number {
+  let h = seed ^ Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul(y | 0, 0x165667b1);
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / UINT32_RANGE;
+}
+
+/** Numeric seed from a text: a number is used as is (32 bits), anything else is hashed. */
+export function parseSeed(text: string): number {
+  return /^\d+$/.test(text.trim()) ? Number(text.trim()) >>> 0 : hashSeed(text);
+}
