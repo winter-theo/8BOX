@@ -46,7 +46,7 @@ function fakeStore() {
         writes.push(batch.map(label));
       },
       async saveCharacters(batch: readonly SavedCharacter[]) {
-        characters.push(batch.map((c) => `${c.name}@${c.x}`));
+        characters.push(batch.map((c) => `${c.playerId}@${c.x}`));
       },
     },
   };
@@ -131,14 +131,14 @@ describe('WriteQueue', () => {
     expect(writes.flat()).toEqual(['1:v2']);
   });
 
-  it('writes each character once, with its latest position (names are case-insensitive)', async () => {
+  it('writes each character once, with its latest position', async () => {
     const { queue, characters } = setup();
 
-    queue.saveCharacter({ name: 'Ana', layer: 0, x: 1, y: 1 });
-    queue.saveCharacter({ name: 'ana', layer: 0, x: 2, y: 1 });
-    queue.saveCharacter({ name: 'Bob', layer: 0, x: 5, y: 5 });
+    queue.saveCharacter({ playerId: 1, layer: 0, x: 1, y: 1 });
+    queue.saveCharacter({ playerId: 1, layer: 0, x: 2, y: 1 });
+    queue.saveCharacter({ playerId: 2, layer: 0, x: 5, y: 5 });
     await queue.flush();
 
-    expect(characters).toEqual([['ana@2', 'Bob@5']]);
+    expect(characters).toEqual([['1@2', '2@5']]);
   });
 });

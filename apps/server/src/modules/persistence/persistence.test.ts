@@ -1,6 +1,6 @@
 import { baseContent, LAYER, loadContent, PROTOCOL_VERSION } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
-import { connectFakeClient, createTestContext } from '../../core/testing';
+import { connectFakeClient, createTestContext, settle } from '../../core/testing';
 import { Persistence } from '../../persistence/Persistence';
 import { MemoryStore } from '../../persistence/store';
 import { WriteQueue } from '../../persistence/writeQueue';
@@ -43,6 +43,7 @@ describe('persistence module', () => {
     const { ctx, tick, store, persistence, ticksFor } = setup();
     const client = connectFakeClient(ctx);
     client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
+    await settle();
     const entity = client.session.player?.entity ?? -1;
     ctx.entities.set(entity, 'position', { layer: LAYER.surface, x: 10.5, y: 20.25 });
 
@@ -54,7 +55,8 @@ describe('persistence module', () => {
     }
     await persistence.flush();
 
-    expect(store.characters.get('ana')).toEqual({ name: 'Ana', layer: 0, x: 10.5, y: 20.25 });
+    const playerId = client.session.account?.playerId ?? -1;
+    expect(store.characters.get(playerId)).toEqual({ playerId, layer: 0, x: 10.5, y: 20.25 });
   });
 
   it('saves everything left on shutdown', async () => {

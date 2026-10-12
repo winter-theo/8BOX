@@ -11,6 +11,8 @@ import {
   type RejectReason,
   type ServerMessage,
 } from '@8box/shared';
+import type { Accounts } from '../accounts/Accounts';
+import type { Account } from '../accounts/account';
 import type { EventBus } from '../core/events';
 import type { Logger } from '../core/module';
 import type { Scheduler } from '../core/scheduler';
@@ -25,7 +27,7 @@ export const CloseCode = {
 } as const;
 
 /** Message types handled by modules once the player has joined. */
-export type GameMessageType = Exclude<ClientMessageType, 'hello' | 'ping'>;
+export type GameMessageType = Exclude<ClientMessageType, 'hello' | 'setName' | 'ping'>;
 export type GameMessage<T extends GameMessageType> = Extract<ClientMessage, { t: T }>;
 export type MessageHandler<T extends GameMessageType> = (
   session: Session,
@@ -37,6 +39,8 @@ export interface NetOptions {
   log: Logger;
   events: EventBus;
   scheduler: Scheduler;
+  /** Sign-in (Clerk tokens, dev names) and chosen names. */
+  accounts: Pick<Accounts, 'signIn' | 'devSignIn' | 'setName'>;
   /** Accept `hello { devName }` without an account (DEV_AUTH; never in production). */
   devAuth: boolean;
   /** Clock for rate limits and latency, in ms (default: performance.now). */
@@ -203,6 +207,9 @@ export class NetServer {
       case 'hello':
         this.handleHello(session, message);
         return;
+      case 'setName':
+        this.handleSetName(session, message.name);
+        return;
       case 'ping':
         this.send(session, { t: 'pong', time: message.time });
         return;
@@ -225,24 +232,99 @@ export class NetServer {
       this.reject(session, 'outdated');
       return;
     }
-    // Accounts come with step 11; until then only the dev mode can authenticate.
-    if (!this.options.devAuth) {
-      this.reject(session, 'devAuthDisabled');
+    const { accounts, devAuth } = this.options;
+    let signIn: Promise<Account | undefined>;
+    if (hello.devName !== undefined) {
+      if (!devAuth) {
+        this.reject(session, 'devAuthDisabled');
+        return;
+      }
+      if (!isValidPlayerName(hello.devName)) {
+        this.reject(session, 'invalidName');
+        return;
+      }
+      signIn = accounts.devSignIn(hello.devName);
+    } else if (hello.token !== undefined) {
+      signIn = accounts.signIn(hello.token);
+    } else {
+      this.reject(session, 'invalidToken');
       return;
     }
-    const name = hello.devName;
-    if (name === undefined || !isValidPlayerName(name)) {
-      this.reject(session, 'invalidName');
+    session.state = 'signingIn';
+    signIn.then(
+      (account) => {
+        if (session.state === 'closed') {
+          return;
+        }
+        if (!account) {
+          this.reject(session, 'invalidToken');
+          return;
+        }
+        session.cancelHelloTimeout?.();
+        this.admit(session, account);
+      },
+      (error: unknown) => this.failSignIn(session, error),
+    );
+  }
+
+  /** A player who needs a name sent one: checked, then the account goes on. */
+  private handleSetName(session: Session, name: string): void {
+    const account = session.account;
+    if (session.state !== 'naming' || !account) {
+      this.ignore(session, 'setName out of place');
       return;
     }
+    session.state = 'signingIn';
+    this.options.accounts.setName(account.playerId, name).then(
+      (result) => {
+        if (session.state === 'closed') {
+          return;
+        }
+        if (!result.ok) {
+          session.state = 'naming';
+          this.send(session, { t: 'status', state: 'needsName', nameError: result.error });
+          return;
+        }
+        this.options.log.info({ playerId: account.playerId, name }, 'player named');
+        this.admit(session, result.account);
+      },
+      (error: unknown) => this.failSignIn(session, error),
+    );
+  }
+
+  /** Lets a signed-in account in, or tells it why not yet. */
+  private admit(session: Session, account: Account): void {
+    session.account = account;
+    if (account.status === 'banned' || account.status === 'denied') {
+      this.send(session, {
+        t: 'status',
+        state: account.status,
+        ...(account.banReason !== null && { reason: account.banReason }),
+      });
+      this.disconnect(session, CloseCode.normal, `account ${account.status}`);
+      return;
+    }
+    if (account.name === null) {
+      session.state = 'naming';
+      this.send(session, { t: 'status', state: 'needsName' });
+      return;
+    }
+    if (account.status === 'pending') {
+      session.state = 'waiting';
+      this.send(session, { t: 'status', state: 'pending' });
+      return;
+    }
+    this.enterGame(session, account, account.name);
+  }
+
+  private enterGame(session: Session, account: Account, name: string): void {
+    // The same player connected again (another tab…): the older session ends.
     for (const other of this.allSessions()) {
-      if (other !== session && other.name?.toLowerCase() === name.toLowerCase()) {
+      if (other !== session && other.account?.playerId === account.playerId) {
         this.reject(other, 'replaced');
       }
     }
-
     session.name = name;
-    session.cancelHelloTimeout?.();
     this.options.events.emit('session.authenticated', { session });
     if (!session.player) {
       this.reject(session, 'unavailable');
@@ -254,6 +336,13 @@ export class NetServer {
       you: { ...session.player },
       tick: this.options.scheduler.currentTick,
     });
+  }
+
+  private failSignIn(session: Session, error: unknown): void {
+    this.options.log.error({ err: error, session: session.id }, 'sign-in failed');
+    if (session.state !== 'closed') {
+      this.reject(session, 'unavailable');
+    }
   }
 
   private ignore(session: Session, reason: string, detail?: string): void {

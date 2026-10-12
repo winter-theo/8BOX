@@ -9,7 +9,7 @@ import {
   PROTOCOL_VERSION,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
-import { connectFakeClient, createTestContext } from '../../core/testing';
+import { connectFakeClient, createTestContext, settle } from '../../core/testing';
 import { World } from '../../world/World';
 import { chunksModule } from '../chunks';
 import { playersModule } from '../players';
@@ -21,7 +21,7 @@ const RIGHT = directionOf(1, 0);
 /** Clear grass around the spawn, so that only the tiles a test places get in the way. */
 const CLEARING_RADIUS = 12;
 
-function setup() {
+async function setup() {
   const test = createTestContext({ devAuth: true, modules: [playersModule, movementModule] });
   const { ctx } = test;
   const dt = 1 / ctx.config.net.tickRateHz;
@@ -34,14 +34,15 @@ function setup() {
   }
   const client = connectFakeClient(ctx);
   client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
+  await settle();
   const entity = client.session.player?.entity ?? -1;
   const position = () => ctx.entities.get(entity, 'position') ?? { layer: 0, x: NaN, y: NaN };
   return { ...test, dt, spawn, client, entity, position };
 }
 
 describe('movement module', () => {
-  it('walks at the walking speed, one input per tick', () => {
-    const { ctx, client, tick, spawn, entity, position, dt } = setup();
+  it('walks at the walking speed, one input per tick', async () => {
+    const { ctx, client, tick, spawn, entity, position, dt } = await setup();
 
     for (let seq = 0; seq < 20; seq++) {
       client.send({ t: 'input', seq, dir: RIGHT });
@@ -58,8 +59,8 @@ describe('movement module', () => {
     expect(ctx.entities.get(entity, 'anim')).toBe('idle');
   });
 
-  it('does not go faster when inputs are flooded', () => {
-    const { client, tick, spawn, position, dt } = setup();
+  it('does not go faster when inputs are flooded', async () => {
+    const { client, tick, spawn, position, dt } = await setup();
     const ticks = 10;
 
     let seq = 0;
@@ -82,8 +83,8 @@ describe('movement module', () => {
     expect(client.closed).toBeUndefined();
   });
 
-  it('stops against a tree and slides along it', () => {
-    const { ctx, client, tick, spawn, position } = setup();
+  it('stops against a tree and slides along it', async () => {
+    const { ctx, client, tick, spawn, position } = await setup();
     const treeX = Math.floor(spawn.x) + 2;
     ctx.world.setTile(LAYER.surface, treeX, Math.floor(spawn.y), 'object', 'base:oak_tree');
 
@@ -101,8 +102,8 @@ describe('movement module', () => {
     expect(position().y).toBeGreaterThan(blocked.y);
   });
 
-  it('ignores repeated and late inputs', () => {
-    const { ctx, client, tick, spawn, entity, position, dt } = setup();
+  it('ignores repeated and late inputs', async () => {
+    const { ctx, client, tick, spawn, entity, position, dt } = await setup();
 
     client.send({ t: 'input', seq: 5, dir: RIGHT });
     client.send({ t: 'input', seq: 5, dir: RIGHT });
@@ -113,8 +114,8 @@ describe('movement module', () => {
     expect(ctx.entities.get(entity, 'inputAck')).toBe(5);
   });
 
-  it('keeps the spatial index up to date when the player changes chunk', () => {
-    const { ctx, client, tick, entity, position } = setup();
+  it('keeps the spatial index up to date when the player changes chunk', async () => {
+    const { ctx, client, tick, entity, position } = await setup();
     const start = position();
     const startChunk = { layer: 0, cx: chunkCoord(start.x), cy: chunkCoord(start.y) };
     // Walk left into the previous chunk (the test world is 2 × 2 chunks, the spawn in the middle).
@@ -131,7 +132,7 @@ describe('movement module', () => {
     expect(ctx.entities.inChunk({ ...startChunk, cx: startChunk.cx - 1 }).has(entity)).toBe(true);
   });
 
-  it('makes the streamed chunks follow the player', () => {
+  it('makes the streamed chunks follow the player', async () => {
     // 10 × 10 chunks, with a cleared corridor east of the spawn.
     const content = loadContent(baseContent);
     const world = World.generate({ seed: 4, content, layerSizeTiles: 320 });
@@ -161,6 +162,7 @@ describe('movement module', () => {
     }
     const client = connectFakeClient(ctx);
     client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
+    await settle();
     client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
     tick(10);
     const startChunk = chunkCoord(world.spawn.x);

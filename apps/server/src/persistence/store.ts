@@ -1,8 +1,8 @@
 import type { SavedChunk } from '../world/chunkSerializer';
 
-/** Where a character was when last saved. Until Clerk (step 11), a player is known by name. */
+/** Where the character of a player (`players.id`) was when last saved. */
 export interface SavedCharacter {
-  name: string;
+  playerId: number;
   layer: number;
   /** Feet position, in tiles. */
   x: number;
@@ -28,7 +28,7 @@ export interface GameStore {
 export class MemoryStore implements GameStore {
   seed: number | undefined;
   readonly chunks = new Map<string, SavedChunk>();
-  readonly characters = new Map<string, SavedCharacter>();
+  readonly characters = new Map<number, SavedCharacter>();
 
   async loadSeed() {
     return this.seed;
@@ -54,7 +54,7 @@ export class MemoryStore implements GameStore {
 
   async saveCharacters(characters: readonly SavedCharacter[]) {
     for (const character of characters) {
-      this.characters.set(character.name.toLowerCase(), character);
+      this.characters.set(character.playerId, character);
     }
   }
 

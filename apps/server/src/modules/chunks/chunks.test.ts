@@ -8,7 +8,7 @@ import {
   PROTOCOL_VERSION,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
-import { connectFakeClient, createTestContext, type FakeClient } from '../../core/testing';
+import { connectFakeClient, createTestContext, type FakeClient, settle } from '../../core/testing';
 import { World } from '../../world/World';
 import { playersModule } from '../players';
 import { chunksModule } from './index';
@@ -24,9 +24,10 @@ function setup(devAuth = true) {
     world,
     modules: [playersModule, chunksModule],
   });
-  const join = (name: string) => {
+  const join = async (name: string) => {
     const client = connectFakeClient(test.ctx);
     client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: name });
+    await settle();
     return client;
   };
   return { ...test, join };
@@ -37,9 +38,9 @@ const chunksOf = (client: FakeClient) =>
 const keyOf = (m: { cx: number; cy: number }) => `${m.cx},${m.cy}`;
 
 describe('chunks module', () => {
-  it('streams the chunks around the spawn, a few per tick, nearest first', () => {
+  it('streams the chunks around the spawn, a few per tick, nearest first', async () => {
     const { tick, join } = setup();
-    const client = join('Ana');
+    const client = await join('Ana');
     client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
 
     tick();
@@ -50,9 +51,9 @@ describe('chunks module', () => {
     expect(chunksOf(client)).toHaveLength(16); // chunks 3 → 6 on both axes
   });
 
-  it('sends real chunk contents', () => {
+  it('sends real chunk contents', async () => {
     const { tick, join } = setup();
-    const client = join('Ana');
+    const client = await join('Ana');
     tick();
 
     const message = chunksOf(client)[0];
@@ -61,9 +62,9 @@ describe('chunks module', () => {
     expect(chunk?.ground).toEqual(original?.ground);
   });
 
-  it('follows the debug camera: new chunks arrive, far ones are released', () => {
+  it('follows the debug camera: new chunks arrive, far ones are released', async () => {
     const { tick, join } = setup();
-    const client = join('Ana');
+    const client = await join('Ana');
     client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
     tick(10);
     client.received.length = 0;
@@ -76,7 +77,7 @@ describe('chunks module', () => {
     expect(chunksOf(client).map(keyOf)).toContain('9,5');
   });
 
-  it('ignores the debug camera outside dev mode', () => {
+  it('ignores the debug camera outside dev mode', async () => {
     const { ctx, tick } = setup(false);
     // Without dev mode nobody can join yet: spawn a session by hand.
     const client = connectFakeClient(ctx);
@@ -95,9 +96,9 @@ describe('chunks module', () => {
     expect(client.received).toEqual([]);
   });
 
-  it('sends tile updates for subscribed chunks only', () => {
+  it('sends tile updates for subscribed chunks only', async () => {
     const { ctx, tick, join } = setup();
-    const client = join('Ana');
+    const client = await join('Ana');
     tick(10);
     client.received.length = 0;
 
@@ -111,9 +112,9 @@ describe('chunks module', () => {
     ]);
   });
 
-  it('forgets a session once it is closed', () => {
+  it('forgets a session once it is closed', async () => {
     const { ctx, tick, join } = setup();
-    const client = join('Ana');
+    const client = await join('Ana');
     tick(2);
 
     ctx.net.handleClose(client.session);

@@ -1,12 +1,11 @@
 import type { GameStore } from '../persistence/store';
 import { readCharacters, writeCharacters } from './characters.repo';
 import { readChunks, writeChunks } from './chunks.repo';
-import { openDatabase } from './database';
+import type { DatabaseConnection } from './database';
 import { readSeed, writeSeed } from './worldState.repo';
 
-/** The game store in PostgreSQL; the migrations are applied when it opens. */
-export async function openPgStore(url: string): Promise<GameStore> {
-  const { db, close } = await openDatabase(url);
+/** The game store in PostgreSQL. */
+export function pgGameStore({ db, close }: DatabaseConnection): GameStore {
   return {
     loadSeed: () => readSeed(db),
     saveSeed: (seed) => writeSeed(db, seed),

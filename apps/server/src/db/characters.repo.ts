@@ -5,42 +5,30 @@ import { characters, players } from './schema';
 
 export async function readCharacters(db: Database): Promise<SavedCharacter[]> {
   return db
-    .select({ name: players.name, layer: characters.layer, x: characters.x, y: characters.y })
-    .from(characters)
-    .innerJoin(players, eq(players.id, characters.playerId));
+    .select({
+      playerId: characters.playerId,
+      layer: characters.layer,
+      x: characters.x,
+      y: characters.y,
+    })
+    .from(characters);
 }
 
-/**
- * Saves the position of characters. Until Clerk (step 11), a player is known by name: the first save
- * of a name creates the player (approved, as dev players are).
- */
+/** Saves the position of characters, and when their players were last seen. */
 export async function writeCharacters(
   db: Database,
   saved: readonly SavedCharacter[],
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    for (const { name, layer, x, y } of saved) {
+    for (const { playerId, layer, x, y } of saved) {
       const now = new Date();
-      let [player] = await tx
-        .select({ id: players.id })
-        .from(players)
-        .where(sql`lower(${players.name}) = lower(${name})`);
-      if (!player) {
-        [player] = await tx
-          .insert(players)
-          .values({ name, status: 'approved' })
-          .returning({ id: players.id });
-      }
-      if (!player) {
-        throw new Error(`Could not create the player "${name}"`);
-      }
-      await tx.update(players).set({ lastSeenAt: now }).where(eq(players.id, player.id));
+      await tx.update(players).set({ lastSeenAt: now }).where(eq(players.id, playerId));
       await tx
         .insert(characters)
-        .values({ playerId: player.id, layer, x, y, updatedAt: now })
+        .values({ playerId, layer, x, y, updatedAt: now })
         .onConflictDoUpdate({
           target: characters.playerId,
-          set: { layer, x, y, updatedAt: now },
+          set: { layer, x, y, updatedAt: sql`excluded.updated_at` },
         });
     }
   });

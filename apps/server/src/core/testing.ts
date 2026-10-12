@@ -10,6 +10,7 @@ import {
   type ServerMessage,
 } from '@8box/shared';
 import { pino } from 'pino';
+import type { Accounts } from '../accounts/Accounts';
 import type { Session, Transport } from '../net/session';
 import type { Persistence } from '../persistence/Persistence';
 import { World } from '../world/World';
@@ -35,6 +36,8 @@ export interface TestContextOptions {
   now?: () => number;
   /** Saves. Default: kept in memory. */
   persistence?: Persistence;
+  /** Sign-in. Default: dev accounts in memory, no Clerk. */
+  accounts?: Accounts;
 }
 
 export interface TestContext {
@@ -57,6 +60,7 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     devAuth: options.devAuth ?? false,
     ...(options.now && { now: options.now }),
     ...(options.persistence && { persistence: options.persistence }),
+    ...(options.accounts && { accounts: options.accounts }),
   });
   initModules(ctx, options.modules ?? []);
 
@@ -107,4 +111,9 @@ export function connectFakeClient(ctx: ServerContext): FakeClient {
   };
   client.session = ctx.net.connect(transport);
   return client;
+}
+
+/** Lets pending promises finish (sign-in, saves): what a real server does between two messages. */
+export function settle(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve));
 }

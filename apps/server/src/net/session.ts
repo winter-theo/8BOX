@@ -1,4 +1,5 @@
 import type { ClientMessageType, WorldPosition } from '@8box/shared';
+import type { Account } from '../accounts/account';
 import type { EntityId } from '../core/entities';
 import type { ChunkSubscriptions } from './interest';
 import type { TokenBucket } from './rateLimit';
@@ -11,8 +12,11 @@ export interface Transport {
   ping(): void;
 }
 
-/** `handshake`: waiting for a valid `hello`; `playing`: joined; `closed`: gone for good. */
-export type SessionState = 'handshake' | 'playing' | 'closed';
+/**
+ * `handshake`: waiting for a valid `hello`; `signingIn`: checking the account (or a chosen name);
+ * `naming`: waiting for `setName`; `waiting`: pending approval; `playing`: joined; `closed`: gone.
+ */
+export type SessionState = 'handshake' | 'signingIn' | 'naming' | 'waiting' | 'playing' | 'closed';
 
 export interface SessionPlayer {
   entity: EntityId;
@@ -24,8 +28,10 @@ export interface SessionPlayer {
 /** One connected client. Created by `NetServer.connect`, one per socket. */
 export class Session {
   state: SessionState = 'handshake';
-  /** Name proven by the handshake (dev name for now, account name later). */
+  /** Name of the player, once in the game. */
   name: string | undefined;
+  /** The signed-in account (set by the handshake). */
+  account: Account | undefined;
   /** Set by the module that spawns the player when the session is authenticated. */
   player: SessionPlayer | undefined;
   /** Chunks this client receives; set by the module that streams the world. */
