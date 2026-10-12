@@ -11,6 +11,7 @@ import {
 } from '@8box/shared';
 import { pino } from 'pino';
 import type { Session, Transport } from '../net/session';
+import type { Persistence } from '../persistence/Persistence';
 import { World } from '../world/World';
 import { createContext, runTick } from './game';
 import { type GameModule, initModules, type ServerContext } from './module';
@@ -32,6 +33,8 @@ export interface TestContextOptions {
   devAuth?: boolean;
   /** Network clock, in ms (rate limits, latency). Default: performance.now. */
   now?: () => number;
+  /** Saves. Default: kept in memory. */
+  persistence?: Persistence;
 }
 
 export interface TestContext {
@@ -53,6 +56,7 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     log: pino({ level: 'silent' }),
     devAuth: options.devAuth ?? false,
     ...(options.now && { now: options.now }),
+    ...(options.persistence && { persistence: options.persistence }),
   });
   initModules(ctx, options.modules ?? []);
 

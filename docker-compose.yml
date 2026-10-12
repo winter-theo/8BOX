@@ -1,0 +1,22 @@
+# Development database: `pnpm db:up` starts it, `pnpm db:down` stops it (the data stays in the volume).
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: 8box
+      POSTGRES_PASSWORD: 8box
+      POSTGRES_DB: 8box
+    ports:
+      # Reachable from this computer only.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/18/.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U 8box -d 8box']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  db-data:

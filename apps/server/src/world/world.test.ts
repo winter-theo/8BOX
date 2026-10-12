@@ -17,6 +17,26 @@ describe('World', () => {
     expect(world.getChunk(LAYER.mine, 0, 0)).toBeUndefined();
   });
 
+  it('uses the saved chunks and generates only the missing ones', () => {
+    const options = { seed: 3, content, layerSizeTiles: SIZE };
+    const original = generate();
+    original.setTile(LAYER.surface, 40, 5, 'object', 'base:oak_tree');
+    const saved = original.getChunk(LAYER.surface, 1, 0);
+    if (!saved) {
+      throw new Error('missing chunk');
+    }
+
+    const { world, generated } = World.load(options, [saved]);
+
+    expect(world.getChunk(LAYER.surface, 1, 0)).toBe(saved);
+    expect(world.getTile(LAYER.surface, 40, 5, 'object')?.id).toBe('base:oak_tree');
+    expect(generated.map((chunk) => `${chunk.cx},${chunk.cy}`).sort()).toEqual([
+      '0,0',
+      '0,1',
+      '1,1',
+    ]);
+  });
+
   it('reads tiles by slot, and nothing outside the world', () => {
     const world = generate();
 

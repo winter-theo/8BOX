@@ -1,5 +1,8 @@
 import { CONFIG, type Content, type GameConfig } from '@8box/shared';
 import { NetServer } from '../net/net';
+import { Persistence } from '../persistence/Persistence';
+import { MemoryStore } from '../persistence/store';
+import { WriteQueue } from '../persistence/writeQueue';
 import type { World } from '../world/World';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
@@ -22,6 +25,17 @@ export interface ContextOptions {
   devAuth?: boolean;
   /** Clock of the network layer, in ms (default: performance.now). */
   now?: () => number;
+  /** Saves (default: kept in memory, for tests). */
+  persistence?: Persistence;
+}
+
+/** Saves kept in memory: nothing outlives the process (tests). */
+export function memoryPersistence(content: Content, log: Logger): Persistence {
+  const writes = new WriteQueue({
+    store: new MemoryStore(),
+    onError: (error) => log.error({ err: error }, 'save failed'),
+  });
+  return new Persistence(content, writes);
 }
 
 /** Duration of a tick, in ms. */
@@ -36,6 +50,7 @@ export function createContext({
   world,
   devAuth = false,
   now,
+  persistence = memoryPersistence(content, log),
 }: ContextOptions): ServerContext {
   const events = createEventBus();
   world.onChange((change) => events.emit('tile.changed', change));
@@ -53,6 +68,7 @@ export function createContext({
     systems: new SystemRegistry(),
     world,
     net: new NetServer({ config, log, events, scheduler, devAuth, ...(now && { now }) }),
+    persistence,
   };
 }
 
@@ -69,6 +85,7 @@ export interface GameOptions {
   modules: readonly GameModule[];
   config?: GameConfig;
   devAuth?: boolean;
+  persistence?: Persistence;
 }
 
 export interface Game {
@@ -86,8 +103,16 @@ export function createGame({
   modules,
   config = CONFIG,
   devAuth = false,
+  persistence,
 }: GameOptions): Game {
-  const ctx = createContext({ config, content, log, world, devAuth });
+  const ctx = createContext({
+    config,
+    content,
+    log,
+    world,
+    devAuth,
+    ...(persistence && { persistence }),
+  });
   const order = initModules(ctx, modules);
   log.info({ modules: order, devAuth }, 'modules initialized');
 

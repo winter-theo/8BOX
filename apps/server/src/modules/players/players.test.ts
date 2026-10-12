@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION } from '@8box/shared';
+import { LAYER, PROTOCOL_VERSION } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { connectFakeClient, createTestContext } from '../../core/testing';
 import { playersModule, spawnPosition } from './index';
@@ -62,6 +62,35 @@ describe('players module', () => {
     expect(ctx.entities.exists(first.session.player?.entity ?? -1)).toBe(false);
     expect(ctx.entities.ofType('player')).toEqual([second.session.player?.entity]);
     expect(log).toEqual(['joined Ana', 'left Ana (rejected: replaced)', 'joined Ana']);
+  });
+
+  it('brings a player back where they left, whatever the case of their name', () => {
+    const { ctx, join } = setup();
+    const first = join('Ana');
+    const entity = first.session.player?.entity ?? -1;
+    ctx.entities.set(entity, 'position', { layer: LAYER.surface, x: 20.5, y: 30.25 });
+
+    ctx.net.handleClose(first.session);
+    expect(ctx.persistence.character('ana')).toEqual({ name: 'Ana', layer: 0, x: 20.5, y: 30.25 });
+
+    const again = join('ANA');
+    expect(again.last()).toMatchObject({ t: 'welcome', you: { position: { x: 20.5, y: 30.25 } } });
+    expect(ctx.entities.get(again.session.player?.entity ?? -1, 'position')).toEqual({
+      layer: 0,
+      x: 20.5,
+      y: 30.25,
+    });
+  });
+
+  it('starts at the spawn when the saved place is outside the world', () => {
+    const { ctx, join } = setup();
+    ctx.persistence.saveCharacter({ name: 'Bob', layer: 0, x: 99_999, y: 5 });
+
+    const bob = join('Bob');
+
+    expect(ctx.entities.get(bob.session.player?.entity ?? -1, 'position')).toEqual(
+      spawnPosition(ctx.world),
+    );
   });
 
   it('does not spawn anything for a rejected client', () => {

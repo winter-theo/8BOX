@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!docs", "!ref", "!.claude"]
+    "includes": ["**", "!docs", "!ref", "!.claude", "!apps/server/drizzle"]
   },
   "formatter": {
     "enabled": true,

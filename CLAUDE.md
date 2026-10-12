@@ -33,7 +33,9 @@ RimWorld et The Escapists (bâtiments), Zelda vu de dessus (combat).
 - `pnpm dev` : serveur + client en mode développement.
 - `pnpm check` : typecheck + lint + tests. Doit passer avant chaque commit.
 - `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm format`.
-- À partir de l'étape 10 : `pnpm db:up` (PostgreSQL dans Docker), `pnpm db:generate`, `pnpm db:migrate`.
+- Base de données (Docker Desktop doit tourner) : `pnpm db:up` démarre PostgreSQL, `pnpm db:down` l'arrête,
+  `pnpm db:generate` crée une migration après un changement de `apps/server/src/db/schema.ts` ; le serveur
+  applique les migrations au démarrage (`pnpm db:migrate` les applique à la main).
 - Outils : `pnpm tools:map` (carte du monde en PNG, étape 04), `pnpm tools:tiles` (aperçu PNG des tuiles du sol),
   `pnpm tools:bots <n>` (clients robots, étape 08).
 

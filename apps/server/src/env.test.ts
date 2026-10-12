@@ -11,7 +11,14 @@ describe('parseEnv', () => {
       ALLOWED_ORIGINS: ['http://localhost:5173'],
       DEV_AUTH: false,
       WORLD_SEED: undefined,
+      DATABASE_URL: 'postgres://8box:8box@localhost:5432/8box',
     });
+  });
+
+  it('requires DATABASE_URL in production only', () => {
+    expect(() => parseEnv({ NODE_ENV: 'production' })).toThrow(/DATABASE_URL/);
+    const url = 'postgres://game:secret@db:5432/game';
+    expect(parseEnv({ NODE_ENV: 'production', DATABASE_URL: url }).DATABASE_URL).toBe(url);
   });
 
   it('splits and trims the allowed origins', () => {
