@@ -3,16 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 10 — Base de données et sauvegarde
-- [ ] PostgreSQL 18 dans Docker (`docker-compose.yml`), scripts `db:*`, Drizzle : tables `world_state`, `chunks`,
-  `players`, `characters`, migrations appliquées au démarrage, `DATABASE_URL`.
-- [ ] Sérialisation des chunks (palette d'identifiants texte) ; tests d'aller-retour et de réordonnancement.
-- [ ] File d'écriture hors tick qui regroupe les chunks sales (testée) ; service de persistance (base, et mémoire
-  pour les tests).
-- [ ] Démarrage : graine en base, chunks chargés ou générés ; écriture toutes les 30 s et à l'arrêt.
-- [ ] Personnages : position restaurée à la connexion, sauvée à la déconnexion et toutes les 60 s.
-- [ ] Route de dev `POST /dev/tile`.
-- [ ] Vérification : case modifiée gardée après redémarrage, retour au même endroit après reconnexion.
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -232,8 +223,51 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   tester sur ton téléphone en réseau local, voir la note (00) sur `HOST=0.0.0.0`.
 - (09) `.claude/launch.json` a maintenant deux entrées, `server` (port 3000) et `client` (5173) : l'outil d'aperçu
   impose `PORT` à chaque processus.
+- (10) Toute la surface est enregistrée à la création du monde (1 024 chunks, environ 3 Mo). Un monde existant ne
+  dépend donc plus du générateur : modifier la génération ne change que les nouveaux mondes. Pour repartir de zéro,
+  il faut supprimer le volume (`pnpm db:down`, puis `docker volume rm 8box_db-data`). Charger le monde depuis la
+  base prend environ 90 ms, contre environ 1 s pour le générer.
+- (10) Une case enregistrée dont l'id a disparu du contenu devient vide, avec un avertissement au démarrage.
+- (10) Joueurs en mode dev :
+  - créés en base au premier enregistrement de leur personnage, avec le statut `approved` ;
+  - nom insensible à la casse (« Ana » et « ana » sont le même joueur) ; Clerk (étape 11) les reliera aux comptes ;
+  - une position enregistrée hors de la carte renvoie au spawn.
+- (10) Colonnes `hp` et `hunger` vides jusqu'à l'étape 20 ; `inventory` et `equipment` vides. Les tables
+  `reports` et `admin_audit` (ARCHITECTURE §8) viendront avec leurs étapes (12, 13).
+- (10) File d'écriture :
+  - ce qui est mis en file pendant un même tick part ensemble ;
+  - lots de 100 chunks au plus (`PERSISTENCE.chunkWriteBatchSize`) ;
+  - après une erreur de la base, nouvel essai 5 s plus tard ;
+  - à l'arrêt, attente de 10 s au plus.
+- (10) `DATABASE_URL` est obligatoire en production ; en dev, elle vaut par défaut la base de `docker-compose.yml`.
+  La route `POST /dev/tile` existe hors production, même sans `DEV_AUTH`.
+- (10) Sous Windows, quand `tsx watch` redémarre le serveur (ou quand l'outil d'aperçu l'arrête), le processus est
+  tué sans SIGINT : les changements des 30 dernières secondes peuvent être perdus. Ctrl+C dans un terminal déclenche
+  bien la sauvegarde finale (à vérifier chez toi).
+- (10) Docker Desktop doit tourner pour `pnpm dev`. Sans base, le serveur s'arrête avec le message « database
+  unavailable (is it started? pnpm db:up) ».
+- (10) Biome ignore `apps/server/drizzle/` (migrations générées).
 
 ## Historique
+
+### 2026-10-12 — Étape 10 : Base de données et sauvegarde ✅
+- PostgreSQL 18 dans Docker (`pnpm db:up`, `db:down`, `db:generate`, `db:migrate`).
+- Drizzle : tables `world_state`, `chunks`, `players`, `characters`. Migrations appliquées au démarrage du serveur.
+- Chunks enregistrés avec leur propre palette d'ids de tuile. Tests : aller-retour, contenu réordonné, tuile retirée
+  du contenu.
+- Démarrage : graine lue en base, ou créée ; chunks chargés depuis la base, ou générés puis enregistrés.
+- Écriture hors tick, par une file qui regroupe les données (testée) : chunks modifiés toutes les 30 s, personnages
+  toutes les 60 s et à la déconnexion, tout à l'arrêt.
+- Le personnage revient là où il était ; route de dev `POST /dev/tile`.
+- Vérifié avec la vraie base :
+  - un arbre posé par `/dev/tile` est enregistré sous 30 s ;
+  - après redémarrage (1 024 chunks chargés, 0 généré), il bloque toujours le joueur (x = 513,70) ;
+  - un client qui se reconnecte, y compris après un redémarrage du serveur, revient à 513,70 ;
+  - aucun `await` dans le code des ticks.
+- Écarts par rapport à la fiche :
+  - service `ctx.persistence` et module `persistence` ;
+  - toute la surface enregistrée dès la création ;
+  - `launch.json` séparé en serveur et client.
 
 ### 2026-10-12 — Étape 09 : Contrôles mobiles ✅
 - Mode tactile détecté (`?touch=1` pour le forcer en dev). HUD React en paysage :
