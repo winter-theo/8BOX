@@ -3,7 +3,14 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 11 — Connexion Google, pseudo et liste blanche
+- [ ] Protocole 5 : `hello { token }`, `setName`, `status`, nouveaux refus ; validation du pseudo avec mots
+  interdits (testée).
+- [ ] Serveur : service des comptes (Clerk simulable), joueurs en base (`pending`, admins de `ADMIN_EMAILS`),
+  poignée de main avec statuts (testée), personnage rattaché à `players.id`, mode dev conservé.
+- [ ] Client : `ClerkProvider`, accueil « Se connecter avec Google », jeton dans `hello`, écrans pseudo / attente /
+  refus / banni, menu du compte.
+- [ ] `.env.example`, puis vérification (jeton invalide refusé, pseudo unique, parcours Google).
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
