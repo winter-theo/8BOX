@@ -6,6 +6,7 @@ export { HARVEST } from './harvest';
 export { INTERACTION } from './interaction';
 export { INVENTORY } from './inventory';
 export { LIGHT } from './light';
+export { LOOP } from './loop';
 export { MONSTERS } from './monsters';
 export { NET } from './net';
 export { PERSISTENCE } from './persistence';
