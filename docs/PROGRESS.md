@@ -6,7 +6,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 **Étape 01 — Socle partagé : contenu, config, i18n** (démarrée le 2026-10-11)
 - [x] 1. RNG seedé (`util/rng.ts`) et tests
 - [x] 2. Émetteur d'événements typé (`util/events.ts`) et tests
-- [ ] 3. Schémas zod du contenu (`content/schemas.ts`)
+- [x] 3. Schémas zod du contenu (`content/schemas.ts`)
 - [ ] 4. Chargeur et registres (`content/load.ts`), références croisées, tests (1 cas valide, 3+ erreurs)
 - [ ] 5. Contenu initial (`packages/shared/content/*.json`) exporté par shared, chargé par le serveur et le client
 - [x] 6. Config de gameplay (`src/config/*.ts`, 15 fichiers, valeurs de `DECISIONS.md`)
