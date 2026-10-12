@@ -21,7 +21,7 @@ interface SessionState {
   rejectReason: RejectReason | null;
   /** Chunks currently received from the server (dev info). */
   loadedChunks: number;
-  /** Position of the test character followed by the camera, in tiles (dev mode). */
+  /** Center of the free camera, in tiles (dev mode); null when the camera follows the player. */
   debugCamera: { x: number; y: number } | null;
   /** Rendering figures (dev mode). */
   debugStats: DebugStats | null;

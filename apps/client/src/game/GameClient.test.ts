@@ -228,26 +228,83 @@ describe('GameClient world streaming', () => {
     client.connect('Ana');
     lastSocket().open();
     bus.emit('view.changed', { w: 1280, h: 720, zoom: 4 });
-    bus.emit('debugCamera.moved', { x: 10, y: 20 });
+    bus.emit('debugCamera.moved', { at: { x: 10, y: 20 } });
     expect(lastSocket().sent.map((m) => m.t)).toEqual(['hello']);
 
     welcome();
-    bus.emit('debugCamera.moved', { x: 11, y: 20 });
+    bus.emit('debugCamera.moved', { at: { x: 11, y: 20 } });
 
     expect(lastSocket().sent).toContainEqual({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
     expect(lastSocket().sent).toContainEqual({ t: 'debugCamera', at: { x: 11, y: 20 } });
     expect(state().debugCamera).toEqual({ x: 11, y: 20 });
+
+    bus.emit('debugCamera.moved', { at: null });
+    expect(lastSocket().sent.at(-1)).toEqual({ t: 'debugCamera', at: null });
+    expect(state().debugCamera).toBeNull();
+  });
+
+  it('sends the held direction once per input interval, and nothing while still', () => {
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+    welcome();
+    const inputs = () => lastSocket().sent.filter((message) => message.t === 'input');
+
+    vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
+    expect(inputs()).toEqual([]);
+
+    bus.emit('input.direction', { dir: 3 });
+    vi.advanceTimersByTime(NET.clientInputIntervalMs * 2);
+    bus.emit('input.direction', { dir: 0 });
+    vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
+
+    expect(inputs()).toEqual([
+      { t: 'input', seq: 0, dir: 3 },
+      { t: 'input', seq: 1, dir: 3 },
+      { t: 'input', seq: 2, dir: 0 },
+    ]);
+  });
+
+  it('stops sending inputs when the connection is lost', () => {
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+    welcome();
+    bus.emit('input.direction', { dir: 1 });
+    const socket = lastSocket();
+    socket.drop();
+    vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
+
+    expect(socket.sent.filter((message) => message.t === 'input')).toEqual([]);
+  });
+
+  it('passes the player position of each snapshot to Phaser', () => {
+    const moves: unknown[] = [];
+    bus.on('player.moved', (move) => moves.push(move));
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+    welcome();
+
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 7,
+      ackSeq: 3,
+      you: { x: 513, y: 512.5, facing: 'right' },
+    });
+
+    expect(moves).toEqual([{ x: 513, y: 512.5, facing: 'right' }]);
   });
 
   it('tells Phaser where the player spawned', () => {
     const spawns: unknown[] = [];
-    bus.on('player.spawned', ({ position }) => spawns.push(position));
+    bus.on('player.spawned', ({ entity, position }) => spawns.push({ entity, position }));
     const client = createClient();
     client.connect('Ana');
     lastSocket().open();
 
     welcome();
 
-    expect(spawns).toEqual([SPAWN]);
+    expect(spawns).toEqual([{ entity: expect.any(Number), position: SPAWN }]);
   });
 });

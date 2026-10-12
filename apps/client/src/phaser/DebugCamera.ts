@@ -68,7 +68,7 @@ export class DebugCamera {
     if (this.moved && now - this.lastSentAt >= DEBUG.cameraSendIntervalMs) {
       this.moved = false;
       this.lastSentAt = now;
-      eventBus.emit('debugCamera.moved', { ...this.position });
+      eventBus.emit('debugCamera.moved', { at: { ...this.position } });
     }
   }
 }

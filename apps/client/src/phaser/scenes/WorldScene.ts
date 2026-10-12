@@ -6,6 +6,7 @@ import { content } from '../../game/content';
 import { eventBus } from '../../game/events';
 import { CameraController } from '../CameraController';
 import { DebugCamera } from '../DebugCamera';
+import { MovementKeys } from '../MovementKeys';
 import { atlasFromScene } from '../world/atlasFromScene';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundLayer } from '../world/GroundLayer';
@@ -41,6 +42,7 @@ export class WorldScene extends Phaser.Scene {
     emitView();
     const debugCamera = import.meta.env.DEV ? new DebugCamera(this, entities, camera) : undefined;
     this.debugCamera = debugCamera;
+    const movementKeys = new MovementKeys((dir) => eventBus.emit('input.direction', { dir }));
     if (import.meta.env.DEV) {
       this.time.addEvent({
         delay: DEBUG.fpsSampleIntervalMs,
@@ -90,6 +92,7 @@ export class WorldScene extends Phaser.Scene {
         off();
       }
       camera.destroy();
+      movementKeys.destroy();
       ground.destroy();
       objects.destroy();
       entities.destroy();

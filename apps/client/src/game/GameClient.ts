@@ -50,6 +50,11 @@ export class GameClient {
   private view: { w: number; h: number; zoom: number } | undefined;
   private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
+  private inputTimer: ReturnType<typeof setInterval> | undefined;
+  /** Direction held now, and the one last sent (no input is sent while standing still). */
+  private direction = 0;
+  private sentDirection = 0;
+  private inputSeq = 0;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly options: GameClientOptions) {
@@ -63,11 +68,14 @@ export class GameClient {
         this.send({ t: 'viewport', ...view });
       }
     });
-    bus.on('debugCamera.moved', ({ x, y }) => {
-      useSessionStore.setState({ debugCamera: { x, y } });
+    bus.on('debugCamera.moved', ({ at }) => {
+      useSessionStore.setState({ debugCamera: at });
       if (this.online) {
-        this.send({ t: 'debugCamera', at: { x, y } });
+        this.send({ t: 'debugCamera', at });
       }
+    });
+    bus.on('input.direction', ({ dir }) => {
+      this.direction = dir;
     });
     bus.on('debug.stats', (stats) => useSessionStore.setState({ debugStats: stats }));
     for (const event of ['chunk.loaded', 'chunk.unloaded'] as const) {
@@ -123,10 +131,14 @@ export class GameClient {
         if (this.view) {
           this.send({ t: 'viewport', ...this.view });
         }
-        this.options.bus.emit('player.spawned', { position });
+        this.options.bus.emit('player.spawned', { entity, position });
         this.startPing();
+        this.startInputs();
         return;
       }
+      case 'snapshot':
+        this.options.bus.emit('player.moved', message.you);
+        return;
       case 'pong':
         useSessionStore.setState({ pingMs: Math.round(this.now() - message.time) });
         return;
@@ -171,6 +183,8 @@ export class GameClient {
   private goOffline(): void {
     this.online = false;
     this.stopPing();
+    clearInterval(this.inputTimer);
+    this.inputTimer = undefined;
     this.chunks.clear();
   }
 
@@ -179,6 +193,20 @@ export class GameClient {
     const ping = () => this.send({ t: 'ping', time: this.now() });
     ping();
     this.pingTimer = setInterval(ping, NET.clientPingIntervalMs);
+  }
+
+  /** Sends the held direction 20 times per second (one input per server tick), from seq 0. */
+  private startInputs(): void {
+    clearInterval(this.inputTimer);
+    this.inputSeq = 0;
+    this.sentDirection = 0;
+    this.inputTimer = setInterval(() => {
+      if (this.direction === 0 && this.sentDirection === 0) {
+        return; // Still, and the server knows it.
+      }
+      this.send({ t: 'input', seq: this.inputSeq++, dir: this.direction });
+      this.sentDirection = this.direction;
+    }, NET.clientInputIntervalMs);
   }
 
   private stopPing(): void {
