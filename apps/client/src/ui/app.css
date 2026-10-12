@@ -316,9 +316,9 @@ body {
   position: static;
 }
 
-/* In touch mode the dev info sits at the top, right of the full screen button. */
+/* In touch mode the dev info sits at the top left, under the full screen button. */
 .app--touch .dev-info {
-  left: calc(max(8px, env(safe-area-inset-left)) + 120px);
+  top: calc(max(8px, env(safe-area-inset-top)) + 56px);
 }
 
 .rotate-phone {

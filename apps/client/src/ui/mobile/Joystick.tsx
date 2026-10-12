@@ -45,7 +45,11 @@ export function Joystick() {
     if (touch.current) {
       return; // One thumb at a time.
     }
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId); // Keep the thumb even off the zone.
+    } catch {
+      // Unknown pointer: the zone still follows it while it stays inside.
+    }
     const zone = event.currentTarget.getBoundingClientRect();
     touch.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
     if (base.current) {

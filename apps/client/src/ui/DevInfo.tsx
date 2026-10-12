@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../store/session';
+import { useTouchMode } from './useTouchMode';
 
-/** Dev mode only: FPS, zoom, streamed chunks and objects, positions and controls. */
+/** Dev mode only: FPS, zoom, streamed chunks and objects, positions and keyboard controls. */
 export function DevInfo() {
   const { t } = useTranslation();
   const online = useSessionStore((state) => state.status === 'online');
@@ -9,6 +10,7 @@ export function DevInfo() {
   const player = useSessionStore((state) => state.playerPosition);
   const camera = useSessionStore((state) => state.debugCamera);
   const stats = useSessionStore((state) => state.debugStats);
+  const touch = useTouchMode();
 
   if (!import.meta.env.DEV || !online) {
     return null;
@@ -23,7 +25,7 @@ export function DevInfo() {
       {camera && (
         <span>{t('ui.dev.camera', { x: Math.floor(camera.x), y: Math.floor(camera.y) })}</span>
       )}
-      <span>{t('ui.dev.controls')}</span>
+      {!touch && <span>{t('ui.dev.controls')}</span>}
     </aside>
   );
 }
