@@ -11,14 +11,21 @@ import {
 } from '@8box/shared';
 import { pino } from 'pino';
 import type { Session, Transport } from '../net/session';
+import { World } from '../world/World';
 import { createContext, runTick } from './game';
 import { type GameModule, initModules, type ServerContext } from './module';
+
+/** Side of the default test world, in tiles: 2 × 2 chunks, quick to generate. */
+const TEST_WORLD_SIZE_TILES = 64;
+const TEST_WORLD_SEED = 1;
 
 export interface TestContextOptions {
   /** Default: the real config. */
   config?: GameConfig;
   /** Default: the base content. */
   content?: Content;
+  /** Default: a small generated world (64 × 64 tiles). */
+  world?: World;
   /** Modules to initialize, in dependency order. */
   modules?: readonly GameModule[];
   /** Accept dev logins. Default: false. */
@@ -35,9 +42,14 @@ export interface TestContext {
 
 /** Server context for tests: real core services, no network, no database, silent logs. */
 export function createTestContext(options: TestContextOptions = {}): TestContext {
+  const content = options.content ?? loadContent(baseContent);
+  const world =
+    options.world ??
+    World.generate({ seed: TEST_WORLD_SEED, content, layerSizeTiles: TEST_WORLD_SIZE_TILES });
   const ctx = createContext({
     config: options.config ?? CONFIG,
-    content: options.content ?? loadContent(baseContent),
+    content,
+    world,
     log: pino({ level: 'silent' }),
     devAuth: options.devAuth ?? false,
     ...(options.now && { now: options.now }),

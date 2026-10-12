@@ -1,9 +1,18 @@
-import { baseContent, type Content, contentSizes, loadContent } from '@8box/shared';
+import {
+  baseContent,
+  CONFIG,
+  type Content,
+  contentSizes,
+  loadContent,
+  parseSeed,
+} from '@8box/shared';
 import { pino } from 'pino';
 import { buildApp } from './app';
 import { createGame } from './core/game';
 import { env } from './env';
 import { MODULES } from './modules';
+import { randomSeed } from './world/seed';
+import { World } from './world/World';
 
 const log = pino({ level: env.LOG_LEVEL });
 
@@ -17,6 +26,18 @@ try {
 }
 log.info(contentSizes(content), 'content loaded');
 
+const seed = env.WORLD_SEED === undefined ? randomSeed() : parseSeed(env.WORLD_SEED);
+const generationStart = performance.now();
+const world = World.generate({ seed, content, layerSizeTiles: CONFIG.world.layerSizeTiles });
+log.info(
+  {
+    seed,
+    chunks: world.chunkCount,
+    ms: Math.round(performance.now() - generationStart),
+  },
+  'world generated',
+);
+
 // Dev logins without an account are never allowed in production.
 const devAuth = env.DEV_AUTH && env.NODE_ENV !== 'production';
 if (env.DEV_AUTH && !devAuth) {
@@ -26,6 +47,7 @@ if (env.DEV_AUTH && !devAuth) {
 const game = createGame({
   content,
   log: log.child({ scope: 'game' }),
+  world,
   modules: MODULES,
   devAuth,
 });

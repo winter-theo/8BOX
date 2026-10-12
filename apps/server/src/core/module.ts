@@ -1,13 +1,14 @@
 import type { Content, GameConfig } from '@8box/shared';
 import type { FastifyBaseLogger } from 'fastify';
 import type { NetServer } from '../net/net';
+import type { World } from '../world/World';
 import type { EntityStore } from './entities';
 import type { EventBus } from './events';
 import type { Scheduler } from './scheduler';
 
 export type Logger = FastifyBaseLogger;
 
-/** Everything a module can use. Later steps add `world`, `actions`, `commands`, `writeQueue`. */
+/** Everything a module can use. Later steps add `actions`, `commands`, `writeQueue`. */
 export interface ServerContext {
   readonly config: GameConfig;
   readonly content: Content;
@@ -18,6 +19,8 @@ export interface ServerContext {
   readonly systems: SystemRegistry;
   /** Client sessions: send messages, handle game messages (`onMessage`). */
   readonly net: NetServer;
+  /** Tiles of every layer, in memory. */
+  readonly world: World;
 }
 
 export interface GameModule {

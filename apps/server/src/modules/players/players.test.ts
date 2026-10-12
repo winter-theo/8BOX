@@ -1,4 +1,4 @@
-import { CONFIG, PROTOCOL_VERSION } from '@8box/shared';
+import { PROTOCOL_VERSION } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { connectFakeClient, createTestContext } from '../../core/testing';
 import { playersModule, spawnPosition } from './index';
@@ -29,7 +29,7 @@ describe('players module', () => {
       tick: 0,
     });
     expect(ctx.entities.typeOf(entity)).toBe('player');
-    expect(ctx.entities.get(entity, 'position')).toEqual(spawnPosition(CONFIG));
+    expect(ctx.entities.get(entity, 'position')).toEqual(spawnPosition(ctx.world));
     expect(ctx.entities.get(entity, 'player')).toEqual({ name: 'Ana' });
     expect(log).toEqual(['joined Ana']);
   });

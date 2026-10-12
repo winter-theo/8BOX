@@ -17,6 +17,8 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter((origin) => origin.length > 0),
     ),
+  /** World seed: a number or any text. Random when unset (stored in the database from step 10). */
+  WORLD_SEED: z.string().trim().min(1).optional(),
   /** `1` accepts dev logins (`hello { devName }`, no account). Always ignored in production. */
   DEV_AUTH: z
     .enum(['0', '1'])

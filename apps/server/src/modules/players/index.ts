@@ -1,11 +1,11 @@
-import type { GameConfig } from '@8box/shared';
+import { LAYER } from '@8box/shared';
 import type { Position } from '../../core/entities';
 import type { GameModule } from '../../core/module';
+import type { World } from '../../world/World';
 
-/** Where new players appear: the center of the surface until the world exists (step 04). */
-export function spawnPosition(config: GameConfig): Position {
-  const center = config.world.layerSizeTiles / 2;
-  return { layer: 0, x: center, y: center };
+/** Where new players appear: the spawn clearing of the surface. */
+export function spawnPosition(world: World): Position {
+  return { layer: LAYER.surface, x: world.spawn.x, y: world.spawn.y };
 }
 
 /** Turns authenticated sessions into player entities, and removes them when the session ends. */
@@ -18,7 +18,7 @@ export const playersModule: GameModule = {
         return;
       }
       const entity = ctx.entities.create('player', {
-        position: spawnPosition(ctx.config),
+        position: spawnPosition(ctx.world),
         player: { name },
       });
       session.player = { entity, name };

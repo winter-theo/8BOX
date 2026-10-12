@@ -10,6 +10,7 @@ describe('parseEnv', () => {
       LOG_LEVEL: 'info',
       ALLOWED_ORIGINS: ['http://localhost:5173'],
       DEV_AUTH: false,
+      WORLD_SEED: undefined,
     });
   });
 
