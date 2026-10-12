@@ -181,6 +181,44 @@ export class NetServer {
     this.disconnect(session, CloseCode.normal, `rejected: ${reason}`);
   }
 
+  /** Players with an open session past the sign-in: playing, waiting for approval or naming. */
+  connectedPlayerIds(): Set<number> {
+    const ids = new Set<number>();
+    for (const session of this.sessions.values()) {
+      if (session.account) {
+        ids.add(session.account.playerId);
+      }
+    }
+    return ids;
+  }
+
+  /**
+   * An admin changed an account: a banned or denied player leaves at once, with the matching screen;
+   * an approved player who was waiting enters the game.
+   */
+  applyAccount(account: Account): void {
+    for (const session of this.sessionsOf(account.playerId)) {
+      if (
+        account.status === 'banned' ||
+        account.status === 'denied' ||
+        session.state === 'waiting'
+      ) {
+        this.admit(session, account);
+      } else {
+        session.account = account;
+      }
+    }
+  }
+
+  /** An admin kicks a player out (they can come back); false when the player is not connected. */
+  kick(playerId: number): boolean {
+    const sessions = this.sessionsOf(playerId);
+    for (const session of sessions) {
+      this.reject(session, 'kicked');
+    }
+    return sessions.length > 0;
+  }
+
   /** Closes every session (server shutdown). */
   closeAll(reason: string): void {
     for (const session of this.allSessions()) {
@@ -200,6 +238,10 @@ export class NetServer {
       session.pingSentAt = now;
       session.transport.ping();
     }
+  }
+
+  private sessionsOf(playerId: number): Session[] {
+    return this.allSessions().filter((session) => session.account?.playerId === playerId);
   }
 
   private dispatch(session: Session, message: ClientMessage): void {

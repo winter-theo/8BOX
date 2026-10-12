@@ -29,7 +29,7 @@
       },
       "pending": {
         "title": "Waiting for approval",
-        "text": "Your request is sent. An admin has to approve it before you can play."
+        "text": "Your request is sent. An admin has to approve it: keep this page open, you will enter the game as soon as they do."
       },
       "denied": {
         "title": "Request denied",
@@ -47,6 +47,7 @@
       "devAuthDisabled": "Development login is disabled on this server.",
       "invalidName": "This name is not valid.",
       "replaced": "This name just connected somewhere else (another tab?).",
+      "kicked": "An admin kicked you out of the game. You can come back.",
       "unavailable": "The server cannot take players right now.",
       "reload": "Reload",
       "back": "Back"

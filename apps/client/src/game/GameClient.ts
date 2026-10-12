@@ -200,7 +200,7 @@ export class GameClient {
         const { entity, name, position } = message.you;
         this.attempt = 0;
         this.online = true;
-        useSessionStore.setState({ status: 'online', player: { entity, name } });
+        useSessionStore.setState({ status: 'online', player: { entity, name }, account: null });
         if (this.view) {
           this.send({ t: 'viewport', ...this.view });
         }

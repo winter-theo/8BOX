@@ -102,6 +102,8 @@ export type RejectReason =
   | 'invalidName'
   /** Someone joined with the same name: this older session ends. */
   | 'replaced'
+  /** An admin kicked the player out (they can come back). */
+  | 'kicked'
   /** The server cannot take players right now. */
   | 'unavailable';
 

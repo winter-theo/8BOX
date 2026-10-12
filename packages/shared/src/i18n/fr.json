@@ -29,7 +29,7 @@
       },
       "pending": {
         "title": "En attente de validation",
-        "text": "Ta demande est envoyée. Un administrateur doit la valider avant que tu puisses jouer."
+        "text": "Ta demande est envoyée. Un administrateur doit la valider : garde cette page ouverte, tu entreras en jeu dès qu'elle le sera."
       },
       "denied": {
         "title": "Demande refusée",
@@ -47,6 +47,7 @@
       "devAuthDisabled": "La connexion de développement est désactivée sur ce serveur.",
       "invalidName": "Ce pseudo n'est pas valide.",
       "replaced": "Ce pseudo vient de se connecter ailleurs (un autre onglet ?).",
+      "kicked": "Un administrateur t'a expulsé du jeu. Tu peux revenir.",
       "unavailable": "Le serveur ne peut pas accueillir de joueur pour le moment.",
       "reload": "Recharger",
       "back": "Retour"
