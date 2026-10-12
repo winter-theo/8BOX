@@ -43,9 +43,9 @@ export const WORLDGEN = {
   /** River noise: rivers follow the line where it is 0. Feature size, in tiles. */
   riverScaleTiles: 260,
   /** Half-width of a river, in noise units. */
-  riverWidth: 0.022,
+  riverWidth: 0.03,
   /** Width of the sand banks along a river, in noise units. */
-  riverBankWidth: 0.016,
+  riverBankWidth: 0.025,
   /** Rivers fade out within this distance of the spawn, in tiles. */
   riverFreeRadiusTiles: 45,
 
@@ -57,7 +57,7 @@ export const WORLDGEN = {
   /** Wild forest noise: feature size, in tiles. */
   forestScaleTiles: 110,
   /** Forest noise above which a wild forest grows (fading in over 0.2). */
-  wildForestThreshold: 0.25,
+  wildForestThreshold: 0.12,
   /** Radius of the dense starting forest around the spawn, in tiles. */
   startForestRadiusTiles: 70,
 
