@@ -15,6 +15,8 @@ export type EntityType = 'player' | 'groundItem' | 'monster';
 export interface Components {
   /** Never mutate it in place: `set` it again so the spatial index follows. */
   position: Position;
+  /** Entities controlled by a connected player. */
+  player: { name: string };
 }
 
 /**

@@ -17,11 +17,23 @@ try {
 }
 log.info(contentSizes(content), 'content loaded');
 
-const game = createGame({ content, log: log.child({ scope: 'game' }), modules: MODULES });
+// Dev logins without an account are never allowed in production.
+const devAuth = env.DEV_AUTH && env.NODE_ENV !== 'production';
+if (env.DEV_AUTH && !devAuth) {
+  log.warn('DEV_AUTH is ignored in production');
+}
+
+const game = createGame({
+  content,
+  log: log.child({ scope: 'game' }),
+  modules: MODULES,
+  devAuth,
+});
 
 const app = buildApp({
   logger: log,
   allowedOrigins: env.ALLOWED_ORIGINS,
+  net: game.ctx.net,
   tickStats: () => game.stats(),
 });
 

@@ -1,5 +1,16 @@
-import { baseContent, CONFIG, type Content, type GameConfig, loadContent } from '@8box/shared';
+import {
+  baseContent,
+  type ClientMessage,
+  CONFIG,
+  type Content,
+  decodeServerMessage,
+  encodeMessage,
+  type GameConfig,
+  loadContent,
+  type ServerMessage,
+} from '@8box/shared';
 import { pino } from 'pino';
+import type { Session, Transport } from '../net/session';
 import { createContext, runTick } from './game';
 import { type GameModule, initModules, type ServerContext } from './module';
 
@@ -10,6 +21,10 @@ export interface TestContextOptions {
   content?: Content;
   /** Modules to initialize, in dependency order. */
   modules?: readonly GameModule[];
+  /** Accept dev logins. Default: false. */
+  devAuth?: boolean;
+  /** Network clock, in ms (rate limits, latency). Default: performance.now. */
+  now?: () => number;
 }
 
 export interface TestContext {
@@ -24,6 +39,8 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     config: options.config ?? CONFIG,
     content: options.content ?? loadContent(baseContent),
     log: pino({ level: 'silent' }),
+    devAuth: options.devAuth ?? false,
+    ...(options.now && { now: options.now }),
   });
   initModules(ctx, options.modules ?? []);
 
@@ -37,4 +54,41 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
       }
     },
   };
+}
+
+export interface FakeClient {
+  session: Session;
+  /** Messages the server sent to this client, decoded. */
+  received: ServerMessage[];
+  /** Set once the server closed the connection. */
+  closed: { code: number; reason: string } | undefined;
+  /** Heartbeat pings received. */
+  pings: number;
+  send(message: ClientMessage): void;
+  sendRaw(data: Uint8Array, isBinary?: boolean): void;
+  last(): ServerMessage | undefined;
+}
+
+/** Connects a fake client to the context's network layer (no socket). */
+export function connectFakeClient(ctx: ServerContext): FakeClient {
+  const transport: Transport = {
+    send: (data) => client.received.push(decodeServerMessage(data)),
+    close: (code, reason) => {
+      client.closed = { code, reason };
+    },
+    ping: () => {
+      client.pings++;
+    },
+  };
+  const client: FakeClient = {
+    session: undefined as unknown as Session,
+    received: [],
+    closed: undefined,
+    pings: 0,
+    send: (message) => ctx.net.receive(client.session, encodeMessage(message)),
+    sendRaw: (data, isBinary = true) => ctx.net.receive(client.session, data, isBinary),
+    last: () => client.received.at(-1),
+  };
+  client.session = ctx.net.connect(transport);
+  return client;
 }

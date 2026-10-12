@@ -1,9 +1,28 @@
 {
   "ui": {
+    "game": {
+      "title": "8Box"
+    },
     "connection": {
+      "connecting": "Connecting…",
       "online": "Connected",
-      "offline": "Offline",
-      "protocol": "protocol {{version}}"
+      "reconnecting": "Offline · reconnecting…",
+      "ping": "{{ms}} ms"
+    },
+    "login": {
+      "devMode": "Development mode: pick a name to play.",
+      "name": "Name",
+      "nameRules": "3 to 16 characters: letters, digits or _",
+      "play": "Play"
+    },
+    "rejected": {
+      "outdated": "A new version of the game is available.",
+      "devAuthDisabled": "Development login is disabled on this server.",
+      "invalidName": "This name is not valid.",
+      "replaced": "This name just connected somewhere else (another tab?).",
+      "unavailable": "The server cannot take players right now.",
+      "reload": "Reload",
+      "back": "Back"
     },
     "language": {
       "label": "Language",

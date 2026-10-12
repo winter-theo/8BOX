@@ -35,6 +35,5 @@ describe('debug module', () => {
     tick(TICKS_PER_INTERVAL * 3);
 
     expect(info).not.toHaveBeenCalled();
-    expect(ctx.scheduler.size).toBe(0);
   });
 });

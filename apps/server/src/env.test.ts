@@ -9,6 +9,7 @@ describe('parseEnv', () => {
       PORT: 3000,
       LOG_LEVEL: 'info',
       ALLOWED_ORIGINS: ['http://localhost:5173'],
+      DEV_AUTH: false,
     });
   });
 
@@ -19,5 +20,11 @@ describe('parseEnv', () => {
 
   it('rejects an invalid port', () => {
     expect(() => parseEnv({ PORT: 'abc' })).toThrow(/PORT/);
+  });
+
+  it('reads DEV_AUTH as a 0/1 flag', () => {
+    expect(parseEnv({ DEV_AUTH: '1' }).DEV_AUTH).toBe(true);
+    expect(parseEnv({ DEV_AUTH: '0' }).DEV_AUTH).toBe(false);
+    expect(() => parseEnv({ DEV_AUTH: 'yes' })).toThrow(/DEV_AUTH/);
   });
 });
