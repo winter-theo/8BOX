@@ -3,15 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-**Étape 01 — Socle partagé : contenu, config, i18n** (démarrée le 2026-10-11)
-- [x] 1. RNG seedé (`util/rng.ts`) et tests
-- [x] 2. Émetteur d'événements typé (`util/events.ts`) et tests
-- [x] 3. Schémas zod du contenu (`content/schemas.ts`)
-- [x] 4. Chargeur et registres (`content/load.ts`), références croisées, tests (1 cas valide, 3+ erreurs)
-- [x] 5. Contenu initial (`packages/shared/content/*.json`) exporté par shared, chargé par le serveur et le client
-- [x] 6. Config de gameplay (`src/config/*.ts`, 15 fichiers, valeurs de `DECISIONS.md`)
-- [x] 7. i18n FR/EN (shared + test) ; client i18next, langue du navigateur, sélecteur mémorisé, textes de l'étape 00
-- [ ] 8. Vérifier les critères d'acceptation, clôture
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -29,8 +21,41 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (00) Le serveur tourne avec `tsx` (pas de build serveur). Le mode d'exécution en production reste à choisir à
   l'étape 25.
 - (00) L'auteur git du dépôt est « Ton Nom » : à corriger avec `git config user.name "…"`.
+- (01) Objets : `stack` est facultatif. Sans valeur, il vaut 99 (`INVENTORY.defaultStackSize`), ou 1 pour un outil
+  ou une arme (`INVENTORY.toolStackSize`). L'or fixe le sien dans le contenu (1 000 000).
+- (01) Cases : `hp: 0` signifie « incassable » (terrains). Le buisson à baies et l'eau profonde bloquent le passage.
+  Les hautes herbes et les fleurs ne le bloquent pas.
+- (01) Les valeurs propres à un objet ou une créature vont dans le contenu quand il est créé, pas dans la config.
+  Exemples : outils et épée en bois, PV des murs, monstres, nourriture (baies +2 et pomme +4, déjà dans `items.json`).
+  La torche prendra `LIGHT.defaultRadiusTiles` (6).
+- (01) Le ralentissement en eau peu profonde (× 0,5) reste dans `PLAYER.shallowWaterSpeedFactor`. On pourra le
+  passer dans la case `base:shallow_water` à l'étape 07.
+- (01) Régénération « tous les 7 jours » : comprise comme 7 jours réels (`WORLD.regenerationIntervalMs`).
+- (01) Pseudo : lettres ASCII seulement (sans accents), chiffres et `_`.
+- (01) Recettes : un champ `id` a été ajouté. Une station est un id (`base:workbench`) fourni par une case (champ
+  `station`), et le chargeur vérifie qu'une case la fournit. Types d'outils : `axe` et `pickaxe` pour l'instant.
+- (01) Une case et un objet de même id partagent le même nom affiché (`content.base.<nom>.name`).
+- (01) Le sélecteur de langue est provisoire, en haut à droite. Il ira dans le menu des options quand il existera.
+- (01) Le paquet client passe à environ 1,74 Mo (zod et i18next en plus de Phaser).
 
 ## Historique
+
+### 2026-10-11 — Étape 01 : Socle partagé : contenu, config, i18n ✅
+- `shared` fournit un RNG seedé (mulberry32 et `hashSeed`) et un émetteur d'événements typé et synchrone.
+- Schémas zod 4 stricts : cases, objets, recettes, et ébauches pour le butin et les créatures.
+- `loadContent` construit des registres triés par id (index d'exécution stables). Il vérifie les références
+  croisées et lève une `ContentError` qui liste chaque problème : fichier, id, champ.
+- Contenu de base : 9 cases et 7 objets. Les recettes, le butin et les créatures sont vides. Le serveur le charge au
+  démarrage (log « content loaded ») et le client aussi (console en dev).
+- 15 fichiers de config avec les valeurs de `DECISIONS.md`, commentées avec leur unité (durées en ms).
+- i18n FR/EN dans `shared`. Côté client : i18next, langue enregistrée sinon celle du navigateur, sinon le français.
+  Le sélecteur garde le choix dans `localStorage`. Les textes de l'étape 00 passent par des clés.
+- Écarts par rapport à la fiche :
+  - La config a été faite avant les schémas, qui en ont besoin.
+  - `stack` est facultatif, avec une valeur par défaut tirée de la config, et les recettes ont un `id`.
+  - Les constantes réseau de l'étape 00 (taille maximale des messages, délai de reconnexion) sont passées dans `NET`.
+  - En plus de la fiche : tests des schémas, test du contenu de base, helpers `contentNameKey`, `resolveLanguage`
+    et `contentSizes`.
 
 ### 2026-10-11 — Étape 00 : Monorepo et outillage ✅
 - Monorepo pnpm (`apps/*`, `packages/*`), Node 24 (`engines`, `.nvmrc`), TypeScript strict, Biome, Vitest (projets).
@@ -45,7 +70,8 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
     `env.ts`, `.gitattributes` (LF).
   - Les textes du bandeau sont en dur en français, comme prévu : l'étape 01 les remplace par des clés i18n.
   - `pnpm dev` utilise `pnpm --parallel`, sans dépendance supplémentaire.
-- Environnement : Node.js 24.20.0 LTS (winget) et pnpm 12.11.2 (`npm -g`) installés sur le poste.
+- Environnement : Node.js 24.20.0 LTS installé par winget, et pnpm 12.11.2 installé par l'utilisateur
+  (`npm.cmd install -g pnpm@12.11.2`).
   - pnpm 12 bloque les scripts d'installation : seul `esbuild` est autorisé (`allowBuilds` dans
     `pnpm-workspace.yaml`).
   - pnpm propose d'« approuver » les skills agents de Phaser : non fait. On les lit directement dans
