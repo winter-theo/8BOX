@@ -7,7 +7,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 
 | Id | Étape | Prérequis | Statut |
 |---|---|---|---|
-| 00 | [Monorepo et outillage](steps/00-monorepo.md) | — | ⬜ |
+| 00 | [Monorepo et outillage](steps/00-monorepo.md) | — | ✅ |
 | 01 | [Socle partagé : contenu, config, i18n](steps/01-socle-partage.md) | 00 | ⬜ |
 | 02 | [Serveur : boucle, modules, entités, événements](steps/02-boucle-serveur.md) | 01 | ⬜ |
 | 03 | [Protocole et connexions](steps/03-protocole-connexions.md) | 02 | ⬜ |

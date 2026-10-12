@@ -59,4 +59,4 @@ RimWorld et The Escapists (bâtiments), Zelda vu de dessus (combat).
 - Pas de nouvelle dépendance sans raison claire. Préférer du code simple et lisible.
 - Ne pas modifier `docs/design/` ni `docs/ARCHITECTURE.md` sans le signaler dans `docs/PROGRESS.md`.
 - Phaser 4 : en cas de doute sur une API, consulter les fichiers « skills » fournis par le dépôt Phaser
-  plutôt que supposer l'API de Phaser 3.
+  plutôt que supposer l'API de Phaser 3. Ils sont installés dans `apps/client/node_modules/phaser/skills/<sujet>/SKILL.md`.

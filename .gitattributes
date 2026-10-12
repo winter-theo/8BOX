@@ -1,0 +1,9 @@
+# Normalize line endings to LF everywhere (Biome expects LF, CI runs on Linux).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff2 binary
