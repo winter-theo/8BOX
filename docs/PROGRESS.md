@@ -3,13 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-**Étape 03 — Protocole et connexions** (démarrée le 2026-10-11, branche `step/03-protocole-connexions`)
-- [x] 1. Protocole partagé : schémas zod client → serveur, types serveur → client, codec msgpack, tests
-- [x] 2. Serveur `net/` : limiteur de débit, sessions, décodage et validation, battement (latence), fermeture, tests
-- [x] 3. Mode dev (`DEV_AUTH`) et module `players` : entité au spawn, `player.joined` / `player.left`, tests
-- [x] 4. Client `GameClient` : connexion, reconnexion à délai croissant, `hello` / `welcome`, ping ; store Zustand
-- [ ] 5. UI : écran de connexion de dev (pseudo), ping affiché, refus (`outdated` → recharger), i18n FR/EN
-- [ ] 6. Critères d'acceptation (deux onglets), clôture, PR et fusion
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -26,7 +20,6 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   de mise en ligne (25, 26).
 - (00) Le serveur tourne avec `tsx` (pas de build serveur). Le mode d'exécution en production reste à choisir à
   l'étape 25.
-- (00) L'auteur git du dépôt est « Ton Nom » : à corriger avec `git config user.name "…"`.
 - (01) Objets : `stack` est facultatif. Sans valeur, il vaut 99 (`INVENTORY.defaultStackSize`), ou 1 pour un outil
   ou une arme (`INVENTORY.toolStackSize`). L'or fixe le sien dans le contenu (1 000 000).
 - (01) Cases : `hp: 0` signifie « incassable » (terrains). Le buisson à baies et l'eau profonde bloquent le passage.
@@ -57,8 +50,51 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (02) Ids d'entité : des nombres qui augmentent et ne sont jamais réutilisés pendant une exécution. Ils ne sont ni
   sauvegardés ni durables.
 - (02) Le planificateur parcourt toutes ses tâches à chaque tick. Il faudra un tas (heap) s'il en a des milliers.
+- (03) Le même pseudo qui se reconnecte remplace l'ancienne session : l'ancien onglet reçoit
+  `rejected { reason: 'replaced' }` et ne se reconnecte pas. On ne refuse pas le nouveau venu.
+- (03) Mode dev : `pnpm dev` charge `apps/server/.env.development` (commité, `DEV_AUTH=1`), puis `.env`, qui le
+  surcharge. Le mode dev est toujours ignoré en production.
+- (03) Sans mode dev, il n'y a encore aucun moyen de se connecter (`devAuthDisabled`), en attendant Clerk (11).
+- (03) Spawn provisoire au centre de la couche 0 (512, 512), en attendant le monde (04).
+- (03) Limites de débit par client :
+  - `hello` 3 par 10 s, `ping` 5 par s, `input` 30 par s ;
+  - 50 messages ignorés par 10 s entraînent une déconnexion (code 1008).
+- (03) Délais réseau :
+  - `hello` attendu sous 10 s ;
+  - battement toutes les 5 s, et coupure si le ping précédent est resté sans réponse ;
+  - ping du client toutes les 2 s ;
+  - reconnexion après 1, 2, 4… s, plafonnée à 30 s.
+- (03) Les messages sont traités dès leur réception, entre deux ticks. L'étape 07 mettra les `input` en file, pour
+  les traiter dans la phase `input`.
+- (03) En dev, `?protocol=N` dans l'URL du client annonce une autre version, pour tester l'écran « Recharger ».
+- (03) `welcome` ne contient pas encore l'heure du monde (étape 21), et `hello` pas encore le viewport (étape 05).
 
 ## Historique
+
+### 2026-10-11 — Étape 03 : Protocole et connexions ✅
+- Protocole dans `shared` :
+  - messages client validés par zod (`hello`, `ping`, `input`) et messages serveur typés (`welcome`, `rejected`,
+    `pong`) ;
+  - codec msgpack.
+- Serveur, `NetServer` :
+  - une session par socket ;
+  - validation des messages, et limites par type avec des seaux de jetons ;
+  - message invalide ou trop fréquent ignoré, déconnexion en cas d'abus ;
+  - battement (latence, connexions mortes), contrôle d'origine, fermeture propre.
+- Mode dev (`DEV_AUTH`) et module `players` : entité joueur au spawn, `player.joined` / `player.left`, logs
+  d'arrivée et de départ.
+- Client :
+  - `GameClient` : `hello`, `welcome`, ping affiché, reconnexion à délai croissant ;
+  - écran de connexion de dev (pseudo mémorisé) et écran de refus (« Recharger » si la version est dépassée) ;
+  - textes en FR et en EN.
+- Vérifié dans le navigateur : Ana et Bob dans deux onglets, ping affiché, arrivées et départs journalisés,
+  `?protocol=0` mène à l'écran « Recharger ».
+- Écarts par rapport à la fiche :
+  - Événements `session.authenticated` / `session.closed` : le module `players` y crée et retire le joueur.
+  - Composant d'entité `player` (nom).
+  - Tests du client (Vitest) en plus.
+  - Fonctionnement Git : une branche et une PR par étape (`CLAUDE.md`, skill `/etape`). Les commits sont signés
+    Théo Winter.
 
 ### 2026-10-11 — Étape 02 : Serveur : boucle, modules, entités, événements ✅
 - Boucle à pas fixe (50 ms) avec rattrapage borné et mesure du tick (moyenne, maximum, ticks sautés), affichée

@@ -20,7 +20,9 @@ Facultatif : copier `apps/server/.env.example` en `apps/server/.env` et `apps/cl
 pnpm dev
 ```
 
-- Client : <http://localhost:5173> (le bandeau en haut indique « Connecté » quand le serveur répond).
+- Client : <http://localhost:5173>. En attendant les comptes, un écran de connexion de développement demande un
+  pseudo. `pnpm dev` active ce mode via `apps/server/.env.development` (`DEV_AUTH=1`). Ensuite, le bandeau du haut
+  affiche « Connecté » et le ping.
 - Serveur : <http://localhost:3000/health> ; WebSocket sur `ws://localhost:3000/ws`.
 
 ## Commandes
