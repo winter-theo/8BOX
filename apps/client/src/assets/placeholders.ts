@@ -1,17 +1,8 @@
+import { OBJECT_PLACEHOLDERS } from './objectPlaceholders';
 import { PALETTE, type PaletteColor } from './palette';
+import { type Legend, type Placeholder, pixelSprite } from './pixelSprite';
 
-/** Sets one pixel of a sprite. */
-export type Paint = (x: number, y: number, color: PaletteColor) => void;
-
-export interface Placeholder {
-  /** In pixels. */
-  width: number;
-  height: number;
-  /** Relative frequency of each variant (its length is the number of variants). */
-  weights: readonly number[];
-  /** Draws variant `variant` (0 to weights.length - 1). Pixels left unpainted stay transparent. */
-  draw(paint: Paint, variant: number): void;
-}
+export type { Paint, Placeholder } from './pixelSprite';
 
 const TILE = 8;
 const P = PALETTE;
@@ -27,35 +18,6 @@ export function pickVariant(placeholder: Placeholder, n: number): number {
     }
   }
   return 0;
-}
-
-// ─── Pixel maps ───────────────────────────────────────────────────────────────
-// One string per row, one character per pixel, mapped to a color by a legend ('.' = transparent).
-
-type Legend = Readonly<Record<string, PaletteColor>>;
-
-interface PixelMap {
-  weight: number;
-  rows: readonly string[];
-}
-
-function pixelSprite(legend: Legend, maps: readonly PixelMap[]): Placeholder {
-  return {
-    width: TILE,
-    height: TILE,
-    weights: maps.map((map) => map.weight),
-    draw(paint, variant) {
-      const rows = maps[variant]?.rows ?? maps[0]?.rows ?? [];
-      rows.forEach((row, y) => {
-        for (let x = 0; x < row.length; x++) {
-          const color = legend[row[x] ?? '.'];
-          if (color) {
-            paint(x, y, color);
-          }
-        }
-      });
-    },
-  };
 }
 
 const GRASS: Legend = {
@@ -632,6 +594,7 @@ const PLACEHOLDERS: Record<string, Placeholder> = {
   'ground.sand': sand,
   'ground.shallow_water': shallowWater,
   'ground.deep_water': deepWater,
+  ...OBJECT_PLACEHOLDERS,
 };
 for (const [id, style] of Object.entries(EDGE_STYLES)) {
   for (const side of SIDES) {

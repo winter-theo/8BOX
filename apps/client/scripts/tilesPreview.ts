@@ -1,6 +1,6 @@
 /**
- * Renders the ground art without the game: a sheet of every placeholder sprite and variant, and a piece
- * of a generated map drawn exactly like the game does (variants, patches, edges).
+ * Renders the art without the game: a sheet of every placeholder sprite and variant, and a piece of a
+ * generated map drawn like the game does (ground variants, patches, edges, then objects sorted by Y).
  * Usage: pnpm tools:tiles [seed]
  */
 import { writeFileSync } from 'node:fs';
@@ -20,6 +20,7 @@ import {
 } from '@8box/shared';
 import { PNG } from 'pngjs';
 import { type GroundLookup, planGroundTile } from '../src/assets/groundArt';
+import { objectVariant } from '../src/assets/objectArt';
 import {
   MISSING_PLACEHOLDER,
   type Placeholder,
@@ -27,6 +28,7 @@ import {
   placeholderFor,
   placeholderIds,
 } from '../src/assets/placeholders';
+import { objectAnchor } from '../src/phaser/depth';
 
 const TILE = WORLD.tileSizePx;
 /** Screen pixels per art pixel in the preview images. */
@@ -76,17 +78,22 @@ class Canvas {
   }
 }
 
-/** One row per sprite id, one cell per variant. */
+/** One row per sprite id (as tall as its sprite), one cell per variant. */
 function renderSheet(file: string): void {
   const ids = placeholderIds();
-  const cell = TILE * SHEET_SCALE + 4;
-  const columns = Math.max(...ids.map((id) => placeholderFor(id)?.weights.length ?? 1));
-  const canvas = new Canvas(columns * cell + 4, ids.length * cell + 4);
-  ids.forEach((id, row) => {
-    const placeholder = placeholderFor(id) ?? MISSING_PLACEHOLDER;
+  const placeholders = ids.map((id) => placeholderFor(id) ?? MISSING_PLACEHOLDER);
+  const gap = 4;
+  const cell = TILE * SHEET_SCALE + gap;
+  const columns = Math.max(...placeholders.map((placeholder) => placeholder.weights.length));
+  const rowHeights = placeholders.map((placeholder) => placeholder.height * SHEET_SCALE + gap);
+  const height = rowHeights.reduce((sum, rowHeight) => sum + rowHeight, gap);
+  const canvas = new Canvas(columns * cell + gap, height);
+  let y = gap;
+  placeholders.forEach((placeholder, row) => {
     placeholder.weights.forEach((_, variant) => {
-      canvas.sprite(placeholder, variant, 4 + variant * cell, 4 + row * cell, SHEET_SCALE);
+      canvas.sprite(placeholder, variant, gap + variant * cell, y, SHEET_SCALE);
     });
+    y += rowHeights[row] ?? 0;
   });
   canvas.save(file);
   process.stdout.write(`sheet: ${ids.length} sprites → ${file}\n`);
@@ -116,6 +123,14 @@ function renderMap(seed: number, file: string): void {
       ground: tileOfCode(content, chunk.ground[index] ?? 0)?.sprite,
       floor: tileOfCode(content, chunk.floor[index] ?? 0)?.sprite,
     };
+  };
+
+  const objectAt = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= size || y >= size) {
+      return undefined;
+    }
+    const chunk = chunkAt(chunkCoord(x), chunkCoord(y));
+    return tileOfCode(content, chunk.object[tileIndex(localCoord(x), localCoord(y))] ?? 0)?.sprite;
   };
 
   // Pick the excerpt with the most kinds of ground, preferring the spawn on ties.
@@ -152,6 +167,20 @@ function renderMap(seed: number, file: string): void {
             const variant = pickVariant(placeholder, draw.variant);
             canvas.sprite(placeholder, variant, tx * TILE * scale, ty * TILE * scale, scale);
           }
+        }
+      }
+    }
+    // Objects row by row, top to bottom: the order of their depth in the game.
+    for (let ty = 0; ty < heightTiles; ty++) {
+      for (let tx = 0; tx < widthTiles; tx++) {
+        const sprite = objectAt(x0 + tx, y0 + ty);
+        const placeholder = sprite === undefined ? undefined : placeholderFor(sprite);
+        if (placeholder) {
+          const variant = pickVariant(placeholder, objectVariant(x0 + tx, y0 + ty));
+          const anchor = objectAnchor(tx, ty);
+          const left = (anchor.x - placeholder.width / 2) * scale;
+          const top = (anchor.y - placeholder.height) * scale;
+          canvas.sprite(placeholder, variant, left, top, scale);
         }
       }
     }
