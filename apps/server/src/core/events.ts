@@ -1,5 +1,6 @@
 import { TypedEmitter } from '@8box/shared';
 import type { Session } from '../net/session';
+import type { TileChange } from '../world/World';
 import type { EntityId, EntityType } from './entities';
 
 /**
@@ -22,6 +23,8 @@ export type ServerEvents = {
   'player.joined': { entity: EntityId; name: string };
   /** A player left the world; their entity is already removed. */
   'player.left': { entity: EntityId; name: string; reason: string };
+  /** A tile slot of the world changed (`World.setTile`). */
+  'tile.changed': TileChange;
 };
 
 /** Synchronous typed bus: `emit` returns once every listener has run. */

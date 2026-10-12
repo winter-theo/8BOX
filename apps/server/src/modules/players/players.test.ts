@@ -25,7 +25,7 @@ describe('players module', () => {
     const entity = client.session.player?.entity ?? -1;
     expect(client.last()).toEqual({
       t: 'welcome',
-      you: { entity, name: 'Ana' },
+      you: { entity, name: 'Ana', position: spawnPosition(ctx.world) },
       tick: 0,
     });
     expect(ctx.entities.typeOf(entity)).toBe('player');

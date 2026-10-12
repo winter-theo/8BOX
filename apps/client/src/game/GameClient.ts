@@ -1,12 +1,16 @@
 import {
   type ClientMessage,
+  type Content,
   decodeServerMessage,
   encodeMessage,
   NET,
   PROTOCOL_VERSION,
   type ServerMessage,
+  VIEW,
 } from '@8box/shared';
 import { useSessionStore } from '../store/session';
+import type { ClientEventBus } from './events';
+import { ChunkCache } from './world/ChunkCache';
 
 export function toWebSocketUrl(serverUrl: string): string {
   const url = new URL('/ws', serverUrl);
@@ -17,6 +21,8 @@ export function toWebSocketUrl(serverUrl: string): string {
 export interface GameClientOptions {
   /** Base HTTP URL of the server. */
   serverUrl: string;
+  content: Content;
+  bus: ClientEventBus;
   /** Version sent in `hello` (only changed in dev, to test the "outdated" screen). */
   protocolVersion?: number;
   /** Creates the socket (tests pass a fake one). */
@@ -26,10 +32,13 @@ export interface GameClientOptions {
 }
 
 /**
- * Connection to the game server: handshake, ping, and reconnection with a growing delay.
- * Pure TypeScript; it publishes its state in the session store.
+ * Connection to the game server: handshake, ping, reconnection with a growing delay, and the world
+ * streamed by the server. Pure TypeScript: it publishes to Phaser through the event bus and to React
+ * through the session store.
  */
 export class GameClient {
+  /** Chunks received from the server. */
+  readonly chunks: ChunkCache;
   private readonly createSocket: (url: string) => WebSocket;
   private readonly now: () => number;
   private socket: WebSocket | undefined;
@@ -37,12 +46,32 @@ export class GameClient {
   private attempt = 0;
   /** True when no reconnection must happen (rejected or left on purpose). */
   private stopped = true;
+  private online = false;
+  private view: { w: number; h: number; zoom: number } | undefined;
   private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
+  private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly options: GameClientOptions) {
     this.createSocket = options.createSocket ?? ((url) => new WebSocket(url));
     this.now = options.now ?? (() => performance.now());
+    this.chunks = new ChunkCache(options.content, options.bus);
+    const { bus } = options;
+    bus.on('view.changed', (view) => {
+      this.view = view;
+      if (this.online) {
+        this.send({ t: 'viewport', ...view });
+      }
+    });
+    bus.on('debugCamera.moved', ({ x, y }) => {
+      useSessionStore.setState({ debugCamera: { x, y } });
+      if (this.online) {
+        this.send({ t: 'debugCamera', x, y });
+      }
+    });
+    for (const event of ['chunk.loaded', 'chunk.unloaded'] as const) {
+      bus.on(event, () => this.syncUiSoon());
+    }
   }
 
   /** Joins the game with a dev name. */
@@ -59,9 +88,9 @@ export class GameClient {
   disconnect(): void {
     this.stopped = true;
     clearTimeout(this.reconnectTimer);
-    this.stopPing();
     const socket = this.socket;
     this.socket = undefined;
+    this.goOffline();
     socket?.close(1000, 'left');
     useSessionStore.setState({ status: 'idle', player: null, pingMs: null, rejectReason: null });
   }
@@ -85,11 +114,18 @@ export class GameClient {
 
   private handle(message: ServerMessage): void {
     switch (message.t) {
-      case 'welcome':
+      case 'welcome': {
+        const { entity, name, position } = message.you;
         this.attempt = 0;
-        useSessionStore.setState({ status: 'online', player: message.you });
+        this.online = true;
+        useSessionStore.setState({ status: 'online', player: { entity, name } });
+        if (this.view) {
+          this.send({ t: 'viewport', ...this.view });
+        }
+        this.options.bus.emit('player.spawned', { position });
         this.startPing();
         return;
+      }
       case 'pong':
         useSessionStore.setState({ pingMs: Math.round(this.now() - message.time) });
         return;
@@ -102,6 +138,15 @@ export class GameClient {
           player: null,
         });
         return;
+      case 'chunk':
+        this.chunks.load(message);
+        return;
+      case 'chunkUnload':
+        this.chunks.unload(message.layer, message.cx, message.cy);
+        return;
+      case 'tileUpdate':
+        this.chunks.applyTileUpdate(message);
+        return;
     }
   }
 
@@ -110,7 +155,7 @@ export class GameClient {
       return; // An older socket, already replaced.
     }
     this.socket = undefined;
-    this.stopPing();
+    this.goOffline();
     useSessionStore.setState({ pingMs: null });
     if (this.stopped) {
       return;
@@ -119,6 +164,13 @@ export class GameClient {
     this.attempt++;
     useSessionStore.setState({ status: 'reconnecting', player: null });
     this.reconnectTimer = setTimeout(() => this.open(), delay);
+  }
+
+  /** Connection lost or left: stop pinging and forget the world (the server sends it again). */
+  private goOffline(): void {
+    this.online = false;
+    this.stopPing();
+    this.chunks.clear();
   }
 
   private startPing(): void {
@@ -131,6 +183,17 @@ export class GameClient {
   private stopPing(): void {
     clearInterval(this.pingTimer);
     this.pingTimer = undefined;
+  }
+
+  /** Publishes the chunk count to the UI, a few times per second at most. */
+  private syncUiSoon(): void {
+    if (this.uiSyncTimer !== undefined) {
+      return;
+    }
+    this.uiSyncTimer = setTimeout(() => {
+      this.uiSyncTimer = undefined;
+      useSessionStore.setState({ loadedChunks: this.chunks.size });
+    }, VIEW.uiSyncIntervalMs);
   }
 
   private send(message: ClientMessage): void {

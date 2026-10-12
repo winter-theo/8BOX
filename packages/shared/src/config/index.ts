@@ -14,6 +14,7 @@ import { PERSISTENCE } from './persistence';
 import { PLAYER } from './player';
 import { SURVIVAL } from './survival';
 import { TIME } from './time';
+import { VIEW } from './view';
 import { WORLD } from './world';
 import { WORLDGEN } from './worldgen';
 
@@ -35,6 +36,7 @@ export {
   PLAYER,
   SURVIVAL,
   TIME,
+  VIEW,
   WORLD,
   WORLDGEN,
 };
@@ -57,6 +59,7 @@ export const CONFIG = {
   player: PLAYER,
   survival: SURVIVAL,
   time: TIME,
+  view: VIEW,
   world: WORLD,
   worldgen: WORLDGEN,
 } as const;

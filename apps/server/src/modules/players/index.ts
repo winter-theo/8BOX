@@ -17,11 +17,9 @@ export const playersModule: GameModule = {
       if (name === undefined) {
         return;
       }
-      const entity = ctx.entities.create('player', {
-        position: spawnPosition(ctx.world),
-        player: { name },
-      });
-      session.player = { entity, name };
+      const position = spawnPosition(ctx.world);
+      const entity = ctx.entities.create('player', { position, player: { name } });
+      session.player = { entity, name, position: { ...position } };
       ctx.log.info({ name, entity, session: session.id }, 'player joined');
       ctx.events.emit('player.joined', { entity, name });
     });

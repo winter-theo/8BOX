@@ -86,8 +86,53 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   ignorées par git.
 - (04) `createTestContext()` utilise par défaut un petit monde de 64 × 64 cases (graine 1), pour que les tests
   restent rapides.
+- (05) Message `chunk` : une palette d'ids de case propre au chunk, puis 1 octet par case et par emplacement (2 si la
+  palette dépasse 256). Cela fait environ 3 Ko par chunk, soit environ 50 Ko pour les 16 chunks du départ au
+  zoom 4. Pas de compression pour l'instant (permessage-deflate possible plus tard, voir §16).
+- (05) Intérêt :
+  - zone visible calculée depuis le viewport (pixels CSS / (zoom × 8)), plus 1 chunk d'avance ;
+  - un chunk n'est libéré qu'à 1 chunk au-delà, pour éviter le clignotement en bordure ;
+  - plafond de 3 chunks autour du chunk central ;
+  - 4 chunks envoyés par tick et par client au plus, les plus proches d'abord.
+- (05) Caméra de debug, en mode dev seulement :
+  - message `debugCamera` ; le serveur centre alors la diffusion sur la caméra au lieu du joueur ;
+  - flèches à 40 cases/s ;
+  - zoom de 1 à 8 (4 au départ), avec + / - (selon le symbole imprimé, `event.key`) ou la molette.
+- (05) Placeholders aux couleurs PICO-8 : l'herbe est donc d'un vert vif. À remplacer par la palette tirée de
+  `ref/` (un seul fichier : `apps/client/src/assets/palette.ts`).
+- (05) Atlas : chargé seulement si `assets/atlas.json` existe (requête HEAD au démarrage). Les noms de frames sont
+  les ids de sprite du contenu (`ground.grass`…). Le design parle de `tile.grass`, mais j'ai gardé les ids du
+  contenu.
+- (05) `PROTOCOL_VERSION` passe à 2 (`welcome` donne la position du joueur, et de nouveaux messages sont apparus).
+- (05) Les objets (arbres, fleurs, buissons) ne sont pas encore dessinés : c'est l'étape 06.
 
 ## Historique
+
+### 2026-10-12 — Étape 05 : Chunks, diffusion et rendu du sol ✅
+- Protocole 2 :
+  - côté client : `viewport` et `debugCamera` (dev) ;
+  - côté serveur : `chunk` (palette d'ids et tableaux compacts), `chunkUnload`, `tileUpdate` ; `welcome` donne la
+    position du joueur.
+- Serveur :
+  - calcul d'intérêt pur (`net/interest.ts`) ;
+  - module `chunks` : diffusion des chunks proches, libération des lointains, et `tileUpdate` sur l'événement
+    `tile.changed` émis par le `World`.
+- Client :
+  - `EventBus` typé et `ChunkCache`, branchés dans `GameClient` ;
+  - registre d'assets : l'atlas s'il existe, sinon des placeholders PICO-8 à variantes ;
+  - sol rendu avec une texture canvas par chunk, posée au pixel près.
+- Caméra de debug (flèches, + / - ou molette) et encart d'infos dev (chunks chargés, position de la caméra).
+- Vérifié dans le navigateur :
+  - sol visible autour du spawn ;
+  - en déplaçant la caméra de 10 chunks, le nombre de chunks chargés reste stable (20) : les lointains sont
+    libérés ;
+  - pixels nets aux zooms 1, 4 et 8, sans couture ;
+  - aucune erreur dans la console.
+- Écarts par rapport à la fiche :
+  - En plus de la fiche : message `debugCamera`, nécessaire pour que le serveur suive la caméra libre, et message
+    `chunkUnload`.
+  - Événement serveur `tile.changed`.
+  - Encart d'infos dev.
 
 ### 2026-10-11 — Étape 04 : Génération du monde de surface ✅
 - `shared/world` : couches, coordonnées de case et de chunk, `Chunk` (3 `Uint16Array` + `meta`), codes de case.

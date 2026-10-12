@@ -1,6 +1,8 @@
 import { DAY_MS } from './units';
 
 export const WORLD = {
+  /** Side of a tile in the pixel art, in pixels. */
+  tileSizePx: 8,
   /** Width and height of a layer, in tiles. */
   layerSizeTiles: 1024,
   /** Width and height of a chunk, in tiles. */

@@ -63,6 +63,11 @@ export class NetServer {
     );
   }
 
+  /** Whether dev logins and dev tools (debug camera) are allowed. */
+  get devAuth(): boolean {
+    return this.options.devAuth;
+  }
+
   get sessionCount(): number {
     return this.sessions.size;
   }
@@ -246,7 +251,7 @@ export class NetServer {
     session.state = 'playing';
     this.send(session, {
       t: 'welcome',
-      you: { entity: session.player.entity, name: session.player.name },
+      you: { ...session.player },
       tick: this.options.scheduler.currentTick,
     });
   }

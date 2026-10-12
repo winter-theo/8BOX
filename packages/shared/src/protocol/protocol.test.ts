@@ -15,10 +15,19 @@ const clientMessages: ClientMessage[] = [
   { t: 'hello', version: PROTOCOL_VERSION },
   { t: 'ping', time: 123456.789 },
   { t: 'input' },
+  { t: 'viewport', w: 1280, h: 720, zoom: 4 },
+  { t: 'debugCamera', x: 512.5, y: 498.25 },
 ];
 
 const serverMessages: ServerMessage[] = [
-  { t: 'welcome', you: { entity: 7, name: 'Ana_42' }, tick: 1200 },
+  {
+    t: 'welcome',
+    you: { entity: 7, name: 'Ana_42', position: { layer: 0, x: 512.5, y: 512.5 } },
+    tick: 1200,
+  },
+  { t: 'chunkUnload', layer: 0, cx: 3, cy: 4 },
+  { t: 'tileUpdate', layer: 0, x: 10, y: 20, slot: 'object', tile: 'base:flowers' },
+  { t: 'tileUpdate', layer: 0, x: 10, y: 20, slot: 'object', tile: null },
   { t: 'rejected', reason: 'outdated' },
   { t: 'pong', time: 123456.789 },
 ];
@@ -81,6 +90,20 @@ describe('isValidPlayerName', () => {
   it('rejects other names', () => {
     for (const name of ['Al', 'a'.repeat(17), 'Théo', 'with space', 'semi;colon', '']) {
       expect(isValidPlayerName(name), name).toBe(false);
+    }
+  });
+});
+
+describe('viewport and debugCamera messages', () => {
+  it('reject sizes and zooms out of range', () => {
+    for (const bad of [
+      { t: 'viewport', w: 0, h: 720, zoom: 4 },
+      { t: 'viewport', w: 1280, h: 100_000, zoom: 4 },
+      { t: 'viewport', w: 1280, h: 720, zoom: 2.5 },
+      { t: 'viewport', w: 1280, h: 720, zoom: 99 },
+      { t: 'debugCamera', x: 'left', y: 0 },
+    ]) {
+      expect(parseClientMessage(encode(bad)).ok, JSON.stringify(bad)).toBe(false);
     }
   });
 });
