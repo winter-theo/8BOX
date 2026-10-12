@@ -28,7 +28,7 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   Exemples : outils et épée en bois, PV des murs, monstres, nourriture (baies +2 et pomme +4, déjà dans `items.json`).
   La torche prendra `LIGHT.defaultRadiusTiles` (6).
 - (01) Le ralentissement en eau peu profonde (× 0,5) reste dans `PLAYER.shallowWaterSpeedFactor`. On pourra le
-  passer dans la case `base:shallow_water` à l'étape 07.
+  passer dans la case `base:shallow_water` à l'étape 07 (fait : champ `speedFactor`).
 - (01) Régénération « tous les 7 jours » : comprise comme 7 jours réels (`WORLD.regenerationIntervalMs`).
 - (01) Pseudo : lettres ASCII seulement (sans accents), chiffres et `_`.
 - (01) Recettes : un champ `id` a été ajouté. Une station est un id (`base:workbench`) fourni par une case (champ
@@ -140,8 +140,61 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   Rendre à la résolution de l'écran reste à étudier.
 - (06) Phaser rejoue les touches d'une même image à chaque nouvel événement clavier. Les touches de zoom passent
   donc par les événements DOM de `window`.
+- (07) Ralentissement : nouveau champ de contenu `speedFactor` sur les cases (0,5 sur l'eau peu profonde).
+  `PLAYER.shallowWaterSpeedFactor` est supprimé. Si un sol est posé (`floor`), c'est son facteur qui compte.
+- (07) Boîte de collision : carré de 0,6 case centré sur les pieds. En 3/4, le personnage se tient devant un tronc
+  (il le recouvre) ou derrière (le feuillage le cache).
+- (07) Directions : `dir` vaut 0 à l'arrêt, puis 1 à 8 dans le sens horaire en partant du haut. Regard :
+  - c'est la dernière direction de déplacement, et il change même contre un obstacle ;
+  - en diagonale, il garde son côté actuel s'il fait partie de la diagonale, sinon il prend le côté horizontal.
+- (07) Inputs :
+  - le client en envoie 20 par seconde seulement en marchant, plus un input « à l'arrêt » quand il s'arrête ;
+  - le serveur en applique un par tick. La file est bornée à 4 (`NET.maxQueuedInputs`) : au-delà, les plus
+    anciens sont jetés. Un `seq` répété ou en retard est ignoré ;
+  - un tick sans input ne fait pas bouger : pas d'extrapolation. Avec de la gigue réseau, le mouvement peut donc
+    saccader. La prédiction et l'interpolation (08) lisseront.
+- (07) `snapshot` part à chaque tick vers chaque joueur, même sans changement (environ 40 octets). Les autres
+  entités viendront à l'étape 08. `PROTOCOL_VERSION` passe à 3. `debugCamera` devient `{ at }`, avec `at: null`
+  pour revenir au joueur.
+- (07) Sans prédiction, le joueur avance par pas d'un quart de case toutes les 50 ms : c'est visible, et attendu
+  jusqu'à l'étape 08. La caméra le suit sans lissage.
+- (07) Mode dev :
+  - F2 active ou coupe la caméra libre (flèches, Maj pour aller lentement). Pendant ce temps, le joueur ne bouge
+    pas ;
+  - le personnage de test de l'étape 06 disparaît ;
+  - l'encart dev affiche la position du joueur.
+- (07) Les flèches n'agissent plus sur la page (`preventDefault`) : sinon elles la feraient défiler.
+- (07) FPS : le panneau du navigateur intégré, caché, ralentit les minuteurs. La mesure va de 37 à 61 FPS, mais
+  une image ne coûte que 1,7 ms en moyenne (2,3 ms au plus) avec environ 5 500 sprites. **À confirmer sur ton PC.**
 
 ## Historique
+
+### 2026-10-12 — Étape 07 : Déplacement autoritaire et collisions ✅
+- `shared/sim/movement.ts` : `stepMovement` déterministe, testé (coin, glissement, diagonales, vitesse constante,
+  trou d'une case, bord de la carte, pas de traversée même en un grand pas) :
+  - 8 directions, diagonales normalisées ;
+  - collisions axe par axe, donc glissement le long des obstacles ;
+  - vitesse multipliée par la case sous les pieds.
+- Serveur, module `movement` :
+  - un input par tick et par joueur, file bornée ;
+  - met à jour la position, le regard et l'index spatial ; les chunks suivent le joueur (testé sur deux chunks) ;
+  - `snapshot { tick, ackSeq, you }` à chaque tick ;
+  - inonder d'inputs ne fait pas aller plus vite (testé).
+- Client :
+  - touches lues par `event.code` (WASD/ZQSD et flèches), inputs à 20 Hz ;
+  - personnage en 3 frames, retourné vers la gauche ;
+  - la caméra suit le joueur. La caméra libre (F2) n'existe qu'en dev.
+- Vérifié dans le navigateur :
+  - 5 cases en 1 s ;
+  - arrêt contre un arbre (x = 518,70, la boîte touche la case 519) ;
+  - glissement le long de l'arbre, puis caché derrière le feuillage de l'arbre du dessous ;
+  - F2 coupe la marche et la rend ;
+  - aucune erreur dans la console.
+- Écarts par rapport à la fiche :
+  - ralentissement dans le contenu (`speedFactor`) plutôt que dans la config ;
+  - événements client `player.moved`, `player.despawned`, `input.direction`, et composant serveur `facing` ;
+  - `debugCamera` peut se couper ;
+  - position du joueur dans l'encart dev.
 
 ### 2026-10-12 — Étape 06 : Vue 3/4, profondeur, caméra et zoom ✅
 - Objets en 3/4 : un sprite par objet, ancré en bas de sa case. Les objets hauts (8 × 16) dépassent sur la case du

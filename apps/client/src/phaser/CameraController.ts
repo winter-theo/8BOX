@@ -46,6 +46,15 @@ export class CameraController {
     this.camera.startFollow(target, true);
   }
 
+  stopFollow(): void {
+    this.camera.stopFollow();
+  }
+
+  /** Center of the view, in tiles. */
+  center(): { x: number; y: number } {
+    return { x: this.camera.midPoint.x / TILE_PX, y: this.camera.midPoint.y / TILE_PX };
+  }
+
   /** Centers the view on a position in tiles, when there is no target to follow. */
   centerOn(position: { x: number; y: number }): void {
     this.camera.centerOn(position.x * TILE_PX, position.y * TILE_PX);

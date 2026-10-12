@@ -14,8 +14,16 @@ export class EntityLayer {
     private readonly textures: SpriteTextures,
   ) {}
 
-  /** Shows an entity or moves it; `position` is in tiles (its feet). Returns its sprite. */
-  set(id: number, sprite: string, position: { x: number; y: number }): Phaser.GameObjects.Image {
+  /**
+   * Shows an entity or moves it; `position` is in tiles (its feet), `flipX` mirrors the sprite.
+   * Returns its sprite.
+   */
+  set(
+    id: number,
+    sprite: string,
+    position: { x: number; y: number },
+    flipX = false,
+  ): Phaser.GameObjects.Image {
     let entry = this.sprites.get(id);
     if (!entry) {
       const { key, frame } = this.textures.frame(sprite);
@@ -27,7 +35,11 @@ export class EntityLayer {
       entry.sprite = sprite;
     }
     const anchor = entityAnchor(position);
-    return entry.image.setPosition(anchor.x, anchor.y).setDepth(sortDepth(anchor.y, 'entity'));
+    const depth = sortDepth(anchor.y, 'entity');
+    if (entry.image.depth !== depth) {
+      entry.image.setDepth(depth); // Setting it sorts the whole display list again.
+    }
+    return entry.image.setPosition(anchor.x, anchor.y).setFlipX(flipX);
   }
 
   remove(id: number): void {

@@ -1,4 +1,10 @@
-import { type Chunk, type TileSlot, TypedEmitter, type WorldPosition } from '@8box/shared';
+import {
+  type Chunk,
+  type Facing,
+  type TileSlot,
+  TypedEmitter,
+  type WorldPosition,
+} from '@8box/shared';
 
 /**
  * Events between the game layer, Phaser and React: they never import each other's components, they
@@ -11,12 +17,18 @@ export type ClientEvents = {
   'chunk.unloaded': { layer: number; cx: number; cy: number };
   /** A slot of tile (x, y) of a loaded chunk changed: redraw that tile. */
   'tile.changed': { chunk: Chunk; x: number; y: number; slot: TileSlot };
-  /** The local player joined the world. */
-  'player.spawned': { position: WorldPosition };
+  /** The local player joined the world (`entity` is only valid for this connection). */
+  'player.spawned': { entity: number; position: WorldPosition };
+  /** The local player left the world (connection lost or left). */
+  'player.despawned': Record<string, never>;
+  /** The server moved the local player: feet position in tiles, and facing. */
+  'player.moved': { x: number; y: number; facing: Facing };
+  /** Phaser → game: movement direction held on the keyboard (an index of `DIRECTIONS`, 0 = still). */
+  'input.direction': { dir: number };
   /** Phaser → game: size of the game view, in CSS pixels, and camera zoom. */
   'view.changed': { w: number; h: number; zoom: number };
-  /** Phaser → game (dev mode): position of the test character followed by the camera, in tiles. */
-  'debugCamera.moved': { x: number; y: number };
+  /** Phaser → game (dev mode): center of the free camera in tiles, or null when it follows the player. */
+  'debugCamera.moved': { at: { x: number; y: number } | null };
   /** Phaser → game (dev mode): frames per second, camera zoom and object sprites shown. */
   'debug.stats': DebugStats;
 };

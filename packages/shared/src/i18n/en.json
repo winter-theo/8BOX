@@ -28,8 +28,9 @@
       "chunks_one": "{{count}} chunk loaded",
       "chunks_other": "{{count}} chunks loaded",
       "stats": "{{fps}} FPS · zoom ×{{zoom}} · {{objects}} objects",
-      "camera": "test character: {{x}}, {{y}}",
-      "controls": "Arrows: test character (Shift: slowly) · + / -: zoom"
+      "player": "player: {{x}}, {{y}}",
+      "camera": "free camera: {{x}}, {{y}}",
+      "controls": "WASD or arrows: walk · + / -: zoom · F2: free camera (arrows, Shift: slowly)"
     },
     "language": {
       "label": "Language",

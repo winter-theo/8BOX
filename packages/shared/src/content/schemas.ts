@@ -26,6 +26,8 @@ export const tileDefSchema = z.strictObject({
   sprite: spriteIdSchema,
   /** Blocks movement. */
   solid: z.boolean(),
+  /** Speed multiplier of whoever walks on it (shallow water: 0.5); absent means 1. */
+  speedFactor: z.number().positive().max(1).optional(),
   /** Drawn taller than a tile and depth-sorted with entities (trees, walls). */
   tall: z.boolean(),
   /** Hit points; 0 means it cannot be broken. */

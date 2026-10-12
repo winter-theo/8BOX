@@ -1,4 +1,4 @@
-import { chunkCoord } from '@8box/shared';
+import { chunkCoord, type Facing } from '@8box/shared';
 import type { EventBus } from './events';
 import { type ChunkRef, type Position, SpatialIndex } from './spatial';
 
@@ -18,6 +18,8 @@ export interface Components {
   position: Position;
   /** Entities controlled by a connected player. */
   player: { name: string };
+  /** Last direction moved in (aim and hits). */
+  facing: Facing;
 }
 
 /**

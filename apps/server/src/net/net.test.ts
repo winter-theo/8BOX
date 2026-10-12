@@ -157,9 +157,9 @@ describe('NetServer messages', () => {
     ctx.net.onMessage('input', (session) => inputs.push(session.id));
     const client = connect();
 
-    client.send({ t: 'input' });
+    client.send({ t: 'input', seq: 0, dir: 0 });
     client.send(hello('Ana'));
-    client.send({ t: 'input' });
+    client.send({ t: 'input', seq: 0, dir: 0 });
 
     expect(inputs).toEqual([client.session.id]);
   });
@@ -172,7 +172,7 @@ describe('NetServer messages', () => {
     const client = connect();
     client.send(hello('Ana'));
 
-    expect(() => client.send({ t: 'input' })).not.toThrow();
+    expect(() => client.send({ t: 'input', seq: 0, dir: 0 })).not.toThrow();
     expect(client.session.state).toBe('playing');
   });
 
@@ -187,12 +187,12 @@ describe('NetServer messages', () => {
     const { max, windowMs } = CONFIG.net.rateLimits.input;
 
     for (let i = 0; i < max + 10; i++) {
-      client.send({ t: 'input' });
+      client.send({ t: 'input', seq: 0, dir: 0 });
     }
     expect(inputs).toBe(max);
 
     clock.now += windowMs;
-    client.send({ t: 'input' });
+    client.send({ t: 'input', seq: 0, dir: 0 });
     expect(inputs).toBe(max + 1);
     expect(client.closed).toBeUndefined();
   });

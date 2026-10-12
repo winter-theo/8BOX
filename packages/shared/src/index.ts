@@ -31,6 +31,19 @@ export {
 } from './protocol/codec';
 export * from './protocol/messages';
 export { PROTOCOL_VERSION } from './protocol/version';
+export {
+  createMovementWorld,
+  DIRECTIONS,
+  directionOf,
+  type Facing,
+  facingAfter,
+  MAX_DIRECTION,
+  type MovementConfig,
+  type MovementInput,
+  type MovementWorld,
+  type MoverState,
+  stepMovement,
+} from './sim/movement';
 export { type Listener, TypedEmitter } from './util/events';
 export { createRng, hashCoords, hashSeed, parseSeed, type Rng } from './util/rng';
 export { Chunk, type TileMeta } from './world/chunk';

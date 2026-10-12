@@ -239,22 +239,11 @@ const woodenDoor = pixelSprite(WOOD, [
 
 const CHARACTER: Legend = { h: P.soilDark, s: P.skin, o: P.ink, c: P.water, p: P.ink };
 
-/** A character facing right, at rest (walk frames come with the player, step 07). */
-const character = pixelSprite(CHARACTER, [
-  {
-    weight: 1,
-    rows: [
-      '..hhhh..',
-      '.hhhhhh.',
-      '.hhssos.',
-      '..ssss..',
-      '.cccccc.',
-      's.cccc.s',
-      '..pppp..',
-      '..p..p..',
-    ],
-  },
-]);
+const HEAD = ['..hhhh..', '.hhhhhh.', '.hhssos.', '..ssss..'];
+
+/** One frame of a character facing right (flipped to face left): head, then body and legs. */
+const characterFrame = (body: readonly string[]) =>
+  pixelSprite(CHARACTER, [{ weight: 1, rows: [...HEAD, ...body] }]);
 
 /** Placeholders of the objects and characters, by sprite id. */
 export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
@@ -264,5 +253,7 @@ export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.flowers': flowers,
   'obj.wooden_wall': woodenWall,
   'obj.wooden_door': woodenDoor,
-  'char.default': character,
+  'char.default.idle': characterFrame(['.cccccc.', 's.cccc.s', '..pppp..', '..p..p..']),
+  'char.default.walk1': characterFrame(['.cccccs.', 's.cccc..', '..pppp..', '.pp..pp.']),
+  'char.default.walk2': characterFrame(['.cccccc.', '.scccs..', '..pppp..', '...pp...']),
 };
