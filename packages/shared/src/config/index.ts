@@ -1,16 +1,74 @@
-export { BUILDING } from './building';
-export { CHAT } from './chat';
-export { COMBAT } from './combat';
-export { CRAFTING } from './crafting';
-export { HARVEST } from './harvest';
-export { INTERACTION } from './interaction';
-export { INVENTORY } from './inventory';
-export { LIGHT } from './light';
-export { MONSTERS } from './monsters';
-export { NET } from './net';
-export { PERSISTENCE } from './persistence';
-export { PLAYER } from './player';
-export { SURVIVAL } from './survival';
-export { TIME } from './time';
+import { BUILDING } from './building';
+import { CHAT } from './chat';
+import { COMBAT } from './combat';
+import { CRAFTING } from './crafting';
+import { DEBUG } from './debug';
+import { HARVEST } from './harvest';
+import { INTERACTION } from './interaction';
+import { INVENTORY } from './inventory';
+import { LIGHT } from './light';
+import { LOOP } from './loop';
+import { MONSTERS } from './monsters';
+import { NET } from './net';
+import { PERSISTENCE } from './persistence';
+import { PLAYER } from './player';
+import { SURVIVAL } from './survival';
+import { TIME } from './time';
+import { WORLD } from './world';
+
 export { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from './units';
-export { WORLD } from './world';
+export {
+  BUILDING,
+  CHAT,
+  COMBAT,
+  CRAFTING,
+  DEBUG,
+  HARVEST,
+  INTERACTION,
+  INVENTORY,
+  LIGHT,
+  LOOP,
+  MONSTERS,
+  NET,
+  PERSISTENCE,
+  PLAYER,
+  SURVIVAL,
+  TIME,
+  WORLD,
+};
+
+/** Every config section, e.g. `CONFIG.player.speedTilesPerSecond` (the server context exposes it). */
+export const CONFIG = {
+  building: BUILDING,
+  chat: CHAT,
+  combat: COMBAT,
+  crafting: CRAFTING,
+  debug: DEBUG,
+  harvest: HARVEST,
+  interaction: INTERACTION,
+  inventory: INVENTORY,
+  light: LIGHT,
+  loop: LOOP,
+  monsters: MONSTERS,
+  net: NET,
+  persistence: PERSISTENCE,
+  player: PLAYER,
+  survival: SURVIVAL,
+  time: TIME,
+  world: WORLD,
+} as const;
+
+/** Literal types widened (`20` → `number`), so another config (tests) can be passed. */
+type Widen<T> = T extends boolean
+  ? boolean
+  : T extends number
+    ? number
+    : T extends string
+      ? string
+      : T extends RegExp
+        ? RegExp
+        : T extends readonly (infer U)[]
+          ? readonly Widen<U>[]
+          : { readonly [K in keyof T]: Widen<T[K]> };
+
+export type GameConfig = Widen<typeof CONFIG>;

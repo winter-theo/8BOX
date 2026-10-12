@@ -10,6 +10,7 @@
   "dependencies": {
     "@8box/shared": "workspace:*",
     "fastify": "^5.12.5",
+    "pino": "^10.4.0",
     "ws": "^8.22.0",
     "zod": "^4.6.5"
   },
