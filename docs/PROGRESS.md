@@ -3,16 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 08 — Prédiction, interpolation, multijoueur
-- [ ] Protocole 4 et serveur : `snapshot.entities` (entités des chunks abonnés, champs compacts, pseudo à
-  l'apparition, `gone` à la disparition) ; test « pas d'entités hors de ses chunks ».
-- [ ] Client : prédiction avec `stepMovement`, inputs non acquittés, réconciliation (testée), correction douce,
-  rendu lissé entre deux pas.
-- [ ] Client : autres entités interpolées ~100 ms dans le passé (tampon testé), apparition et disparition.
-- [ ] Pseudos au-dessus des têtes en police pixel.
-- [ ] Outil `pnpm tools:bots <n>`.
-- [ ] Latence simulée en dev (`?lag=150`).
-- [ ] Vérification : 150 ms de latence, deux navigateurs et 20 bots, tick serveur moyen < 5 ms.
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -175,8 +166,59 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (07) Les flèches n'agissent plus sur la page (`preventDefault`) : sinon elles la feraient défiler.
 - (07) FPS : le panneau du navigateur intégré, caché, ralentit les minuteurs. La mesure va de 37 à 61 FPS, mais
   une image ne coûte que 1,7 ms en moyenne (2,3 ms au plus) avec environ 5 500 sprites. **À confirmer sur ton PC.**
+- (08) Entités dans `snapshot` : `{ id, kind, x, y, facing, anim }`, plus `name` la première fois seulement, et
+  `gone` quand une entité sort de la vue. Coût : environ 55 octets par entité et par tick (chaînes de caractères,
+  flottants sur 8 octets), soit environ 22 Ko/s par client avec 20 entités visibles. Optimisations possibles plus
+  tard : arrondir les positions, enums numériques, n'envoyer que les changements.
+- (08) « Visible » veut dire « dans un chunk reçu par le client » : jusqu'à 7 × 7 chunks autour de lui, donc
+  au-delà de l'écran.
+- (08) Pseudos : affichés au-dessus des autres joueurs, pas au-dessus de soi. Police pixel 3 × 6 avec contour,
+  dessinée par le code (`assets/pixelFont.ts`) : un pixel de police vaut un pixel du monde, elle suit donc le zoom.
+  Les pseudos passent par-dessus tout, arbres compris.
+- (08) Prédiction :
+  - le premier input part dès l'appui sur une touche, puis 20 par seconde ;
+  - l'affichage glisse d'un pas prédit au suivant, donc avec 50 ms de retard sur la prédiction, mais sans saccade ;
+  - une correction de moins de 2 cases s'efface en douceur (80 ms), une plus grande est appliquée d'un coup ;
+  - un chunk pas encore reçu compte comme solide.
+- (08) Interpolation des autres entités :
+  - 100 ms dans le passé (`NET.interpolationDelayMs`) ;
+  - les instants viennent des ticks du serveur, recalés sur les arrivées les plus rapides : la gigue réseau ne
+    fait pas saccader ;
+  - pas d'extrapolation.
+- (08) `?lag=N` (dev) : N ms d'aller-retour, la moitié dans chaque sens, 2 000 ms au plus.
+- (08) `pnpm tools:bots <n> [url]` : bots nommés `bot_01`, etc. Chacun a une petite vue, change de direction
+  toutes les 0,8 à 3 s et s'arrête une fois sur cinq. Ctrl+C pour les arrêter.
+- (08) Mesuré avec 20 bots et 2 navigateurs : tick serveur moyen d'environ 1 ms (6 ms au plus), aucun tick sauté.
+- (08) Architecture :
+  - le module `movement` n'envoie plus les snapshots : c'est le nouveau module `snapshots` ;
+  - nouveaux composants `anim` et `inputAck` ; la session porte ses chunks abonnés (`session.chunks`) ;
+  - côté client, les événements `player.spawned`, `player.moved` et `player.despawned` disparaissent : Phaser lit
+    `gameClient.localView()` et `remoteViews()` à chaque image.
+- (08) Phaser 4 : `RetroFont.Parse` renvoie l'entrée de cache complète, contrairement à Phaser 3 et à l'exemple de
+  la fiche « skills ».
 
 ## Historique
+
+### 2026-10-12 — Étape 08 : Prédiction, interpolation, multijoueur ✅
+- Protocole 4 :
+  - `snapshot.entities` contient les entités des chunks du client, et jamais les autres (testé) ;
+  - le pseudo arrive avec la première apparition, et `gone` signale les entités sorties de la vue.
+- Client, joueur local :
+  - prédiction immédiate avec `stepMovement` ;
+  - réconciliation, avec rejeu testé après une correction du serveur ;
+  - correction douce et glissé entre deux pas.
+- Client, autres joueurs : interpolation 100 ms dans le passé (testée, résiste à la gigue), et pseudos en police
+  pixel.
+- `pnpm tools:bots <n>` et latence simulée `?lag=N` en dev.
+- Vérifié dans le navigateur :
+  - avec 150 ms de latence (ping affiché 169 ms), la position prédite bouge 53 ms après l'appui, sans jamais
+    reculer ;
+  - deux navigateurs (Ana et Bob) et 20 bots : chacun voit les autres, avec leur pseudo ;
+  - tick serveur moyen d'environ 1 ms.
+- Écarts par rapport à la fiche :
+  - `kind` et `name` envoyés comme indiqué dans les points « À valider » ;
+  - nouveau module serveur `snapshots` ;
+  - le client lit l'état du jeu à chaque image au lieu de passer par des événements.
 
 ### 2026-10-12 — Étape 07 : Déplacement autoritaire et collisions ✅
 - `shared/sim/movement.ts` : `stepMovement` déterministe, testé (coin, glissement, diagonales, vitesse constante,
