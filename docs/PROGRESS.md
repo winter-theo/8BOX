@@ -9,7 +9,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] 3. `EntityStore` (`core/entities.ts`) et index spatial par couche et chunk, tests
 - [x] 4. Catalogue d'événements serveur et bus (`core/events.ts`)
 - [x] 5. Modules (`core/module.ts`) : `GameModule`, ordre par dépendances, systèmes par phase, `ServerContext`, tests
-- [ ] 6. `createTestContext()` et test « un module enregistre un système et réagit à un événement »
+- [x] 6. `createTestContext()` et test « un module enregistre un système et réagit à un événement »
 - [ ] 7. Module `modules/debug/` (nombre d'entités toutes les 10 s, désactivable par config)
 - [ ] 8. Démarrage dans `main.ts`, temps de tick dans `/health`, critères d'acceptation, clôture
 
