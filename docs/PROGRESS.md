@@ -3,14 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 11 — Connexion Google, pseudo et liste blanche
-- [ ] Protocole 5 : `hello { token }`, `setName`, `status`, nouveaux refus ; validation du pseudo avec mots
-  interdits (testée).
-- [ ] Serveur : service des comptes (Clerk simulable), joueurs en base (`pending`, admins de `ADMIN_EMAILS`),
-  poignée de main avec statuts (testée), personnage rattaché à `players.id`, mode dev conservé.
-- [ ] Client : `ClerkProvider`, accueil « Se connecter avec Google », jeton dans `hello`, écrans pseudo / attente /
-  refus / banni, menu du compte.
-- [ ] `.env.example`, puis vérification (jeton invalide refusé, pseudo unique, parcours Google).
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -254,8 +247,57 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (10) Docker Desktop doit tourner pour `pnpm dev`. Sans base, le serveur s'arrête avec le message « database
   unavailable (is it started? pnpm db:up) ».
 - (10) Biome ignore `apps/server/drizzle/` (migrations générées).
+- (11) Le bouton « Se connecter avec Google » ouvre la fenêtre de Clerk, qui propose « Continue with Google » :
+  un clic de plus. Aller directement à Google demanderait une page de retour. La fenêtre de Clerk est en anglais
+  (`@clerk/localizations` pourrait la traduire).
+- (11) Après la connexion Google, le jeu se connecte tout seul. Si la session Google est déjà ouverte, l'accueil
+  affiche « Jouer ».
+- (11) Pseudo :
+  - format (3 à 16 caractères : lettres, chiffres, `_`), unique sans tenir compte de la casse ;
+  - courte liste de mots interdits en français et en anglais (`shared/moderation/names.ts`) : les mots longs sont
+    refusés n'importe où, les mots courts seulement comme partie entière du nom (« pute » n'est pas refusé dans
+    « Computer ») ; noms réservés : admin, modérateur, modo, mod, gm, staff, system, server. Liste à compléter ;
+  - le joueur ne peut pas le changer lui-même (l'admin le pourra à l'étape 12).
+- (11) Les emails de `ADMIN_EMAILS` sont admins et approuvés dès leur connexion. Un compte existant est promu à sa
+  connexion suivante.
+- (11) En attente : la connexion reste ouverte, mais après une validation en SQL il faut recharger la page. La
+  notification en direct viendra avec l'onglet admin (étape 12). Refusé ou banni : message, puis déconnexion, sans
+  nouvel essai.
+- (11) Mode dev conservé : un pseudo de dev crée un joueur approuvé en base (sans compte Clerk). Un pseudo de dev
+  égal à celui d'un joueur Google se connecte sur ce compte (en local seulement).
+- (11) `CLERK_SECRET_KEY` est obligatoire en production. Sans elle en dev, seuls les pseudos de dev marchent.
+  `CLERK_JWT_KEY` est facultative (vérification sans appel réseau). `PROTOCOL_VERSION` passe à 5.
+- (11) Le bouton « Se déconnecter », en haut à droite à côté de la langue, n'apparaît que pour une session Google.
+- (11) Côté serveur, la connexion est maintenant asynchrone (base, Clerk), mais en dehors des ticks. Les tests
+  attendent la fin des promesses avec `settle()`.
+- (11) Ton email est dans `ADMIN_EMAILS` (`apps/server/.env`) : ton compte Google entre donc directement, en admin.
+  Pour voir l'écran d'attente, utilise un autre compte Google, ou retire ton email le temps du test.
 
 ## Historique
+
+### 2026-10-12 — Étape 11 : Connexion Google, pseudo et liste blanche ✅
+- Protocole 5 : `hello { token }`, `setName`, `status` (`needsName`, `pending`, `denied`, `banned`), refus
+  `invalidToken`.
+- Serveur :
+  - service `Accounts` : jetons Clerk vérifiés par `@clerk/backend`, à la première connexion email lu et
+    joueur créé `pending`, admins de `ADMIN_EMAILS` ;
+  - poignée de main asynchrone, hors tick, avec les écrans de statut ;
+  - personnage rattaché à `players.id` ;
+  - migration : pseudo vide tant qu'il n'est pas choisi.
+- Client : `ClerkProvider` ; accueil (Google, plus le pseudo de dev en dev) ; nouveau jeton à chaque connexion ;
+  écrans choix du pseudo, attente, refus et bannissement ; bouton « Se déconnecter ».
+- Tests :
+  - statuts avec un faux Clerk (pseudo, attente, refus, bannissement, admin, double connexion) ;
+  - validation du pseudo et unicité sans tenir compte de la casse ;
+  - client : jeton à chaque connexion, statuts.
+- Vérifié :
+  - jeton forgé refusé par le vrai serveur (vrai Clerk) ;
+  - la base refuse « SMOKE_NAME » quand « Smoke_Name » existe ;
+  - la fenêtre Clerk « Continue with Google » s'ouvre ;
+  - le mode dev marche toujours.
+  - Le parcours Google complet reste à faire par toi : je ne me connecte pas à ton compte.
+- Écarts par rapport à la fiche : le bouton Google ouvre la fenêtre de Clerk ; le pseudo de dev crée un joueur
+  approuvé en base.
 
 ### 2026-10-12 — Étape 10 : Base de données et sauvegarde ✅
 - PostgreSQL 18 dans Docker (`pnpm db:up`, `db:down`, `db:generate`, `db:migrate`).
