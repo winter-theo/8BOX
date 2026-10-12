@@ -34,6 +34,8 @@ export interface GameClientOptions {
   createSocket?: (url: string) => WebSocket;
   /** Clock for the ping, in ms. */
   now?: () => number;
+  /** Dev only: simulated round trip latency, half on each way, in ms. */
+  lagMs?: number;
 }
 
 /**
@@ -139,7 +141,12 @@ export class GameClient {
       });
     };
     socket.onmessage = (event: MessageEvent) => {
-      this.handle(decodeServerMessage(event.data as ArrayBuffer));
+      const message = decodeServerMessage(event.data as ArrayBuffer);
+      this.afterLag(() => {
+        if (socket === this.socket) {
+          this.handle(message);
+        }
+      });
     };
     socket.onclose = () => this.handleClose(socket);
   }
@@ -281,8 +288,22 @@ export class GameClient {
   }
 
   private send(message: ClientMessage): void {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(encodeMessage(message));
+    const socket = this.socket;
+    const data = encodeMessage(message);
+    this.afterLag(() => {
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(data);
+      }
+    });
+  }
+
+  /** Runs `action` now, or half the simulated latency later (dev); the order of messages is kept. */
+  private afterLag(action: () => void): void {
+    const lagMs = this.options.lagMs ?? 0;
+    if (lagMs > 0) {
+      setTimeout(action, lagMs / 2);
+    } else {
+      action();
     }
   }
 }

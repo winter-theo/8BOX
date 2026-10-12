@@ -324,6 +324,31 @@ describe('GameClient world streaming', () => {
     expect(view).toMatchObject({ facing: 'right', moving: false });
   });
 
+  it('delays messages both ways with a simulated latency (dev)', () => {
+    const client = new GameClient({
+      serverUrl: 'http://localhost:3000',
+      content,
+      bus,
+      lagMs: 100,
+      createSocket: (url) => {
+        const socket = new FakeSocket(url);
+        sockets.push(socket);
+        return socket as unknown as WebSocket;
+      },
+      now: () => clock,
+    });
+    client.connect('Ana');
+    lastSocket().open();
+    expect(lastSocket().sent).toEqual([]);
+    vi.advanceTimersByTime(50);
+    expect(lastSocket().sent.map((m) => m.t)).toEqual(['hello']);
+
+    welcome();
+    expect(state().status).toBe('connecting');
+    vi.advanceTimersByTime(50);
+    expect(state().status).toBe('online');
+  });
+
   it('stops sending inputs and forgets the player when the connection is lost', () => {
     const client = createClient();
     client.connect('Ana');

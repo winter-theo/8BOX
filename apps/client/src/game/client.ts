@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION_SENT, SERVER_URL } from '../env';
+import { PROTOCOL_VERSION_SENT, SERVER_URL, SIMULATED_LAG_MS } from '../env';
 import { content } from './content';
 import { eventBus } from './events';
 import { GameClient } from './GameClient';
@@ -9,4 +9,5 @@ export const gameClient = new GameClient({
   content,
   bus: eventBus,
   protocolVersion: PROTOCOL_VERSION_SENT,
+  lagMs: SIMULATED_LAG_MS,
 });

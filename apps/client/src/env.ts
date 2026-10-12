@@ -18,3 +18,17 @@ function protocolVersionToSend(): number {
 }
 
 export const PROTOCOL_VERSION_SENT = protocolVersionToSend();
+
+/** Longest simulated latency accepted in the URL, in ms. */
+const MAX_SIMULATED_LAG_MS = 2000;
+
+/** Dev only: `?lag=150` in the URL simulates 150 ms of round trip latency (0 = none). */
+function simulatedLagMs(): number {
+  if (!import.meta.env.DEV) {
+    return 0;
+  }
+  const value = new URLSearchParams(window.location.search).get('lag');
+  return value !== null && /^d+$/.test(value) ? Math.min(Number(value), MAX_SIMULATED_LAG_MS) : 0;
+}
+
+export const SIMULATED_LAG_MS = simulatedLagMs();
