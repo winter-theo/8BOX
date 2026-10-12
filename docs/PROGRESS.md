@@ -3,7 +3,15 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+**Étape 01 — Socle partagé : contenu, config, i18n** (démarrée le 2026-10-11)
+- [ ] 1. RNG seedé (`util/rng.ts`) et tests
+- [ ] 2. Émetteur d'événements typé (`util/events.ts`) et tests
+- [ ] 3. Schémas zod du contenu (`content/schemas.ts`)
+- [ ] 4. Chargeur et registres (`content/load.ts`), références croisées, tests (1 cas valide, 3+ erreurs)
+- [ ] 5. Contenu initial (`packages/shared/content/*.json`) exporté par shared, chargé par le serveur et le client
+- [ ] 6. Config de gameplay (`src/config/*.ts`, 15 fichiers, valeurs de `DECISIONS.md`)
+- [ ] 7. i18n FR/EN (shared + test) ; client i18next, langue du navigateur, sélecteur mémorisé, textes de l'étape 00
+- [ ] 8. Vérifier les critères d'acceptation, clôture
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
