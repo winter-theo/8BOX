@@ -6,6 +6,7 @@ import { content } from '../../game/content';
 import { eventBus } from '../../game/events';
 import { CameraController } from '../CameraController';
 import { DebugCamera } from '../DebugCamera';
+import { LongPress } from '../LongPress';
 import { MovementKeys } from '../MovementKeys';
 import { atlasFromScene } from '../world/atlasFromScene';
 import { EntityLayer } from '../world/EntityLayer';
@@ -49,6 +50,7 @@ export class WorldScene extends Phaser.Scene {
     const camera = new CameraController(this, emitView);
     emitView();
     const movementKeys = new MovementKeys((dir) => eventBus.emit('input.direction', { dir }));
+    const longPress = new LongPress(this);
     // Dev mode: F2 frees the camera from the player (the player stands still meanwhile).
     const debugCamera = import.meta.env.DEV
       ? new DebugCamera(this, camera, (active) => {
@@ -113,6 +115,7 @@ export class WorldScene extends Phaser.Scene {
       }
       camera.destroy();
       movementKeys.destroy();
+      longPress.destroy();
       debugCamera?.destroy();
       ground.destroy();
       objects.destroy();
