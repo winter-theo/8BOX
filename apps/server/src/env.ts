@@ -17,6 +17,11 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter((origin) => origin.length > 0),
     ),
+  /** `1` accepts dev logins (`hello { devName }`, no account). Always ignored in production. */
+  DEV_AUTH: z
+    .enum(['0', '1'])
+    .default('0')
+    .transform((value) => value === '1'),
 });
 
 export type Env = z.infer<typeof envSchema>;
