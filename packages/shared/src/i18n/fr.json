@@ -28,7 +28,7 @@
       "chunks_one": "{{count}} chunk chargé",
       "chunks_other": "{{count}} chunks chargés",
       "camera": "caméra : {{x}}, {{y}}",
-      "controls": "Flèches : se déplacer · + / - ou molette : zoom"
+      "controls": "Flèches : personnage de test (Maj : lentement) · + / - : zoom"
     },
     "language": {
       "label": "Langue",

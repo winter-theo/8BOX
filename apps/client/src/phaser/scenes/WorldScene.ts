@@ -1,19 +1,18 @@
-import { type Chunk, VIEW, WORLD } from '@8box/shared';
+import type { Chunk } from '@8box/shared';
 import * as Phaser from 'phaser';
 import { AssetRegistry } from '../../assets/registry';
 import { gameClient } from '../../game/client';
 import { content } from '../../game/content';
 import { eventBus } from '../../game/events';
+import { CameraController } from '../CameraController';
 import { DebugCamera } from '../DebugCamera';
 import { atlasFromScene } from '../world/atlasFromScene';
+import { EntityLayer } from '../world/EntityLayer';
 import { GroundLayer } from '../world/GroundLayer';
 import { ObjectLayer } from '../world/ObjectLayer';
 import { SpriteTextures } from '../world/SpriteTextures';
 
-const TILE_PX = WORLD.tileSizePx;
-const WORLD_PX = WORLD.layerSizeTiles * TILE_PX;
-
-/** The game world: ground and objects of the streamed chunks, and the camera. */
+/** The game world: ground and objects of the streamed chunks, entities sorted with them, and the camera. */
 export class WorldScene extends Phaser.Scene {
   private debugCamera: DebugCamera | undefined;
 
@@ -26,14 +25,22 @@ export class WorldScene extends Phaser.Scene {
     const ground = new GroundLayer(this, registry, content, gameClient.chunks);
     const textures = new SpriteTextures(this.textures, registry);
     const objects = new ObjectLayer(this, textures, content);
+    const entities = new EntityLayer(this, textures);
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
       objects.show(chunk);
     };
-    const camera = this.cameras.main;
-    camera.setZoom(VIEW.defaultZoom);
-    camera.setBounds(0, 0, WORLD_PX, WORLD_PX);
-    camera.centerOn(WORLD_PX / 2, WORLD_PX / 2);
+    const emitView = () => {
+      eventBus.emit('view.changed', {
+        w: Math.max(1, Math.round(this.scale.width)),
+        h: Math.max(1, Math.round(this.scale.height)),
+        zoom: camera.zoom,
+      });
+    };
+    const camera = new CameraController(this, emitView);
+    emitView();
+    const debugCamera = import.meta.env.DEV ? new DebugCamera(this, entities, camera) : undefined;
+    this.debugCamera = debugCamera;
 
     for (const chunk of gameClient.chunks.all()) {
       showChunk(chunk);
@@ -46,23 +53,14 @@ export class WorldScene extends Phaser.Scene {
         objects.hide(layer, cx, cy);
       }),
       eventBus.on('player.spawned', ({ position }) => {
-        camera.centerOn(position.x * TILE_PX, position.y * TILE_PX);
+        // The player is not drawn before step 07: the view (or the dev test character) goes to the spawn.
+        if (debugCamera) {
+          debugCamera.moveTo(position);
+        } else {
+          camera.centerOn(position);
+        }
       }),
     ];
-
-    const emitView = () => {
-      eventBus.emit('view.changed', {
-        w: Math.max(1, Math.round(this.scale.width)),
-        h: Math.max(1, Math.round(this.scale.height)),
-        zoom: camera.zoom,
-      });
-    };
-    this.scale.on(Phaser.Scale.Events.RESIZE, emitView);
-    emitView();
-
-    if (import.meta.env.DEV) {
-      this.debugCamera = new DebugCamera(this, emitView);
-    }
 
     let cleaned = false;
     const cleanup = () => {
@@ -73,9 +71,10 @@ export class WorldScene extends Phaser.Scene {
       for (const off of unsubscribe) {
         off();
       }
-      this.scale.off(Phaser.Scale.Events.RESIZE, emitView);
+      camera.destroy();
       ground.destroy();
       objects.destroy();
+      entities.destroy();
       textures.destroy();
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);

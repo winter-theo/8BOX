@@ -14,6 +14,8 @@ export function createGame(parent: HTMLElement): Phaser.Game {
     audio: { noAudio: true },
     backgroundColor: BACKGROUND_COLOR,
     scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
+    // Two touch pointers, for the pinch zoom.
+    input: { activePointers: 2 },
     scene: [BootScene, WorldScene],
   });
 }
