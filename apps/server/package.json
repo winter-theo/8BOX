@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@8box/shared": "workspace:*",
+    "@clerk/backend": "^3.23.2",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.5",
     "pino": "^10.4.0",

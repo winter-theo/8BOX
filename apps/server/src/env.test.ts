@@ -12,13 +12,27 @@ describe('parseEnv', () => {
       DEV_AUTH: false,
       WORLD_SEED: undefined,
       DATABASE_URL: 'postgres://8box:8box@localhost:5432/8box',
+      ADMIN_EMAILS: [],
+      CLERK_SECRET_KEY: undefined,
+      CLERK_JWT_KEY: undefined,
     });
   });
 
-  it('requires DATABASE_URL in production only', () => {
+  it('reads the admin emails as a list', () => {
+    expect(parseEnv({ ADMIN_EMAILS: ' a@b.test, c@d.test ,' }).ADMIN_EMAILS).toEqual([
+      'a@b.test',
+      'c@d.test',
+    ]);
+  });
+
+  it('requires DATABASE_URL and CLERK_SECRET_KEY in production only', () => {
     expect(() => parseEnv({ NODE_ENV: 'production' })).toThrow(/DATABASE_URL/);
+    expect(() => parseEnv({ NODE_ENV: 'production', DATABASE_URL: 'postgres://x' })).toThrow(
+      /CLERK_SECRET_KEY/,
+    );
     const url = 'postgres://game:secret@db:5432/game';
-    expect(parseEnv({ NODE_ENV: 'production', DATABASE_URL: url }).DATABASE_URL).toBe(url);
+    const env = parseEnv({ NODE_ENV: 'production', DATABASE_URL: url, CLERK_SECRET_KEY: 'sk_x' });
+    expect(env.DATABASE_URL).toBe(url);
   });
 
   it('splits and trims the allowed origins', () => {

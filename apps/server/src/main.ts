@@ -7,14 +7,17 @@ import {
   parseSeed,
 } from '@8box/shared';
 import { pino } from 'pino';
+import { Accounts } from './accounts/Accounts';
+import { clerkIdentity } from './accounts/clerkIdentity';
 import { buildApp } from './app';
 import { createGame } from './core/game';
-import { openPgStore } from './db/pgStore';
+import { pgAccountStore } from './db/accounts.repo';
+import { type DatabaseConnection, openDatabase } from './db/database';
+import { pgGameStore } from './db/pgStore';
 import { env } from './env';
 import { MODULES } from './modules';
 import { saveEverything } from './modules/persistence';
 import { Persistence } from './persistence/Persistence';
-import type { GameStore } from './persistence/store';
 import { WriteQueue } from './persistence/writeQueue';
 import { deserializeChunk } from './world/chunkSerializer';
 import { randomSeed } from './world/seed';
@@ -32,13 +35,30 @@ try {
 }
 log.info(contentSizes(content), 'content loaded');
 
-let store: GameStore;
+let connection: DatabaseConnection;
 try {
-  store = await openPgStore(env.DATABASE_URL);
+  connection = await openDatabase(env.DATABASE_URL);
 } catch (error) {
   log.fatal(error, 'database unavailable (is it started? pnpm db:up)');
   process.exit(1);
 }
+const store = pgGameStore(connection);
+
+// Google sign-in through Clerk; without a key, only dev names can sign in.
+if (env.CLERK_SECRET_KEY === undefined) {
+  log.warn('CLERK_SECRET_KEY is unset: Google sign-in is off');
+}
+const accounts = new Accounts(
+  pgAccountStore(connection.db),
+  env.CLERK_SECRET_KEY === undefined
+    ? undefined
+    : clerkIdentity({
+        secretKey: env.CLERK_SECRET_KEY,
+        jwtKey: env.CLERK_JWT_KEY,
+        authorizedParties: env.ALLOWED_ORIGINS,
+      }),
+  env.ADMIN_EMAILS,
+);
 
 // The world: its seed and its saved chunks; the missing chunks are generated, then saved.
 const loadStart = performance.now();
@@ -88,6 +108,7 @@ const game = createGame({
   modules: MODULES,
   devAuth,
   persistence,
+  accounts,
 });
 
 const app = buildApp({

@@ -19,6 +19,7 @@ export const NET = {
    */
   rateLimits: {
     hello: { max: 3, windowMs: 10 * SECOND_MS },
+    setName: { max: 5, windowMs: 10 * SECOND_MS },
     ping: { max: 5, windowMs: SECOND_MS },
     /** 30 movement inputs per second (the client sends 20). */
     input: { max: 30, windowMs: SECOND_MS },

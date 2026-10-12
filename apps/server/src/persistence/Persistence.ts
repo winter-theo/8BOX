@@ -8,7 +8,7 @@ import type { WriteQueue } from './writeQueue';
  * save is queued for the background `WriteQueue`.
  */
 export class Persistence {
-  private readonly characters = new Map<string, SavedCharacter>();
+  private readonly characters = new Map<number, SavedCharacter>();
 
   constructor(
     private readonly content: Content,
@@ -16,17 +16,17 @@ export class Persistence {
     characters: readonly SavedCharacter[] = [],
   ) {
     for (const character of characters) {
-      this.characters.set(character.name.toLowerCase(), character);
+      this.characters.set(character.playerId, character);
     }
   }
 
-  /** The saved character of a player (names are case-insensitive). */
-  character(name: string): SavedCharacter | undefined {
-    return this.characters.get(name.toLowerCase());
+  /** The saved character of a player (`players.id`). */
+  character(playerId: number): SavedCharacter | undefined {
+    return this.characters.get(playerId);
   }
 
   saveCharacter(character: SavedCharacter): void {
-    this.characters.set(character.name.toLowerCase(), character);
+    this.characters.set(character.playerId, character);
     this.writes.saveCharacter(character);
   }
 

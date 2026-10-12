@@ -6,7 +6,7 @@ function saveCharacters(ctx: ServerContext): void {
     const player = ctx.entities.get(entity, 'player');
     const position = ctx.entities.get(entity, 'position');
     if (player && position) {
-      ctx.persistence.saveCharacter({ name: player.name, ...position });
+      ctx.persistence.saveCharacter({ playerId: player.playerId, ...position });
     }
   }
 }

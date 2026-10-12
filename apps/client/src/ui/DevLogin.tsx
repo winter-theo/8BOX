@@ -14,8 +14,8 @@ function readStoredName(): string {
   }
 }
 
-/** Dev login: pick a name and play, until accounts arrive (step 11). */
-export function DevLogin() {
+/** Dev mode only: play with a simple name, without an account (bots, tests, several tabs). */
+export function DevLoginForm() {
   const { t } = useTranslation();
   const [name, setName] = useState(readStoredName);
   const valid = isValidPlayerName(name);
@@ -30,33 +30,28 @@ export function DevLogin() {
     } catch {
       // Storage disabled: the name is just not remembered.
     }
-    gameClient.connect(name);
+    gameClient.connect({ devName: name });
   };
 
   return (
-    <div className="overlay">
-      <form className="panel" onSubmit={play}>
-        <h1>{t('ui.game.title')}</h1>
-        <p>{t('ui.login.devMode')}</p>
-        <label className="field">
-          <span>{t('ui.login.name')}</span>
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value.trim())}
-            autoComplete="nickname"
-            autoCapitalize="off"
-            spellCheck={false}
-            // biome-ignore lint/a11y/noAutofocus: the name field is the only thing to do on this screen.
-            autoFocus
-          />
-        </label>
-        <small className={valid || name === '' ? 'hint' : 'hint hint--error'}>
-          {t('ui.login.nameRules')}
-        </small>
-        <button type="submit" disabled={!valid}>
-          {t('ui.login.play')}
-        </button>
-      </form>
-    </div>
+    <form className="login-section" onSubmit={play}>
+      <p>{t('ui.login.devMode')}</p>
+      <label className="field">
+        <span>{t('ui.login.name')}</span>
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value.trim())}
+          autoComplete="nickname"
+          autoCapitalize="off"
+          spellCheck={false}
+        />
+      </label>
+      <small className={valid || name === '' ? 'hint' : 'hint hint--error'}>
+        {t('ui.login.nameRules')}
+      </small>
+      <button type="submit" disabled={!valid}>
+        {t('ui.login.play')}
+      </button>
+    </form>
   );
 }

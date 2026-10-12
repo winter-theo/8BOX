@@ -11,7 +11,7 @@ interface WriteQueueOptions {
 }
 
 const chunkKey = (chunk: SavedChunk) => `${chunk.layer}:${chunk.cx}:${chunk.cy}`;
-const characterKey = (character: SavedCharacter) => character.name.toLowerCase();
+const characterKey = (character: SavedCharacter) => String(character.playerId);
 
 /**
  * Database writes, done outside the game loop: the game only queues data (synchronous), and the queue

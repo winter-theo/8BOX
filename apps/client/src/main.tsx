@@ -1,6 +1,8 @@
 import { contentSizes } from '@8box/shared';
+import { ClerkProvider } from '@clerk/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { CLERK_PUBLISHABLE_KEY } from './env';
 import { content } from './game/content';
 import { initI18n } from './i18n';
 import { App } from './ui/App';
@@ -20,8 +22,15 @@ if (import.meta.env.DEV) {
   console.info('[8box] content loaded', contentSizes(content));
 }
 
+// Google sign-in when Clerk is set up; without a key, only the dev login exists.
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    {CLERK_PUBLISHABLE_KEY ? (
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <App />
+      </ClerkProvider>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 );

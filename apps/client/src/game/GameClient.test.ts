@@ -107,7 +107,7 @@ describe('GameClient', () => {
   it('says hello with its name and protocol version, then goes online on welcome', () => {
     const client = createClient();
 
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     expect(state().status).toBe('connecting');
     lastSocket().open();
 
@@ -122,7 +122,7 @@ describe('GameClient', () => {
 
   it('measures the ping from the pong', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
@@ -142,7 +142,7 @@ describe('GameClient', () => {
 
   it('reconnects with a growing delay, capped, and resets it once welcomed', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     const waits: number[] = [];
 
     for (let i = 0; i < 7; i++) {
@@ -172,7 +172,7 @@ describe('GameClient', () => {
 
   it('stops after a refusal and keeps the reason', () => {
     const client = createClient(PROTOCOL_VERSION + 1);
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
 
     lastSocket().receive({ t: 'rejected', reason: 'outdated' });
@@ -185,7 +185,7 @@ describe('GameClient', () => {
 
   it('goes back to idle without reconnecting when disconnected on purpose', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     const socket = lastSocket();
     socket.open();
 
@@ -210,7 +210,7 @@ describe('GameClient world streaming', () => {
     const client = createClient();
     const unloaded: string[] = [];
     bus.on('chunk.unloaded', ({ cx, cy }) => unloaded.push(`${cx},${cy}`));
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     welcome();
 
@@ -226,7 +226,7 @@ describe('GameClient world streaming', () => {
 
   it('sends the view size and the debug camera once online', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     bus.emit('view.changed', { w: 1280, h: 720, zoom: 4 });
     bus.emit('debugCamera.moved', { at: { x: 10, y: 20 } });
@@ -246,7 +246,7 @@ describe('GameClient world streaming', () => {
 
   it('sends the held direction at once, then once per input interval, nothing while still', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     welcome();
     const inputs = () => lastSocket().sent.filter((message) => message.t === 'input');
@@ -269,7 +269,7 @@ describe('GameClient world streaming', () => {
 
   it('predicts the player at once, glides between steps and reconciles with snapshots', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     lastSocket().receive(encodeChunk(new Chunk(0, 16, 16), content));
     welcome();
@@ -310,7 +310,7 @@ describe('GameClient world streaming', () => {
 
   it('does not predict into chunks it has not received', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     welcome();
 
@@ -337,7 +337,7 @@ describe('GameClient world streaming', () => {
       },
       now: () => clock,
     });
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     expect(lastSocket().sent).toEqual([]);
     vi.advanceTimersByTime(50);
@@ -351,7 +351,7 @@ describe('GameClient world streaming', () => {
 
   it('stops sending inputs and forgets the player when the connection is lost', () => {
     const client = createClient();
-    client.connect('Ana');
+    client.connect({ devName: 'Ana' });
     lastSocket().open();
     welcome();
     const socket = lastSocket();
@@ -361,5 +361,73 @@ describe('GameClient world streaming', () => {
 
     expect(socket.sent.filter((message) => message.t === 'input')).toEqual([]);
     expect(client.localView()).toBeUndefined();
+  });
+});
+
+describe('GameClient accounts', () => {
+  /** Lets the token promise resolve. */
+  const flush = () => Promise.resolve().then(() => undefined);
+
+  it('asks Clerk for a fresh token at each connection and sends it in hello', async () => {
+    const tokens = ['token-1', 'token-2'];
+    const client = createClient();
+    client.connect({ getToken: async () => tokens.shift() ?? null });
+    await flush();
+    lastSocket().open();
+    expect(lastSocket().sent).toEqual([
+      { t: 'hello', version: PROTOCOL_VERSION, token: 'token-1' },
+    ]);
+
+    lastSocket().drop();
+    vi.advanceTimersByTime(NET.reconnectDelayMs);
+    await flush();
+    lastSocket().open();
+    expect(lastSocket().sent[0]).toMatchObject({ token: 'token-2' });
+  });
+
+  it('shows the account screen of a status, and sends the chosen name', async () => {
+    const client = createClient();
+    client.connect({ getToken: async () => 'token' });
+    await flush();
+    lastSocket().open();
+
+    lastSocket().receive({ t: 'status', state: 'needsName' });
+    expect(state()).toMatchObject({
+      status: 'account',
+      account: { state: 'needsName', reason: null, nameError: null },
+    });
+
+    client.setName('Ana');
+    expect(lastSocket().sent.at(-1)).toEqual({ t: 'setName', name: 'Ana' });
+    lastSocket().receive({ t: 'status', state: 'needsName', nameError: 'taken' });
+    expect(state().account?.nameError).toBe('taken');
+    lastSocket().receive({ t: 'status', state: 'pending' });
+    expect(state().account?.state).toBe('pending');
+  });
+
+  it('does not reconnect after a ban, and keeps the reason', async () => {
+    const client = createClient();
+    client.connect({ getToken: async () => 'token' });
+    await flush();
+    lastSocket().open();
+
+    lastSocket().receive({ t: 'status', state: 'banned', reason: 'griefing' });
+    lastSocket().drop();
+    vi.advanceTimersByTime(60_000);
+
+    expect(sockets).toHaveLength(1);
+    expect(state()).toMatchObject({
+      status: 'account',
+      account: { state: 'banned', reason: 'griefing' },
+    });
+  });
+
+  it('stops when the player is signed out (no token)', async () => {
+    const client = createClient();
+    client.connect({ getToken: async () => null });
+    await flush();
+
+    expect(sockets).toHaveLength(0);
+    expect(state()).toMatchObject({ status: 'rejected', rejectReason: 'invalidToken' });
   });
 });

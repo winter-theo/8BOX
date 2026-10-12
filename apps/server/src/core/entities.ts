@@ -16,8 +16,8 @@ export type EntityType = EntityKind;
 export interface Components {
   /** Never mutate it in place: `set` it again so the spatial index follows. */
   position: Position;
-  /** Entities controlled by a connected player. */
-  player: { name: string };
+  /** Entities controlled by a connected player (`playerId`: their account). */
+  player: { name: string; playerId: number };
   /** Last direction moved in (aim and hits). */
   facing: Facing;
   /** How clients draw it: walking while it moves. */

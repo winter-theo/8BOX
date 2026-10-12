@@ -1,4 +1,6 @@
 import { CONFIG, type Content, type GameConfig } from '@8box/shared';
+import { Accounts } from '../accounts/Accounts';
+import { MemoryAccountStore } from '../accounts/account';
 import { NetServer } from '../net/net';
 import { Persistence } from '../persistence/Persistence';
 import { MemoryStore } from '../persistence/store';
@@ -27,6 +29,8 @@ export interface ContextOptions {
   now?: () => number;
   /** Saves (default: kept in memory, for tests). */
   persistence?: Persistence;
+  /** Sign-in (default: dev accounts kept in memory, no Clerk). */
+  accounts?: Accounts;
 }
 
 /** Saves kept in memory: nothing outlives the process (tests). */
@@ -51,6 +55,7 @@ export function createContext({
   devAuth = false,
   now,
   persistence = memoryPersistence(content, log),
+  accounts = new Accounts(new MemoryAccountStore(), undefined, []),
 }: ContextOptions): ServerContext {
   const events = createEventBus();
   world.onChange((change) => events.emit('tile.changed', change));
@@ -67,7 +72,15 @@ export function createContext({
     entities: new EntityStore(events),
     systems: new SystemRegistry(),
     world,
-    net: new NetServer({ config, log, events, scheduler, devAuth, ...(now && { now }) }),
+    net: new NetServer({
+      config,
+      log,
+      events,
+      scheduler,
+      accounts,
+      devAuth,
+      ...(now && { now }),
+    }),
     persistence,
   };
 }
@@ -86,6 +99,7 @@ export interface GameOptions {
   config?: GameConfig;
   devAuth?: boolean;
   persistence?: Persistence;
+  accounts?: Accounts;
 }
 
 export interface Game {
@@ -104,6 +118,7 @@ export function createGame({
   config = CONFIG,
   devAuth = false,
   persistence,
+  accounts,
 }: GameOptions): Game {
   const ctx = createContext({
     config,
@@ -112,6 +127,7 @@ export function createGame({
     world,
     devAuth,
     ...(persistence && { persistence }),
+    ...(accounts && { accounts }),
   });
   const order = initModules(ctx, modules);
   log.info({ modules: order, devAuth }, 'modules initialized');

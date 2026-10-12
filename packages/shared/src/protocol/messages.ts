@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PLAYER } from '../config/player';
 import { VIEW } from '../config/view';
 import type { TileSlot } from '../content/schemas';
+import type { NameError } from '../moderation/names';
 import { type Facing, MAX_DIRECTION } from '../sim/movement';
 import type { TileMeta } from '../world/chunk';
 
@@ -13,8 +14,16 @@ export const helloSchema = z.strictObject({
   t: z.literal('hello'),
   /** PROTOCOL_VERSION of the client. */
   version: z.number().int().nonnegative(),
+  /** Clerk session token of the signed-in player (short-lived: only used to open the socket). */
+  token: z.string().min(1).max(8192).optional(),
   /** Dev mode only (DEV_AUTH): name to play with, without an account. Checked by the handshake. */
   devName: z.string().optional(),
+});
+
+/** The name a new player chooses (`status { state: 'needsName' }`); the server checks it. */
+export const setNameSchema = z.strictObject({
+  t: z.literal('setName'),
+  name: z.string().max(PLAYER.nameMaxLength * 4),
 });
 
 export const pingSchema = z.strictObject({
@@ -54,6 +63,7 @@ export const debugCameraSchema = z.strictObject({
 
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
+  setNameSchema,
   pingSchema,
   inputSchema,
   viewportSchema,
@@ -61,6 +71,7 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
 ]);
 
 export type HelloMessage = z.output<typeof helloSchema>;
+export type SetNameMessage = z.output<typeof setNameSchema>;
 export type PingMessage = z.output<typeof pingSchema>;
 export type InputMessage = z.output<typeof inputSchema>;
 export type ViewportMessage = z.output<typeof viewportSchema>;
@@ -70,6 +81,7 @@ export type ClientMessageType = ClientMessage['t'];
 
 export const CLIENT_MESSAGE_TYPES = [
   'hello',
+  'setName',
   'ping',
   'input',
   'viewport',
@@ -82,6 +94,8 @@ export const CLIENT_MESSAGE_TYPES = [
 export type RejectReason =
   /** The client protocol version differs: it must reload. */
   | 'outdated'
+  /** No session token, or an invalid or expired one: sign in again. */
+  | 'invalidToken'
   /** `devName` sent but the dev mode is off on this server. */
   | 'devAuthDisabled'
   /** The name breaks the player name rules. */
@@ -104,6 +118,22 @@ export interface WelcomeMessage {
   you: { entity: number; name: string; position: WorldPosition };
   /** Server tick when the player joined. */
   tick: number;
+}
+
+/** Where an account stands before playing: pick a name, wait for the admin, or not allowed in. */
+export type AccountState = 'needsName' | 'pending' | 'denied' | 'banned';
+
+/**
+ * Sent instead of `welcome` while the account cannot play yet. `needsName` and `pending` keep the
+ * connection open; `denied` and `banned` end it.
+ */
+export interface StatusMessage {
+  t: 'status';
+  state: AccountState;
+  /** Why the player is banned. */
+  reason?: string;
+  /** Why the last `setName` was refused. */
+  nameError?: NameError;
 }
 
 export interface RejectedMessage {
@@ -193,6 +223,7 @@ export interface SnapshotMessage {
 
 export type ServerMessage =
   | WelcomeMessage
+  | StatusMessage
   | SnapshotMessage
   | RejectedMessage
   | PongMessage

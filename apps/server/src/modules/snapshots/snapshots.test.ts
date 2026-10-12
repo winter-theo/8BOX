@@ -8,7 +8,7 @@ import {
   type SnapshotMessage,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
-import { connectFakeClient, createTestContext, type FakeClient } from '../../core/testing';
+import { connectFakeClient, createTestContext, type FakeClient, settle } from '../../core/testing';
 import { World } from '../../world/World';
 import { chunksModule } from '../chunks';
 import { movementModule } from '../movement';
@@ -31,9 +31,10 @@ function setup() {
   });
   const { ctx } = test;
   const clients: FakeClient[] = [];
-  const join = (name: string) => {
+  const join = async (name: string) => {
     const client = connectFakeClient(ctx);
     client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: name });
+    await settle();
     client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
     clients.push(client);
     return client;
@@ -59,9 +60,9 @@ const snapshotsOf = (client: FakeClient) =>
 const lastSnapshot = (client: FakeClient) => snapshotsOf(client).at(-1);
 
 describe('snapshots module', () => {
-  it('sends the player every tick, and no entity when alone', () => {
+  it('sends the player every tick, and no entity when alone', async () => {
     const { join, tick } = setup();
-    const ana = join('Ana');
+    const ana = await join('Ana');
 
     tick(2);
 
@@ -75,10 +76,10 @@ describe('snapshots module', () => {
     });
   });
 
-  it('shows the other players in its chunks, named the first time', () => {
+  it('shows the other players in its chunks, named the first time', async () => {
     const { join, tick, entityOf } = setup();
-    const ana = join('Ana');
-    const bob = join('Bob');
+    const ana = await join('Ana');
+    const bob = await join('Bob');
 
     tick();
     expect(lastSnapshot(ana)?.entities).toEqual([
@@ -102,10 +103,10 @@ describe('snapshots module', () => {
     expect(lastSnapshot(bob)?.ackSeq).toBe(0);
   });
 
-  it('never sends entities outside the chunks of the client, and tells when one leaves', () => {
+  it('never sends entities outside the chunks of the client, and tells when one leaves', async () => {
     const { ctx, join, tick, entityOf, teleport } = setup();
-    const ana = join('Ana');
-    const bob = join('Bob');
+    const ana = await join('Ana');
+    const bob = await join('Bob');
     tick(10);
     expect(lastSnapshot(ana)?.entities.map((e) => e.id)).toEqual([entityOf(bob)]);
 
@@ -130,10 +131,10 @@ describe('snapshots module', () => {
     expect(ctx.entities.size).toBe(2);
   });
 
-  it('forgets a player who leaves', () => {
+  it('forgets a player who leaves', async () => {
     const { ctx, join, tick, entityOf } = setup();
-    const ana = join('Ana');
-    const bob = join('Bob');
+    const ana = await join('Ana');
+    const bob = await join('Bob');
     tick();
     const bobEntity = entityOf(bob);
 

@@ -62,7 +62,8 @@ export const players = pgTable(
     id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
     clerkUserId: text('clerk_user_id').unique(),
     email: text('email'),
-    name: text('name').notNull(),
+    /** Chosen by the player after their first sign-in (unset until then). */
+    name: text('name'),
     status: text('status', { enum: ['pending', 'approved', 'denied', 'banned'] })
       .notNull()
       .default('pending'),
