@@ -189,3 +189,14 @@ function checkReferences(content: Content, issues: ContentIssue[]): void {
     }
   }
 }
+
+/** Number of entries per content file, for logs. */
+export function contentSizes(content: Content): Record<ContentFile, number> {
+  return {
+    tiles: content.tiles.size,
+    items: content.items.size,
+    recipes: content.recipes.size,
+    loot: content.loot.size,
+    creatures: content.creatures.size,
+  };
+}

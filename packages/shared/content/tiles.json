@@ -1,0 +1,75 @@
+[
+  {
+    "id": "base:grass",
+    "slot": "ground",
+    "sprite": "ground.grass",
+    "solid": false,
+    "tall": false,
+    "hp": 0
+  },
+  {
+    "id": "base:dirt",
+    "slot": "ground",
+    "sprite": "ground.dirt",
+    "solid": false,
+    "tall": false,
+    "hp": 0
+  },
+  {
+    "id": "base:sand",
+    "slot": "ground",
+    "sprite": "ground.sand",
+    "solid": false,
+    "tall": false,
+    "hp": 0
+  },
+  {
+    "id": "base:shallow_water",
+    "slot": "ground",
+    "sprite": "ground.shallow_water",
+    "solid": false,
+    "tall": false,
+    "hp": 0
+  },
+  {
+    "id": "base:deep_water",
+    "slot": "ground",
+    "sprite": "ground.deep_water",
+    "solid": true,
+    "tall": false,
+    "hp": 0
+  },
+  {
+    "id": "base:oak_tree",
+    "slot": "object",
+    "sprite": "obj.oak_tree",
+    "solid": true,
+    "tall": true,
+    "hp": 6,
+    "harvest": { "tool": "axe" }
+  },
+  {
+    "id": "base:berry_bush",
+    "slot": "object",
+    "sprite": "obj.berry_bush",
+    "solid": true,
+    "tall": false,
+    "hp": 3
+  },
+  {
+    "id": "base:tall_grass",
+    "slot": "object",
+    "sprite": "obj.tall_grass",
+    "solid": false,
+    "tall": false,
+    "hp": 1
+  },
+  {
+    "id": "base:flowers",
+    "slot": "object",
+    "sprite": "obj.flowers",
+    "solid": false,
+    "tall": false,
+    "hp": 1
+  }
+]

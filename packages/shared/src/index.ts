@@ -1,10 +1,12 @@
 export * from './config/index';
+export { baseContent } from './content/base';
 export {
   CONTENT_FILES,
   type Content,
   ContentError,
   type ContentFile,
   type ContentIssue,
+  contentSizes,
   formatContentIssue,
   loadContent,
   type RawContent,
