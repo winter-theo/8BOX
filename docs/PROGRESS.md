@@ -9,7 +9,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [ ] 3. Schémas zod du contenu (`content/schemas.ts`)
 - [ ] 4. Chargeur et registres (`content/load.ts`), références croisées, tests (1 cas valide, 3+ erreurs)
 - [ ] 5. Contenu initial (`packages/shared/content/*.json`) exporté par shared, chargé par le serveur et le client
-- [ ] 6. Config de gameplay (`src/config/*.ts`, 15 fichiers, valeurs de `DECISIONS.md`)
+- [x] 6. Config de gameplay (`src/config/*.ts`, 15 fichiers, valeurs de `DECISIONS.md`)
 - [ ] 7. i18n FR/EN (shared + test) ; client i18next, langue du navigateur, sélecteur mémorisé, textes de l'étape 00
 - [ ] 8. Vérifier les critères d'acceptation, clôture
 

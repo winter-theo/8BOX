@@ -1,10 +1,8 @@
+import { NET } from '@8box/shared';
 import type { FastifyInstance } from 'fastify';
 import { WebSocketServer } from 'ws';
 
 export const WEBSOCKET_PATH = '/ws';
-
-/** Largest message accepted from a client, in bytes. */
-const MAX_PAYLOAD_BYTES = 64 * 1024;
 
 export interface WebSocketOptions {
   /** Browser origins allowed to connect. Clients without an Origin header (bots, tools) are accepted. */
@@ -13,7 +11,7 @@ export interface WebSocketOptions {
 
 /** Attaches a WebSocket endpoint to the Fastify HTTP server. */
 export function attachWebSocket(app: FastifyInstance, options: WebSocketOptions): WebSocketServer {
-  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_PAYLOAD_BYTES });
+  const wss = new WebSocketServer({ noServer: true, maxPayload: NET.maxMessageBytes });
 
   app.server.on('upgrade', (request, socket, head) => {
     const { pathname } = new URL(request.url ?? '/', 'http://localhost');
