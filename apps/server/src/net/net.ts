@@ -246,7 +246,7 @@ export class NetServer {
     session.state = 'playing';
     this.send(session, {
       t: 'welcome',
-      you: { entity: session.player.entity, name: session.player.name },
+      you: { ...session.player },
       tick: this.options.scheduler.currentTick,
     });
   }

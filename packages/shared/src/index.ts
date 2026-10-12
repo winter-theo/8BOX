@@ -22,6 +22,7 @@ export {
   type Language,
   resolveLanguage,
 } from './i18n/index';
+export { decodeChunk, encodeChunk } from './protocol/chunk';
 export {
   decodeServerMessage,
   encodeMessage,

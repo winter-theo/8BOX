@@ -48,6 +48,7 @@ class FakeSocket {
   }
 }
 
+const SPAWN = { layer: 0, x: 512.5, y: 512.5 };
 let sockets: FakeSocket[] = [];
 let clock = 0;
 
@@ -92,7 +93,11 @@ describe('GameClient', () => {
     lastSocket().open();
 
     expect(lastSocket().sent[0]).toEqual({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
-    lastSocket().receive({ t: 'welcome', you: { entity: 3, name: 'Ana' }, tick: 10 });
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', position: SPAWN },
+      tick: 10,
+    });
     expect(state()).toMatchObject({ status: 'online', player: { entity: 3, name: 'Ana' } });
   });
 
@@ -100,7 +105,11 @@ describe('GameClient', () => {
     const client = createClient();
     client.connect('Ana');
     lastSocket().open();
-    lastSocket().receive({ t: 'welcome', you: { entity: 3, name: 'Ana' }, tick: 10 });
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', position: SPAWN },
+      tick: 10,
+    });
 
     const ping = lastSocket().sent.at(-1);
     expect(ping).toEqual({ t: 'ping', time: 0 });
@@ -132,7 +141,11 @@ describe('GameClient', () => {
     expect(waits).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000]);
 
     lastSocket().open();
-    lastSocket().receive({ t: 'welcome', you: { entity: 1, name: 'Ana' }, tick: 1 });
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 1, name: 'Ana', position: SPAWN },
+      tick: 1,
+    });
     lastSocket().drop();
     vi.advanceTimersByTime(NET.reconnectDelayMs);
     expect(sockets).toHaveLength(9);

@@ -5,6 +5,12 @@ export const NET = {
   tickRateHz: 20,
   /** Max radius of chunks a client is subscribed to around its player, in chunks. */
   maxSubscriptionRadiusChunks: 3,
+  /** Chunks loaded beyond the edge of the view, ahead of the camera, in chunks. */
+  chunkPrefetchMarginChunks: 1,
+  /** Extra distance before a chunk is released, so that it does not flicker at the border, in chunks. */
+  chunkUnloadMarginChunks: 1,
+  /** Chunks sent to one client per tick at most (the nearest first), in chunks. */
+  maxChunksPerTick: 4,
   /** Largest WebSocket message accepted from a client, in bytes. */
   maxMessageBytes: 64 * 1024,
   /**
@@ -16,6 +22,9 @@ export const NET = {
     ping: { max: 5, windowMs: SECOND_MS },
     /** 30 movement inputs per second. */
     input: { max: 30, windowMs: SECOND_MS },
+    viewport: { max: 5, windowMs: SECOND_MS },
+    /** Dev mode only. */
+    debugCamera: { max: 20, windowMs: SECOND_MS },
   },
   /** Ignored messages (invalid or over the limit) tolerated per window before disconnecting, in messages. */
   maxViolations: 50,

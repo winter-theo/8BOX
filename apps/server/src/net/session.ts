@@ -1,4 +1,4 @@
-import type { ClientMessageType } from '@8box/shared';
+import type { ClientMessageType, WorldPosition } from '@8box/shared';
 import type { EntityId } from '../core/entities';
 import type { TokenBucket } from './rateLimit';
 
@@ -16,6 +16,8 @@ export type SessionState = 'handshake' | 'playing' | 'closed';
 export interface SessionPlayer {
   entity: EntityId;
   name: string;
+  /** Where the player entered the world (sent in `welcome`). */
+  position: WorldPosition;
 }
 
 /** One connected client. Created by `NetServer.connect`, one per socket. */

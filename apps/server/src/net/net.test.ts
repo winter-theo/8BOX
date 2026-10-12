@@ -10,11 +10,12 @@ const joinModule: GameModule = {
   init(ctx) {
     ctx.events.on('session.authenticated', ({ session }) => {
       const entity = ctx.entities.create('player');
-      session.player = { entity, name: session.name ?? '?' };
+      session.player = { entity, name: session.name ?? '?', position: SPAWN };
     });
   },
 };
 
+const SPAWN = { layer: 0, x: 0.5, y: 0.5 };
 const TICK_MS = 1000 / CONFIG.net.tickRateHz;
 /** Encodes any object, valid or not, as a client would. */
 const raw = (message: unknown) => encodeMessage(message as ClientMessage);
