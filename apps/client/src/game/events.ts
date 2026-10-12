@@ -1,4 +1,4 @@
-import { type Chunk, TypedEmitter, type WorldPosition } from '@8box/shared';
+import { type Chunk, type TileSlot, TypedEmitter, type WorldPosition } from '@8box/shared';
 
 /**
  * Events between the game layer, Phaser and React: they never import each other's components, they
@@ -9,8 +9,8 @@ export type ClientEvents = {
   'chunk.loaded': { chunk: Chunk };
   /** A chunk is no longer followed: forget it. */
   'chunk.unloaded': { layer: number; cx: number; cy: number };
-  /** Tiles of a loaded chunk changed: redraw it. */
-  'chunk.changed': { chunk: Chunk };
+  /** A slot of tile (x, y) of a loaded chunk changed: redraw that tile. */
+  'tile.changed': { chunk: Chunk; x: number; y: number; slot: TileSlot };
   /** The local player joined the world. */
   'player.spawned': { position: WorldPosition };
   /** Phaser → game: size of the game view, in CSS pixels, and camera zoom. */

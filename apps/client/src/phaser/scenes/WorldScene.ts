@@ -47,7 +47,13 @@ export class WorldScene extends Phaser.Scene {
     }
     const unsubscribe = [
       eventBus.on('chunk.loaded', ({ chunk }) => showChunk(chunk)),
-      eventBus.on('chunk.changed', ({ chunk }) => showChunk(chunk)),
+      eventBus.on('tile.changed', ({ chunk, x, y, slot }) => {
+        if (slot === 'object') {
+          objects.updateTile(chunk, x, y);
+        } else {
+          ground.updateTile(chunk.layer, x, y);
+        }
+      }),
       eventBus.on('chunk.unloaded', ({ layer, cx, cy }) => {
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
