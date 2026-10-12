@@ -68,7 +68,7 @@ describe('chunks module', () => {
     tick(10);
     client.received.length = 0;
 
-    client.send({ t: 'debugCamera', x: 300, y: 160 });
+    client.send({ t: 'debugCamera', at: { x: 300, y: 160 } });
     tick(10);
 
     const unloaded = client.received.filter((m) => m.t === 'chunkUnload').map(keyOf);
@@ -89,7 +89,7 @@ describe('chunks module', () => {
     tick(10);
     client.received.length = 0;
 
-    client.send({ t: 'debugCamera', x: 300, y: 160 });
+    client.send({ t: 'debugCamera', at: { x: 300, y: 160 } });
     tick(10);
 
     expect(client.received).toEqual([]);

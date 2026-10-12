@@ -20,12 +20,19 @@ export const NET = {
   rateLimits: {
     hello: { max: 3, windowMs: 10 * SECOND_MS },
     ping: { max: 5, windowMs: SECOND_MS },
-    /** 30 movement inputs per second. */
+    /** 30 movement inputs per second (the client sends 20). */
     input: { max: 30, windowMs: SECOND_MS },
     viewport: { max: 5, windowMs: SECOND_MS },
     /** Dev mode only. */
     debugCamera: { max: 20, windowMs: SECOND_MS },
   },
+  /** Interval of the client movement inputs, in ms (one per server tick). */
+  clientInputIntervalMs: 50,
+  /**
+   * Inputs waiting to be applied per player, at most (one is applied per tick). Beyond, the oldest are
+   * dropped so that a client sending too fast gains neither speed nor lag, in inputs.
+   */
+  maxQueuedInputs: 4,
   /** Ignored messages (invalid or over the limit) tolerated per window before disconnecting, in messages. */
   maxViolations: 50,
   /** Window of the violation count, in ms. */

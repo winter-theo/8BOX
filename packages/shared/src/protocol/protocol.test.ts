@@ -14,9 +14,10 @@ const clientMessages: ClientMessage[] = [
   { t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana_42' },
   { t: 'hello', version: PROTOCOL_VERSION },
   { t: 'ping', time: 123456.789 },
-  { t: 'input' },
+  { t: 'input', seq: 12, dir: 3 },
   { t: 'viewport', w: 1280, h: 720, zoom: 4 },
-  { t: 'debugCamera', x: 512.5, y: 498.25 },
+  { t: 'debugCamera', at: { x: 512.5, y: 498.25 } },
+  { t: 'debugCamera', at: null },
 ];
 
 const serverMessages: ServerMessage[] = [
@@ -60,7 +61,7 @@ describe('parseClientMessage', () => {
     ['unknown type', encode({ t: 'teleport', x: 1 })],
     ['missing field', encode({ t: 'hello' })],
     ['wrong field type', encode({ t: 'ping', time: 'now' })],
-    ['extra field', encode({ t: 'input', speed: 99 })],
+    ['extra field', encode({ t: 'input', seq: 1, dir: 0, speed: 99 })],
     ['no type', encode({ version: 1 })],
   ];
 
@@ -94,14 +95,16 @@ describe('isValidPlayerName', () => {
   });
 });
 
-describe('viewport and debugCamera messages', () => {
-  it('reject sizes and zooms out of range', () => {
+describe('input, viewport and debugCamera messages', () => {
+  it('reject values out of range', () => {
     for (const bad of [
       { t: 'viewport', w: 0, h: 720, zoom: 4 },
       { t: 'viewport', w: 1280, h: 100_000, zoom: 4 },
       { t: 'viewport', w: 1280, h: 720, zoom: 2.5 },
       { t: 'viewport', w: 1280, h: 720, zoom: 99 },
-      { t: 'debugCamera', x: 'left', y: 0 },
+      { t: 'debugCamera', at: { x: 'left', y: 0 } },
+      { t: 'input', seq: 1, dir: 9 },
+      { t: 'input', seq: -1, dir: 0 },
     ]) {
       expect(parseClientMessage(encode(bad)).ok, JSON.stringify(bad)).toBe(false);
     }

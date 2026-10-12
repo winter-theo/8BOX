@@ -235,7 +235,7 @@ describe('GameClient world streaming', () => {
     bus.emit('debugCamera.moved', { x: 11, y: 20 });
 
     expect(lastSocket().sent).toContainEqual({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
-    expect(lastSocket().sent).toContainEqual({ t: 'debugCamera', x: 11, y: 20 });
+    expect(lastSocket().sent).toContainEqual({ t: 'debugCamera', at: { x: 11, y: 20 } });
     expect(state().debugCamera).toEqual({ x: 11, y: 20 });
   });
 

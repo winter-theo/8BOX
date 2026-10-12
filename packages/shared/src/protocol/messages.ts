@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PLAYER } from '../config/player';
 import { VIEW } from '../config/view';
 import type { TileSlot } from '../content/schemas';
+import { type Facing, MAX_DIRECTION } from '../sim/movement';
 import type { TileMeta } from '../world/chunk';
 
 // Every message is an object with a `t` field naming its type.
@@ -22,9 +23,13 @@ export const pingSchema = z.strictObject({
   time: z.number(),
 });
 
-/** Player inputs; the movement fields come with step 07. */
+/** What the player holds during one client tick (20 per second): the server applies one per tick. */
 export const inputSchema = z.strictObject({
   t: z.literal('input'),
+  /** Grows by one per input; the server acknowledges the last one applied (`snapshot.ackSeq`). */
+  seq: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  /** Movement direction: an index of `DIRECTIONS` (0 = still). */
+  dir: z.number().int().min(0).max(MAX_DIRECTION),
 });
 
 const viewportSide = z.number().int().min(1).max(VIEW.maxViewportPx);
@@ -40,12 +45,11 @@ export const viewportSchema = z.strictObject({
   zoom: z.number().int().min(VIEW.minZoom).max(VIEW.maxZoom),
 });
 
-/** Dev mode only: position of the free debug camera, which replaces the player for chunk streaming. */
+/** Dev mode only: the free debug camera, which replaces the player for chunk streaming. */
 export const debugCameraSchema = z.strictObject({
   t: z.literal('debugCamera'),
-  /** Center of the view, in tiles. */
-  x: z.number(),
-  y: z.number(),
+  /** Center of the view, in tiles; null when the camera follows the player again. */
+  at: z.strictObject({ x: z.number(), y: z.number() }).nullable(),
 });
 
 export const clientMessageSchema = z.discriminatedUnion('t', [
@@ -152,8 +156,20 @@ export interface TileUpdateMessage {
   tile: string | null;
 }
 
+/** Sent every tick: the state of the player (other entities come with step 08). */
+export interface SnapshotMessage {
+  t: 'snapshot';
+  /** Server tick. */
+  tick: number;
+  /** `seq` of the last input applied, or -1 before the first one. */
+  ackSeq: number;
+  /** The player of this session: feet position in tiles, and facing. */
+  you: { x: number; y: number; facing: Facing };
+}
+
 export type ServerMessage =
   | WelcomeMessage
+  | SnapshotMessage
   | RejectedMessage
   | PongMessage
   | ChunkMessage

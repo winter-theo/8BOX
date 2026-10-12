@@ -48,12 +48,12 @@ export const chunksModule: GameModule = {
     ctx.net.onMessage('viewport', (session, { w, h, zoom }) => {
       stateOf(session).view = { w, h, zoom };
     });
-    ctx.net.onMessage('debugCamera', (session, { x, y }) => {
+    ctx.net.onMessage('debugCamera', (session, { at }) => {
       if (!ctx.net.devAuth) {
         ctx.log.debug({ session: session.id }, 'debug camera ignored outside dev mode');
         return;
       }
-      stateOf(session).debugCamera = { x, y };
+      stateOf(session).debugCamera = at ?? undefined;
     });
     ctx.events.on('session.closed', ({ session }) => {
       states.delete(session);

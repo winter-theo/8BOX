@@ -66,7 +66,7 @@ export class GameClient {
     bus.on('debugCamera.moved', ({ x, y }) => {
       useSessionStore.setState({ debugCamera: { x, y } });
       if (this.online) {
-        this.send({ t: 'debugCamera', x, y });
+        this.send({ t: 'debugCamera', at: { x, y } });
       }
     });
     bus.on('debug.stats', (stats) => useSessionStore.setState({ debugStats: stats }));
