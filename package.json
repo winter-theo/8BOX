@@ -14,7 +14,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
-    "tools:map": "tsx apps/server/src/tools/map.ts"
+    "tools:map": "tsx apps/server/src/tools/map.ts",
+    "tools:tiles": "tsx apps/client/scripts/tilesPreview.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

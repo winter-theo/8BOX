@@ -1,4 +1,4 @@
-import { MISSING_PLACEHOLDER, type Placeholder, placeholderFor } from './placeholders';
+import { MISSING_PLACEHOLDER, type Placeholder, pickVariant, placeholderFor } from './placeholders';
 
 /** Where to copy a sprite from: a region of an image. */
 export interface SpriteSource {
@@ -47,8 +47,13 @@ export class AssetRegistry {
     private readonly createCanvas: CanvasFactory = domCanvas,
   ) {}
 
-  /** Image of a sprite; `variant` is any whole number (placeholders pick one of their variants). */
+  /** Image of a sprite; `variant` is any whole number. Unknown sprites get a loud checker. */
   sprite(id: string, variant = 0): SpriteSource {
+    return this.optional(id, variant) ?? this.drawnVariant(id, MISSING_PLACEHOLDER, 0);
+  }
+
+  /** Image of a sprite, or undefined when neither the atlas nor a placeholder has it (optional overlays). */
+  optional(id: string, variant = 0): SpriteSource | undefined {
     const frame = this.atlas?.frames.get(id);
     if (this.atlas && frame) {
       return {
@@ -59,8 +64,8 @@ export class AssetRegistry {
         height: frame.height,
       };
     }
-    const variants = this.placeholderImages(id);
-    return variants[Math.abs(variant) % variants.length] ?? (variants[0] as SpriteSource);
+    const placeholder = placeholderFor(id);
+    return placeholder && this.drawnVariant(id, placeholder, pickVariant(placeholder, variant));
   }
 
   /** Whether a sprite comes from the atlas (and not from a placeholder). */
@@ -68,11 +73,10 @@ export class AssetRegistry {
     return this.atlas?.frames.has(id) ?? false;
   }
 
-  private placeholderImages(id: string): SpriteSource[] {
+  private drawnVariant(id: string, placeholder: Placeholder, index: number): SpriteSource {
     let images = this.drawn.get(id);
     if (!images) {
-      const placeholder: Placeholder = placeholderFor(id) ?? MISSING_PLACEHOLDER;
-      images = Array.from({ length: placeholder.variants }, (_, variant) => {
+      images = placeholder.weights.map((_, variant) => {
         const { image, context } = this.createCanvas(placeholder.width, placeholder.height);
         placeholder.draw((x, y, color) => {
           context.fillStyle = color;
@@ -82,6 +86,6 @@ export class AssetRegistry {
       });
       this.drawn.set(id, images);
     }
-    return images;
+    return images[index] ?? (images[0] as SpriteSource);
   }
 }

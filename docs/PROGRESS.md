@@ -98,8 +98,14 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   - message `debugCamera` ; le serveur centre alors la diffusion sur la caméra au lieu du joueur ;
   - flèches à 40 cases/s ;
   - zoom de 1 à 8 (4 au départ), avec + / - (selon le symbole imprimé, `event.key`) ou la molette.
-- (05) Placeholders aux couleurs PICO-8 : l'herbe est donc d'un vert vif. À remplacer par la palette tirée de
-  `ref/` (un seul fichier : `apps/client/src/assets/palette.ts`).
+- (05, retouche des tuiles) La palette PICO-8 est remplacée par une palette sourde de 24 couleurs, inspirée des
+  images envoyées par l'auteur. `docs/design/10-graphismes-son.md` parle encore de PICO-8 : à mettre à jour si
+  tu valides. Un seul fichier à modifier : `apps/client/src/assets/palette.ts`.
+- (05, retouche) Bordures automatiques entre sols, du plus bas au plus haut : eau profonde < eau peu profonde < sable
+  < terre < herbe. Le sol le plus haut déborde sur le plus bas, avec un liseré. L'eau a de l'écume le long des rives,
+  et l'herbe a des zones plus denses. Les coins saillants restent carrés : il faudrait découper la case du dessus.
+- (05, retouche) Le son de Phaser est coupé (`audio.noAudio`) jusqu'à la phase P13. Cela évite des erreurs
+  d'`AudioContext` fermé quand React remonte le jeu en dev.
 - (05) Atlas : chargé seulement si `assets/atlas.json` existe (requête HEAD au démarrage). Les noms de frames sont
   les ids de sprite du contenu (`ground.grass`…). Le design parle de `tile.grass`, mais j'ai gardé les ids du
   contenu.
@@ -107,6 +113,20 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (05) Les objets (arbres, fleurs, buissons) ne sont pas encore dessinés : c'est l'étape 06.
 
 ## Historique
+
+### 2026-10-12 — Retouche de l'étape 05 : tuiles du sol
+- À la demande de l'auteur, et dans l'esprit de ses images de référence : nouvelle palette sourde, et sprites du
+  sol dessinés pixel par pixel avec des variantes pondérées.
+  - Herbe : 10 variantes (touffes, trèfle, fleurs, boutons, caillou), plus des zones denses à bords irréguliers.
+  - Terre : 5 variantes. Sable : 4. Eau peu profonde : 6, calme. Eau profonde : 4.
+- Bordures automatiques entre sols : rebord bosselé avec liseré, coins arrondis, écume sur l'eau. Les bordures se
+  raccordent d'un chunk à l'autre : quand un chunk arrive, les cases des chunks voisins qui le touchent sont
+  redessinées.
+- `planGroundTile` (pur, testé) décide quoi dessiner sur chaque case. Le jeu et le nouvel outil
+  `pnpm tools:tiles` l'utilisent tous les deux. L'outil produit une planche de sprites et des extraits de carte en
+  PNG.
+- Vérifié dans le navigateur aux zooms 1 et 4 : rivière, plages, terre et herbe. Aucune couture entre chunks, et
+  aucune erreur dans la console.
 
 ### 2026-10-12 — Étape 05 : Chunks, diffusion et rendu du sol ✅
 - Protocole 2 :

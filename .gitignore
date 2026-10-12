@@ -33,3 +33,4 @@ Thumbs.db
 
 # Maps exported by pnpm tools:map
 /map-*.png
+/tiles-*.png
