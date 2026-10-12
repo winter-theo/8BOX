@@ -14,6 +14,16 @@ import {
   tileOfCode,
 } from '@8box/shared';
 
+/** One slot of one tile changed. */
+export interface TileChange {
+  layer: LayerId;
+  x: number;
+  y: number;
+  slot: TileSlot;
+  /** New tile id, or null when the slot is now empty. */
+  tile: string | null;
+}
+
 export interface WorldOptions {
   seed: number;
   content: Content;
@@ -31,6 +41,7 @@ export class World {
   private readonly content: Content;
   private readonly surface: Chunk[];
   private readonly dirty = new Set<Chunk>();
+  private changeListener: ((change: TileChange) => void) | undefined;
 
   private constructor(options: WorldOptions, spawn: { x: number; y: number }, surface: Chunk[]) {
     this.seed = options.seed;
@@ -91,6 +102,12 @@ export class World {
     const code = id === null ? 0 : tileCode(this.content, id);
     chunk.slot(slot)[tileIndex(localCoord(x), localCoord(y))] = code;
     this.dirty.add(chunk);
+    this.changeListener?.({ layer, x, y, slot, tile: id });
+  }
+
+  /** Called after every `setTile` (the server context turns it into a `tile.changed` event). */
+  onChange(listener: (change: TileChange) => void): void {
+    this.changeListener = listener;
   }
 
   /** Chunks modified since the last call (for saving, step 10). */

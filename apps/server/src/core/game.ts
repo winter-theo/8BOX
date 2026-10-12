@@ -38,6 +38,7 @@ export function createContext({
   now,
 }: ContextOptions): ServerContext {
   const events = createEventBus();
+  world.onChange((change) => events.emit('tile.changed', change));
   const scheduler = new Scheduler({
     tickMs: tickMs(config),
     onError: (error, task) => log.error({ err: error, task }, 'scheduled task failed'),

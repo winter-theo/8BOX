@@ -5,7 +5,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ## En cours
 **Étape 05 — Chunks : diffusion et rendu du sol** (démarrée le 2026-10-11, branche `step/05-chunks-rendu-sol`)
 - [x] 1. Protocole : `viewport`, `debugCamera` (dev), `chunk` (palette + tableaux compacts), `chunkUnload`, `tileUpdate` ; tests
-- [ ] 2. Serveur : intérêt (chunks à abonner / libérer selon le viewport), diffusion par tick, `tileUpdate` ; tests
+- [x] 2. Serveur : intérêt (chunks à abonner / libérer selon le viewport), diffusion par tick, `tileUpdate` ; tests
 - [ ] 3. Client : `EventBus`, `ChunkCache` (chunks reçus, `tileUpdate`), branchement dans `GameClient` ; tests
 - [ ] 4. Client : `assets/registry.ts` et palette (atlas si présent, sinon placeholders dessinés)
 - [ ] 5. Rendu du sol par chunk (texture par chunk, sans couture), caméra de debug (flèches, zoom entier), infos dev

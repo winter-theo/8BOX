@@ -63,6 +63,11 @@ export class NetServer {
     );
   }
 
+  /** Whether dev logins and dev tools (debug camera) are allowed. */
+  get devAuth(): boolean {
+    return this.options.devAuth;
+  }
+
   get sessionCount(): number {
     return this.sessions.size;
   }
