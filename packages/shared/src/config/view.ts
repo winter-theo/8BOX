@@ -7,4 +7,6 @@ export const VIEW = {
   defaultZoom: 4,
   /** Largest game view accepted from a client, in CSS pixels per side. */
   maxViewportPx: 8192,
+  /** Shortest time between two updates of the UI store by the game, in ms (React never runs at 60 FPS). */
+  uiSyncIntervalMs: 100,
 } as const;

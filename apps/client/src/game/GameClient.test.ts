@@ -1,13 +1,19 @@
 import {
+  baseContent,
+  Chunk,
   type ClientMessage,
+  encodeChunk,
   encodeMessage,
+  loadContent,
   NET,
   PROTOCOL_VERSION,
   parseClientMessage,
   type ServerMessage,
+  TypedEmitter,
 } from '@8box/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSessionStore } from '../store/session';
+import type { ClientEvents } from './events';
 import { GameClient, toWebSocketUrl } from './GameClient';
 
 /** Stands in for a browser WebSocket; the test drives its events. */
@@ -48,13 +54,17 @@ class FakeSocket {
   }
 }
 
+const content = loadContent(baseContent);
 const SPAWN = { layer: 0, x: 512.5, y: 512.5 };
 let sockets: FakeSocket[] = [];
+let bus = new TypedEmitter<ClientEvents>();
 let clock = 0;
 
 function createClient(protocolVersion?: number) {
   return new GameClient({
     serverUrl: 'http://localhost:3000',
+    content,
+    bus,
     ...(protocolVersion !== undefined && { protocolVersion }),
     createSocket: (url) => {
       const socket = new FakeSocket(url);
@@ -72,7 +82,15 @@ beforeEach(() => {
   vi.useFakeTimers();
   sockets = [];
   clock = 0;
-  useSessionStore.setState({ status: 'idle', pingMs: null, player: null, rejectReason: null });
+  bus = new TypedEmitter<ClientEvents>();
+  useSessionStore.setState({
+    status: 'idle',
+    pingMs: null,
+    player: null,
+    rejectReason: null,
+    loadedChunks: 0,
+    debugCamera: null,
+  });
 });
 
 afterEach(() => {
@@ -176,5 +194,60 @@ describe('GameClient', () => {
 
     expect(state().status).toBe('idle');
     expect(sockets).toHaveLength(1);
+  });
+});
+
+describe('GameClient world streaming', () => {
+  const welcome = () =>
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 1, name: 'Ana', position: SPAWN },
+      tick: 1,
+    });
+
+  it('stores the chunks it receives and forgets them when the connection drops', () => {
+    const client = createClient();
+    const unloaded: string[] = [];
+    bus.on('chunk.unloaded', ({ cx, cy }) => unloaded.push(`${cx},${cy}`));
+    client.connect('Ana');
+    lastSocket().open();
+    welcome();
+
+    lastSocket().receive(encodeChunk(new Chunk(0, 16, 16), content));
+    lastSocket().receive(encodeChunk(new Chunk(0, 17, 16), content));
+    lastSocket().receive({ t: 'chunkUnload', layer: 0, cx: 17, cy: 16 });
+    expect(client.chunks.size).toBe(1);
+
+    lastSocket().drop();
+    expect(client.chunks.size).toBe(0);
+    expect(unloaded).toEqual(['17,16', '16,16']);
+  });
+
+  it('sends the view size and the debug camera once online', () => {
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+    bus.emit('view.changed', { w: 1280, h: 720, zoom: 4 });
+    bus.emit('debugCamera.moved', { x: 10, y: 20 });
+    expect(lastSocket().sent.map((m) => m.t)).toEqual(['hello']);
+
+    welcome();
+    bus.emit('debugCamera.moved', { x: 11, y: 20 });
+
+    expect(lastSocket().sent).toContainEqual({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
+    expect(lastSocket().sent).toContainEqual({ t: 'debugCamera', x: 11, y: 20 });
+    expect(state().debugCamera).toEqual({ x: 11, y: 20 });
+  });
+
+  it('tells Phaser where the player spawned', () => {
+    const spawns: unknown[] = [];
+    bus.on('player.spawned', ({ position }) => spawns.push(position));
+    const client = createClient();
+    client.connect('Ana');
+    lastSocket().open();
+
+    welcome();
+
+    expect(spawns).toEqual([SPAWN]);
   });
 });

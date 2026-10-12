@@ -18,6 +18,10 @@ interface SessionState {
   pingMs: number | null;
   player: LocalPlayer | null;
   rejectReason: RejectReason | null;
+  /** Chunks currently received from the server (dev info). */
+  loadedChunks: number;
+  /** Center of the free debug camera, in tiles (dev mode). */
+  debugCamera: { x: number; y: number } | null;
 }
 
 /** Written by the GameClient only; the UI reads it with selectors. */
@@ -26,4 +30,6 @@ export const useSessionStore = create<SessionState>()(() => ({
   pingMs: null,
   player: null,
   rejectReason: null,
+  loadedChunks: 0,
+  debugCamera: null,
 }));

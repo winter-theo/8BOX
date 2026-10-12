@@ -1,0 +1,88 @@
+import {
+  baseContent,
+  Chunk,
+  encodeChunk,
+  LAYER,
+  loadContent,
+  TypedEmitter,
+  tileCode,
+} from '@8box/shared';
+import { describe, expect, it } from 'vitest';
+import type { ClientEvents } from '../events';
+import { ChunkCache } from './ChunkCache';
+
+const content = loadContent(baseContent);
+
+function setup() {
+  const bus = new TypedEmitter<ClientEvents>();
+  const log: string[] = [];
+  bus.on('chunk.loaded', ({ chunk }) => log.push(`loaded ${chunk.cx},${chunk.cy}`));
+  bus.on('chunk.unloaded', ({ cx, cy }) => log.push(`unloaded ${cx},${cy}`));
+  bus.on('chunk.changed', ({ chunk }) => log.push(`changed ${chunk.cx},${chunk.cy}`));
+  return { cache: new ChunkCache(content, bus), log };
+}
+
+function grassChunk(cx: number, cy: number) {
+  const chunk = new Chunk(LAYER.surface, cx, cy);
+  chunk.ground.fill(tileCode(content, 'base:grass'));
+  return encodeChunk(chunk, content);
+}
+
+describe('ChunkCache', () => {
+  it('stores received chunks and reads their tiles', () => {
+    const { cache, log } = setup();
+
+    cache.load(grassChunk(2, 3));
+
+    expect(cache.size).toBe(1);
+    expect(cache.getTile(0, 64, 96, 'ground')?.id).toBe('base:grass');
+    expect(cache.getTile(0, 64, 96, 'object')).toBeUndefined();
+    expect(cache.getTile(0, 0, 0, 'ground')).toBeUndefined();
+    expect(log).toEqual(['loaded 2,3']);
+  });
+
+  it('applies tile updates to loaded chunks only', () => {
+    const { cache, log } = setup();
+    cache.load(grassChunk(0, 0));
+
+    cache.applyTileUpdate({
+      t: 'tileUpdate',
+      layer: 0,
+      x: 5,
+      y: 6,
+      slot: 'floor',
+      tile: 'base:sand',
+    });
+    cache.applyTileUpdate({
+      t: 'tileUpdate',
+      layer: 0,
+      x: 500,
+      y: 6,
+      slot: 'floor',
+      tile: 'base:sand',
+    });
+
+    expect(cache.getTile(0, 5, 6, 'floor')?.id).toBe('base:sand');
+    cache.applyTileUpdate({ t: 'tileUpdate', layer: 0, x: 5, y: 6, slot: 'floor', tile: null });
+    expect(cache.getTile(0, 5, 6, 'floor')).toBeUndefined();
+    expect(log).toEqual(['loaded 0,0', 'changed 0,0', 'changed 0,0']);
+  });
+
+  it('unloads one chunk or all of them', () => {
+    const { cache, log } = setup();
+    cache.load(grassChunk(0, 0));
+    cache.load(grassChunk(1, 0));
+    cache.load(grassChunk(2, 0));
+
+    cache.unload(0, 1, 0);
+    cache.unload(0, 9, 9);
+    cache.clear();
+
+    expect(cache.size).toBe(0);
+    expect(log.filter((line) => line.startsWith('unloaded'))).toEqual([
+      'unloaded 1,0',
+      'unloaded 0,0',
+      'unloaded 2,0',
+    ]);
+  });
+});
