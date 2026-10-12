@@ -295,3 +295,34 @@ body {
   transform: translate(-50%, calc(-100% - 16px));
   pointer-events: none;
 }
+
+.fullscreen-button {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  left: max(8px, env(safe-area-inset-left));
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 60%);
+  color: #f4f4f4;
+  font: inherit;
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.panel .fullscreen-button {
+  position: static;
+}
+
+/* In touch mode the dev info sits at the top, right of the full screen button. */
+.app--touch .dev-info {
+  left: calc(max(8px, env(safe-area-inset-left)) + 120px);
+}
+
+.rotate-phone {
+  z-index: 10;
+  background: #1b1b24;
+  text-align: center;
+}

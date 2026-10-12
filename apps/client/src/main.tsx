@@ -13,6 +13,9 @@ if (!rootElement) {
   throw new Error('Missing #root element');
 }
 
+// iOS Safari zooms the page on a pinch despite `touch-action`: the pinch belongs to the game camera.
+document.addEventListener('gesturestart', (event) => event.preventDefault());
+
 if (import.meta.env.DEV) {
   console.info('[8box] content loaded', contentSizes(content));
 }

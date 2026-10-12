@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { eventBus, type TouchButton } from '../../game/events';
+import { FullscreenButton } from './FullscreenButton';
 import { Joystick } from './Joystick';
 
 const BUTTONS: readonly { button: TouchButton; label: string }[] = [
@@ -9,8 +10,8 @@ const BUTTONS: readonly { button: TouchButton; label: string }[] = [
 ];
 
 /**
- * Touch controls in landscape: the joystick on the left, the buttons on the right, and room kept at the
- * bottom for the item bar (step 14).
+ * Touch controls in landscape: the joystick on the left, the buttons on the right, room kept at the
+ * bottom for the item bar (step 14), and a full screen button.
  */
 export function MobileControls() {
   const { t } = useTranslation();
@@ -30,6 +31,7 @@ export function MobileControls() {
         ))}
       </div>
       <div className="hotbar-slot" aria-hidden="true" />
+      <FullscreenButton />
     </div>
   );
 }
