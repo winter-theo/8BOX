@@ -28,6 +28,7 @@
     "slot": "ground",
     "sprite": "ground.shallow_water",
     "solid": false,
+    "speedFactor": 0.5,
     "tall": false,
     "hp": 0
   },

@@ -36,6 +36,12 @@ describe('tileDefSchema', () => {
     expect(tileDefSchema.safeParse({ ...tile, slot: 'roof' }).success).toBe(false);
     expect(tileDefSchema.safeParse({ ...tile, hp: -1 }).success).toBe(false);
   });
+
+  it('accepts a speed factor between 0 (excluded) and 1', () => {
+    expect(tileDefSchema.parse({ ...tile, speedFactor: 0.5 }).speedFactor).toBe(0.5);
+    expect(tileDefSchema.safeParse({ ...tile, speedFactor: 0 }).success).toBe(false);
+    expect(tileDefSchema.safeParse({ ...tile, speedFactor: 1.5 }).success).toBe(false);
+  });
 });
 
 describe('itemDefSchema', () => {
