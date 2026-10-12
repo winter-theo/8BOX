@@ -3,7 +3,15 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 06 — Vue 3/4, profondeur, caméra et zoom
+- [ ] Placeholders d'objets (chêne 8 × 16, buisson, hautes herbes, fleurs, mur avec face, porte) et personnage de
+  test ; `tools:tiles` gère les sprites 8 × 16 et dessine les objets.
+- [ ] Ancrage et tri en profondeur (fonctions pures testées) ; calque des objets avec pool, au rythme des chunks.
+- [ ] Calque des entités trié avec les objets ; entité de test en dev, suivie par la caméra.
+- [ ] Caméra : zoom par paliers (+ / −, pincement), au plus ~150 cases de large, ≈ 40 par défaut, limites de la
+  carte, suivi d'une cible.
+- [ ] `tileUpdate` : redessin de la case du sol (et de ses voisines) ou du sprite d'objet.
+- [ ] Moniteur de FPS en dev, puis vérification des critères dans le navigateur.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
