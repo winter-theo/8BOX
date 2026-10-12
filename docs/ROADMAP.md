@@ -14,7 +14,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 | 04 | [Génération du monde de surface](steps/04-generation-surface.md) | 02 | ✅ |
 | 05 | [Chunks : diffusion et rendu du sol](steps/05-chunks-rendu-sol.md) | 03, 04 | ✅ |
 | 06 | [Vue 3/4, profondeur, caméra et zoom](steps/06-vue-3-4-camera.md) | 05 | ✅ |
-| 07 | [Déplacement autoritaire et collisions](steps/07-deplacement.md) | 06 | ⬜ |
+| 07 | [Déplacement autoritaire et collisions](steps/07-deplacement.md) | 06 | 🟡 |
 | 08 | [Prédiction, interpolation, multijoueur](steps/08-multijoueur-fluide.md) | 07 | ⬜ |
 | 09 | [Contrôles mobiles](steps/09-controles-mobiles.md) | 07 | ⬜ |
 | 10 | [Base de données et sauvegarde](steps/10-base-de-donnees.md) | 08 | ⬜ |

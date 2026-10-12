@@ -3,7 +3,15 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 07 — Déplacement autoritaire et collisions
+- [ ] `shared/sim/movement.ts` : 8 directions, diagonales normalisées, collisions avec glissement, ralentissement
+  (champ `speedFactor` des cases) ; tests (coin, glissement, diagonales, vitesse constante).
+- [ ] Protocole 3 : `input { seq, dir }`, `snapshot { tick, ackSeq, you }`, `debugCamera` désactivable.
+- [ ] Serveur `modules/movement/` : un input par tick et par joueur (file bornée), position, regard, snapshot ;
+  test « inonder d'inputs ne fait pas aller plus vite ».
+- [ ] Client : clavier par `event.code` (WASD et flèches), envoi d'`input` à 20 Hz, position et regard reçus.
+- [ ] Client : personnage 3 frames retourné à gauche, caméra qui suit le joueur, caméra libre en dev seulement.
+- [ ] Vérification des critères dans le navigateur.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
