@@ -12,6 +12,16 @@ body,
   background: #1b1b24;
 }
 
+/* No browser gestures over the game: no page zoom or scroll, no selection, no long-press callout. */
+html,
+body {
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .phaser-game {
   position: fixed;
   inset: 0;
@@ -167,4 +177,109 @@ body,
   font-family: monospace;
   font-size: 12px;
   pointer-events: none;
+}
+
+.app--touch .dev-info {
+  top: max(8px, env(safe-area-inset-top));
+  bottom: auto;
+}
+
+/* ─── Touch controls (landscape) ─── */
+
+.mobile-controls {
+  /* Room kept at the bottom for the item bar (step 14). */
+  --hotbar-height: 64px;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.joystick-zone {
+  position: absolute;
+  top: 30%;
+  bottom: calc(var(--hotbar-height) + env(safe-area-inset-bottom));
+  left: 0;
+  width: 45%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.joystick-base {
+  position: absolute;
+  /* Home, when not touched: bottom left of the zone. The stick moves under the thumb when touched. */
+  left: calc(max(16px, env(safe-area-inset-left)) + 64px);
+  top: calc(100% - 80px);
+  width: 128px;
+  height: 128px;
+  margin: -64px 0 0 -64px;
+  border: 2px solid rgb(255 255 255 / 30%);
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: rgb(0 0 0 / 25%);
+}
+
+.joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 45%);
+}
+
+.touch-buttons {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(var(--hotbar-height) + max(16px, env(safe-area-inset-bottom)));
+  display: grid;
+  grid-template-areas:
+    ". inventory"
+    "action use";
+  gap: 12px;
+  align-items: end;
+  justify-items: end;
+}
+
+.touch-button {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgb(255 255 255 / 35%);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 45%);
+  color: #f4f4f4;
+  font:
+    600 12px system-ui,
+    sans-serif;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.touch-button:active {
+  background: rgb(255 255 255 / 25%);
+}
+
+.touch-button--use {
+  grid-area: use;
+  width: 84px;
+  height: 84px;
+  font-size: 14px;
+}
+
+.touch-button--action {
+  grid-area: action;
+}
+
+.touch-button--inventory {
+  grid-area: inventory;
+}
+
+.hotbar-slot {
+  position: absolute;
+  bottom: env(safe-area-inset-bottom);
+  left: 50%;
+  width: min(60%, 480px);
+  height: var(--hotbar-height);
+  transform: translateX(-50%);
 }

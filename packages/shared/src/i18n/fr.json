@@ -30,12 +30,22 @@
       "stats": "{{fps}} FPS · zoom ×{{zoom}} · {{objects}} objets",
       "player": "joueur : {{x}}, {{y}}",
       "camera": "caméra libre : {{x}}, {{y}}",
-      "controls": "ZQSD ou flèches : marcher · + / - : zoom · F2 : caméra libre (flèches, Maj : lentement)"
+      "controls": "ZQSD ou flèches : marcher · + / - : zoom · F2 : caméra libre (flèches, Maj : lentement)",
+      "longPress": "case {{x}}, {{y}}"
     },
     "language": {
       "label": "Langue",
       "fr": "Français",
       "en": "English"
+    },
+    "mobile": {
+      "joystick": "Joystick de déplacement",
+      "use": "Frapper",
+      "action": "Action",
+      "inventory": "Sac",
+      "rotate": "Tourne ton téléphone",
+      "rotateHint": "8Box se joue en paysage.",
+      "fullscreen": "Plein écran"
     }
   },
   "content": {

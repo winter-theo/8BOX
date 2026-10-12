@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lagFromQuery } from './urlOptions';
+import { lagFromQuery, touchFromQuery } from './urlOptions';
 
 describe('lagFromQuery', () => {
   it('reads a whole number of milliseconds, capped', () => {
@@ -12,5 +12,14 @@ describe('lagFromQuery', () => {
     expect(lagFromQuery('')).toBe(0);
     expect(lagFromQuery('?lag=abc')).toBe(0);
     expect(lagFromQuery('?lag=-5')).toBe(0);
+  });
+});
+
+describe('touchFromQuery', () => {
+  it('forces the touch controls with touch=1 only', () => {
+    expect(touchFromQuery('?touch=1')).toBe(true);
+    expect(touchFromQuery('?lag=10&touch=1')).toBe(true);
+    expect(touchFromQuery('?touch=0')).toBe(false);
+    expect(touchFromQuery('')).toBe(false);
   });
 });
