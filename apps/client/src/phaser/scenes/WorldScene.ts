@@ -10,12 +10,14 @@ import { MovementKeys } from '../MovementKeys';
 import { atlasFromScene } from '../world/atlasFromScene';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundLayer } from '../world/GroundLayer';
+import { LocalPlayer } from '../world/LocalPlayer';
 import { ObjectLayer } from '../world/ObjectLayer';
 import { SpriteTextures } from '../world/SpriteTextures';
 
 /** The game world: ground and objects of the streamed chunks, entities sorted with them, and the camera. */
 export class WorldScene extends Phaser.Scene {
   private debugCamera: DebugCamera | undefined;
+  private localPlayer: LocalPlayer | undefined;
 
   constructor() {
     super('world');
@@ -27,6 +29,9 @@ export class WorldScene extends Phaser.Scene {
     const textures = new SpriteTextures(this.textures, registry);
     const objects = new ObjectLayer(this, textures, content);
     const entities = new EntityLayer(this, textures);
+    const localPlayer = new LocalPlayer(entities);
+    this.localPlayer = localPlayer;
+    let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
       objects.show(chunk);
@@ -40,9 +45,23 @@ export class WorldScene extends Phaser.Scene {
     };
     const camera = new CameraController(this, emitView);
     emitView();
-    const debugCamera = import.meta.env.DEV ? new DebugCamera(this, entities, camera) : undefined;
-    this.debugCamera = debugCamera;
     const movementKeys = new MovementKeys((dir) => eventBus.emit('input.direction', { dir }));
+    // Dev mode: F2 frees the camera from the player (the player stands still meanwhile).
+    const debugCamera = import.meta.env.DEV
+      ? new DebugCamera(this, camera, (active) => {
+          movementKeys.setEnabled(!active);
+          if (!active && playerSprite) {
+            camera.follow(playerSprite);
+          }
+        })
+      : undefined;
+    this.debugCamera = debugCamera;
+    const spawnPlayer = (entity: number, position: { x: number; y: number }) => {
+      playerSprite = localPlayer.spawn(entity, position);
+      if (!debugCamera?.isActive) {
+        camera.follow(playerSprite);
+      }
+    };
     if (import.meta.env.DEV) {
       this.time.addEvent({
         delay: DEBUG.fpsSampleIntervalMs,
@@ -59,6 +78,9 @@ export class WorldScene extends Phaser.Scene {
     for (const chunk of gameClient.chunks.all()) {
       showChunk(chunk);
     }
+    if (gameClient.player) {
+      spawnPlayer(gameClient.player.entity, gameClient.player);
+    }
     const unsubscribe = [
       eventBus.on('chunk.loaded', ({ chunk }) => showChunk(chunk)),
       eventBus.on('tile.changed', ({ chunk, x, y, slot }) => {
@@ -72,13 +94,13 @@ export class WorldScene extends Phaser.Scene {
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
       }),
-      eventBus.on('player.spawned', ({ position }) => {
-        // The player is not drawn before step 07: the view (or the dev test character) goes to the spawn.
-        if (debugCamera) {
-          debugCamera.moveTo(position);
-        } else {
-          camera.centerOn(position);
-        }
+      eventBus.on('player.spawned', ({ entity, position }) => spawnPlayer(entity, position)),
+      eventBus.on('player.moved', ({ x, y, facing }) =>
+        localPlayer.move(x, y, facing, this.time.now),
+      ),
+      eventBus.on('player.despawned', () => {
+        localPlayer.remove();
+        playerSprite = undefined;
       }),
     ];
 
@@ -93,6 +115,7 @@ export class WorldScene extends Phaser.Scene {
       }
       camera.destroy();
       movementKeys.destroy();
+      debugCamera?.destroy();
       ground.destroy();
       objects.destroy();
       entities.destroy();
@@ -102,7 +125,8 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.DESTROY, cleanup);
   }
 
-  override update(_time: number, deltaMs: number): void {
+  override update(time: number, deltaMs: number): void {
     this.debugCamera?.update(deltaMs);
+    this.localPlayer?.update(time);
   }
 }

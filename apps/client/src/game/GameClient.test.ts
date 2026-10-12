@@ -265,17 +265,22 @@ describe('GameClient world streaming', () => {
     ]);
   });
 
-  it('stops sending inputs when the connection is lost', () => {
+  it('stops sending inputs and removes the player when the connection is lost', () => {
+    let despawned = 0;
+    bus.on('player.despawned', () => despawned++);
     const client = createClient();
     client.connect('Ana');
     lastSocket().open();
     welcome();
+    expect(client.player).toMatchObject({ x: SPAWN.x, y: SPAWN.y, facing: 'down' });
     bus.emit('input.direction', { dir: 1 });
     const socket = lastSocket();
     socket.drop();
     vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
 
     expect(socket.sent.filter((message) => message.t === 'input')).toEqual([]);
+    expect(client.player).toBeUndefined();
+    expect(despawned).toBe(1);
   });
 
   it('passes the player position of each snapshot to Phaser', () => {

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../store/session';
 
-/** Dev mode only: FPS, zoom, streamed chunks and objects, test character position and controls. */
+/** Dev mode only: FPS, zoom, streamed chunks and objects, free camera position and controls. */
 export function DevInfo() {
   const { t } = useTranslation();
   const online = useSessionStore((state) => state.status === 'online');

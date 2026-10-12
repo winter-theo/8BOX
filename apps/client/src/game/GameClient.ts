@@ -3,6 +3,7 @@ import {
   type Content,
   decodeServerMessage,
   encodeMessage,
+  type Facing,
   NET,
   PROTOCOL_VERSION,
   type ServerMessage,
@@ -39,6 +40,8 @@ export interface GameClientOptions {
 export class GameClient {
   /** Chunks received from the server. */
   readonly chunks: ChunkCache;
+  /** The player of this connection as the server last showed it; undefined when not in the world. */
+  player: { entity: number; x: number; y: number; facing: Facing } | undefined;
   private readonly createSocket: (url: string) => WebSocket;
   private readonly now: () => number;
   private socket: WebSocket | undefined;
@@ -131,12 +134,16 @@ export class GameClient {
         if (this.view) {
           this.send({ t: 'viewport', ...this.view });
         }
+        this.player = { entity, x: position.x, y: position.y, facing: 'down' };
         this.options.bus.emit('player.spawned', { entity, position });
         this.startPing();
         this.startInputs();
         return;
       }
       case 'snapshot':
+        if (this.player) {
+          Object.assign(this.player, message.you);
+        }
         this.options.bus.emit('player.moved', message.you);
         return;
       case 'pong':
@@ -182,6 +189,10 @@ export class GameClient {
   /** Connection lost or left: stop pinging and forget the world (the server sends it again). */
   private goOffline(): void {
     this.online = false;
+    if (this.player) {
+      this.player = undefined;
+      this.options.bus.emit('player.despawned', {});
+    }
     this.stopPing();
     clearInterval(this.inputTimer);
     this.inputTimer = undefined;

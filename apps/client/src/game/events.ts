@@ -19,6 +19,8 @@ export type ClientEvents = {
   'tile.changed': { chunk: Chunk; x: number; y: number; slot: TileSlot };
   /** The local player joined the world (`entity` is only valid for this connection). */
   'player.spawned': { entity: number; position: WorldPosition };
+  /** The local player left the world (connection lost or left). */
+  'player.despawned': Record<string, never>;
   /** The server moved the local player: feet position in tiles, and facing. */
   'player.moved': { x: number; y: number; facing: Facing };
   /** Phaser → game: movement direction held on the keyboard (an index of `DIRECTIONS`, 0 = still). */
