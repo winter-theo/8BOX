@@ -31,7 +31,7 @@ describe('placeholders', () => {
     const placeholder = placeholderFor(id);
     expect(placeholder).toBeDefined();
     const colors = new Set<string>(Object.values(PALETTE));
-    for (let variant = 0; variant < (placeholder?.variants ?? 0); variant++) {
+    for (let variant = 0; variant < (placeholder?.weights.length ?? 0); variant++) {
       const pixels = new Map<string, string>();
       placeholder?.draw((x, y, color) => pixels.set(`${x},${y}`, color), variant);
       expect(pixels.size).toBe(64);

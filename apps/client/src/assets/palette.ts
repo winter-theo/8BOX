@@ -1,24 +1,33 @@
 /**
- * Temporary game palette (PICO-8, 16 colors). The only place where in-game colors are defined:
- * replacing it restyles every placeholder.
+ * Game palette: muted, natural colors in the spirit of the author's references. The only place where
+ * in-game colors are defined: changing a value restyles every placeholder sprite.
  */
 export const PALETTE = {
-  black: '#000000',
-  darkBlue: '#1d2b53',
-  darkPurple: '#7e2553',
-  darkGreen: '#008751',
-  brown: '#ab5236',
-  darkGray: '#5f574f',
-  lightGray: '#c2c3c7',
-  white: '#fff1e8',
-  red: '#ff004d',
-  orange: '#ffa300',
-  yellow: '#ffec27',
-  green: '#00e436',
-  blue: '#29adff',
-  lavender: '#83769c',
-  pink: '#ff77a8',
-  peach: '#ffccaa',
+  /** Outlines and deepest shadows. */
+  ink: '#1c2a24',
+  leafDark: '#2e4d34',
+  leaf: '#3f6b3e',
+  grassDark: '#4f8545',
+  grass: '#67a052',
+  grassLight: '#8cbf62',
+  grassPale: '#b9da86',
+  soilDark: '#523726',
+  soil: '#7d5636',
+  soilLight: '#a67a4b',
+  sandDark: '#b89a5e',
+  sand: '#d8c288',
+  sandLight: '#ece0b2',
+  waterDeep: '#1d3b52',
+  water: '#285f75',
+  waterShallow: '#3f8f91',
+  waterLight: '#79c2b0',
+  foam: '#dff2df',
+  stone: '#6e7871',
+  stoneLight: '#a8b1a4',
+  bone: '#f2efdc',
+  berry: '#b8433c',
+  petal: '#e7c64a',
+  blossom: '#d58ca4',
 } as const;
 
 export type PaletteColor = (typeof PALETTE)[keyof typeof PALETTE];
