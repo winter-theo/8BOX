@@ -3,15 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-**Étape 02 — Serveur : boucle, modules, entités, événements** (démarrée le 2026-10-11)
-- [x] 1. Boucle à pas fixe (`core/loop.ts`), rattrapage borné, mesure du tick, tests
-- [x] 2. Planificateur (`core/scheduler.ts`) : tâches périodiques et différées en ticks, tests
-- [x] 3. `EntityStore` (`core/entities.ts`) et index spatial par couche et chunk, tests
-- [x] 4. Catalogue d'événements serveur et bus (`core/events.ts`)
-- [x] 5. Modules (`core/module.ts`) : `GameModule`, ordre par dépendances, systèmes par phase, `ServerContext`, tests
-- [x] 6. `createTestContext()` et test « un module enregistre un système et réagit à un événement »
-- [x] 7. Module `modules/debug/` (nombre d'entités toutes les 10 s, désactivable par config)
-- [ ] 8. Démarrage dans `main.ts`, temps de tick dans `/health`, critères d'acceptation, clôture
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -45,8 +37,39 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (01) Une case et un objet de même id partagent le même nom affiché (`content.base.<nom>.name`).
 - (01) Le sélecteur de langue est provisoire, en haut à droite. Il ira dans le menu des options quand il existera.
 - (01) Le paquet client passe à environ 1,74 Mo (zod et i18next en plus de Phaser).
+- (02) Deux nouvelles sections de config dans `shared` :
+  - `LOOP` : rattrapage de 5 ticks au plus ; statistiques calculées sur les 100 derniers ticks (5 s).
+  - `DEBUG` : log du nombre d'entités activé, toutes les 10 s.
+- (02) `CONFIG` regroupe toutes les sections (`ctx.config.player…`). Son type `GameConfig` élargit les valeurs
+  (`20` → `number`) pour que les tests puissent passer une autre config.
+- (02) Le `dt` des systèmes est en secondes (0,05 à 20 Hz). Les tâches planifiées passent avant les systèmes.
+- (02) `/health` renvoie `tick: { count, avgMs, maxMs, skipped }`, calculés sur les 100 derniers ticks.
+- (02) Un seul logger pino, créé dans `main.ts` : Fastify l'utilise (`loggerInstance`) et le jeu reçoit un enfant
+  (`scope: "game"`).
+- (02) Le calcul des chunks (`chunkCoord`) vit pour l'instant dans `apps/server/src/core/spatial.ts`. L'étape 04 ou
+  05 pourra le déplacer dans `shared/world/`, car le client en aura besoin.
+- (02) Ids d'entité : des nombres qui augmentent et ne sont jamais réutilisés pendant une exécution. Ils ne sont ni
+  sauvegardés ni durables.
+- (02) Le planificateur parcourt toutes ses tâches à chaque tick. Il faudra un tas (heap) s'il en a des milliers.
 
 ## Historique
+
+### 2026-10-11 — Étape 02 : Serveur : boucle, modules, entités, événements ✅
+- Boucle à pas fixe (50 ms) avec rattrapage borné et mesure du tick (moyenne, maximum, ticks sautés), affichée
+  dans `/health`. Mesure réelle : 20 ticks/s, environ 0,015 ms par tick.
+- `GameModule` avec `dependsOn` (tri topologique, erreurs claires : doublon, dépendance inconnue, cycle).
+  Systèmes par phase (`input` → `simulate` → `post` → `net`) ; un système qui plante est journalisé, les autres
+  tournent quand même.
+- `EntityStore` : composants typés dans des `Map`, requêtes par composants, et index spatial par couche et par
+  chunk, mis à jour à chaque `set` de position. Recherche `near()`. Événements `entity.created` et `entity.removed`.
+- Planificateur en ticks (`every`, `after`, `inTicks`, annulation), sans `setTimeout` dans la logique de jeu.
+- `createTestContext()` (vrais services, logs muets, ticks à la main) et module `debug` (désactivable par
+  `CONFIG.debug`).
+- Écarts par rapport à la fiche :
+  - Fichiers en plus : `core/game.ts` (assemble le contexte, les modules et la boucle), `core/spatial.ts`
+    (index spatial) et `core/testing.ts`.
+  - `EntityStore` accepte un catalogue de composants en paramètre de type, pour les tests.
+  - `pino` devient une dépendance directe du serveur.
 
 ### 2026-10-11 — Étape 01 : Socle partagé : contenu, config, i18n ✅
 - `shared` fournit un RNG seedé (mulberry32 et `hashSeed`) et un émetteur d'événements typé et synchrone.
