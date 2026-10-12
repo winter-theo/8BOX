@@ -1,5 +1,6 @@
 import { CONFIG, type Content, type GameConfig } from '@8box/shared';
 import { NetServer } from '../net/net';
+import type { World } from '../world/World';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
 import { GameLoop, type TickStats } from './loop';
@@ -16,6 +17,7 @@ export interface ContextOptions {
   config: GameConfig;
   content: Content;
   log: Logger;
+  world: World;
   /** Accept dev logins (`hello { devName }`). Default: false. */
   devAuth?: boolean;
   /** Clock of the network layer, in ms (default: performance.now). */
@@ -31,6 +33,7 @@ export function createContext({
   config,
   content,
   log,
+  world,
   devAuth = false,
   now,
 }: ContextOptions): ServerContext {
@@ -47,6 +50,7 @@ export function createContext({
     scheduler,
     entities: new EntityStore(events),
     systems: new SystemRegistry(),
+    world,
     net: new NetServer({ config, log, events, scheduler, devAuth, ...(now && { now }) }),
   };
 }
@@ -60,6 +64,7 @@ export function runTick(ctx: ServerContext, tick: number): void {
 export interface GameOptions {
   content: Content;
   log: Logger;
+  world: World;
   modules: readonly GameModule[];
   config?: GameConfig;
   devAuth?: boolean;
@@ -76,11 +81,12 @@ export interface Game {
 export function createGame({
   content,
   log,
+  world,
   modules,
   config = CONFIG,
   devAuth = false,
 }: GameOptions): Game {
-  const ctx = createContext({ config, content, log, devAuth });
+  const ctx = createContext({ config, content, log, world, devAuth });
   const order = initModules(ctx, modules);
   log.info({ modules: order, devAuth }, 'modules initialized');
 

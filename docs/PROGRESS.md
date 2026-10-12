@@ -45,8 +45,6 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (02) `/health` renvoie `tick: { count, avgMs, maxMs, skipped }`, calculés sur les 100 derniers ticks.
 - (02) Un seul logger pino, créé dans `main.ts` : Fastify l'utilise (`loggerInstance`) et le jeu reçoit un enfant
   (`scope: "game"`).
-- (02) Le calcul des chunks (`chunkCoord`) vit pour l'instant dans `apps/server/src/core/spatial.ts`. L'étape 04 ou
-  05 pourra le déplacer dans `shared/world/`, car le client en aura besoin.
 - (02) Ids d'entité : des nombres qui augmentent et ne sont jamais réutilisés pendant une exécution. Ils ne sont ni
   sauvegardés ni durables.
 - (02) Le planificateur parcourt toutes ses tâches à chaque tick. Il faudra un tas (heap) s'il en a des milliers.
@@ -68,8 +66,42 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   les traiter dans la phase `input`.
 - (03) En dev, `?protocol=N` dans l'URL du client annonce une autre version, pour tester l'écran « Recharger ».
 - (03) `welcome` ne contient pas encore l'heure du monde (étape 21), et `hello` pas encore le viewport (étape 05).
+- (04) Les réglages de génération sont dans `WORLDGEN` (config de `shared`), ajustés à l'œil sur les cartes PNG.
+  Résultat pour la graine « 8box » :
+  - 20 % d'eau (6 % profonde), 9 % de sable, 10 % de terre ;
+  - 6,6 % de chênes, 1 % de buissons à baies, 5,5 % de hautes herbes, 2,4 % de fleurs.
+- (04) Les rivières sont en eau peu profonde, donc traversables lentement. En eau profonde, elles couperaient la carte
+  en îles, et il n'y a pas de pont dans le MVP. Seuls les centres des lacs sont en eau profonde.
+- (04) Autour du spawn (centre de la carte, case 512 + 0,5) :
+  - clairière de 6 cases, toujours en herbe et sans objet ;
+  - forêt dense sur environ 70 cases ;
+  - pas de rivière à moins de 45 cases ;
+  - terrain surélevé sur 90 cases, pour éloigner les lacs.
+- (04) Sans `WORLD_SEED`, la graine est tirée au hasard et écrite dans le log au démarrage. Elle sera stockée en base à
+  l'étape 10. Une graine en texte est hachée (« 8box » donne 2563337752).
+- (04) Codes de case dans les `Uint16Array` : index d'exécution + 1, et 0 pour une case vide. Ils ne sont jamais
+  sauvegardés.
+- (04) Les couleurs de `tools:map` sont des couleurs de débogage, pas le rendu du jeu.
+- (04) `tsx` est ajouté à la racine pour lancer l'outil depuis le dossier du projet. Les images `map-*.png` sont
+  ignorées par git.
+- (04) `createTestContext()` utilise par défaut un petit monde de 64 × 64 cases (graine 1), pour que les tests
+  restent rapides.
 
 ## Historique
+
+### 2026-10-11 — Étape 04 : Génération du monde de surface ✅
+- `shared/world` : couches, coordonnées de case et de chunk, `Chunk` (3 `Uint16Array` + `meta`), codes de case.
+  `chunkCoord` y est déplacé depuis le serveur.
+- Générateur de surface par chunk :
+  - bruits simplex seedés pour l'altitude (lacs), les rivières (isoligne), l'humidité (terre) et les forêts ;
+  - hachage par case pour placer les objets, si bien qu'un chunk se génère seul, dans n'importe quel ordre.
+- Paysage : lacs avec plages, rivières bordées de sable, prairies fleuries, forêts sauvages, et forêt dense autour
+  de la clairière de spawn.
+- Serveur : `World` génère les 1024 chunks au démarrage (environ 0,8 s). `getTile` et `setTile` marquent le chunk
+  modifié. Graine dans `WORLD_SEED`, sinon aléatoire. Les joueurs apparaissent dans la clairière.
+- Outil `pnpm tools:map [graine] [fichier.png]` : carte PNG et proportions de chaque case.
+- Écarts par rapport à la fiche : réglages dans une config `WORLDGEN` ; `ctx.world` dans le contexte serveur ;
+  rivières en eau peu profonde.
 
 ### 2026-10-11 — Étape 03 : Protocole et connexions ✅
 - Protocole dans `shared` :

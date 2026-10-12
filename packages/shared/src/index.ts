@@ -31,4 +31,21 @@ export {
 export * from './protocol/messages';
 export { PROTOCOL_VERSION } from './protocol/version';
 export { type Listener, TypedEmitter } from './util/events';
-export { createRng, hashSeed, type Rng } from './util/rng';
+export { createRng, hashCoords, hashSeed, parseSeed, type Rng } from './util/rng';
+export { Chunk, type TileMeta } from './world/chunk';
+export {
+  CHUNK_AREA,
+  CHUNK_SIZE,
+  chunkCoord,
+  chunksPerSide,
+  LAYER,
+  type LayerId,
+  localCoord,
+  tileIndex,
+} from './world/coords';
+export {
+  createSurfaceGenerator,
+  type SurfaceGenerator,
+  type SurfaceGenOptions,
+} from './world/gen/surface';
+export { EMPTY_TILE, tileCode, tileOfCode } from './world/tileCodes';

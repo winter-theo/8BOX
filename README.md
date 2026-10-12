@@ -36,6 +36,7 @@ pnpm dev
 | `pnpm lint` | Lint et format vérifiés par Biome |
 | `pnpm format` | Corrige le format et l'ordre des imports |
 | `pnpm check` | typecheck + lint + tests (à faire passer avant chaque commit) |
+| `pnpm tools:map [graine] [fichier.png]` | Exporte la surface générée en PNG (1 pixel = 1 case) |
 
 ## Organisation
 
