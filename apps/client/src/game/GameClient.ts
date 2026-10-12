@@ -145,6 +145,7 @@ export class GameClient {
           Object.assign(this.player, message.you);
         }
         this.options.bus.emit('player.moved', message.you);
+        this.syncUiSoon();
         return;
       case 'pong':
         useSessionStore.setState({ pingMs: Math.round(this.now() - message.time) });
@@ -225,14 +226,18 @@ export class GameClient {
     this.pingTimer = undefined;
   }
 
-  /** Publishes the chunk count to the UI, a few times per second at most. */
+  /** Publishes the chunk count and player position to the UI, a few times per second at most. */
   private syncUiSoon(): void {
     if (this.uiSyncTimer !== undefined) {
       return;
     }
     this.uiSyncTimer = setTimeout(() => {
       this.uiSyncTimer = undefined;
-      useSessionStore.setState({ loadedChunks: this.chunks.size });
+      const player = this.player;
+      useSessionStore.setState({
+        loadedChunks: this.chunks.size,
+        playerPosition: player ? { x: player.x, y: player.y } : null,
+      });
     }, VIEW.uiSyncIntervalMs);
   }
 

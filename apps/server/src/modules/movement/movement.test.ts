@@ -1,14 +1,18 @@
 import {
+  baseContent,
   CHUNK_SIZE,
   chunkCoord,
   directionOf,
   LAYER,
+  loadContent,
   PLAYER,
   PROTOCOL_VERSION,
   type SnapshotMessage,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { connectFakeClient, createTestContext, type FakeClient } from '../../core/testing';
+import { World } from '../../world/World';
+import { chunksModule } from '../chunks';
 import { playersModule } from '../players';
 import { movementModule } from './index';
 
@@ -141,5 +145,56 @@ describe('movement module', () => {
       ackSeq: -1,
       you: { x: spawn.x, y: spawn.y, facing: 'down' },
     });
+  });
+
+  it('makes the streamed chunks follow the player', () => {
+    // 10 × 10 chunks, with a cleared corridor east of the spawn.
+    const content = loadContent(baseContent);
+    const world = World.generate({ seed: 4, content, layerSizeTiles: 320 });
+    // Network clock in step with the ticks, so that 20 inputs per second stay under the rate limit.
+    let now = 0;
+    const test = createTestContext({
+      devAuth: true,
+      content,
+      world,
+      now: () => now,
+      modules: [playersModule, movementModule, chunksModule],
+    });
+    const { ctx } = test;
+    const tick = (count = 1) => {
+      for (let i = 0; i < count; i++) {
+        now += 1000 / ctx.config.net.tickRateHz;
+        test.tick();
+        ctx.net.handlePong(client.session); // A live client answers the heartbeat.
+      }
+    };
+    const row = Math.floor(world.spawn.y);
+    for (let x = Math.floor(world.spawn.x); x < world.layerSizeTiles; x++) {
+      for (let y = row - 1; y <= row + 1; y++) {
+        world.setTile(LAYER.surface, x, y, 'ground', 'base:grass');
+        world.setTile(LAYER.surface, x, y, 'object', null);
+      }
+    }
+    const client = connectFakeClient(ctx);
+    client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
+    client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
+    tick(10);
+    const startChunk = chunkCoord(world.spawn.x);
+    const received = () => new Set(client.received.flatMap((m) => (m.t === 'chunk' ? [m.cx] : [])));
+    expect(received().has(startChunk + 3)).toBe(false);
+
+    // Two chunks east, one input per tick.
+    const ticks = (2 * CHUNK_SIZE) / (SPEED / ctx.config.net.tickRateHz);
+    for (let seq = 0; seq < ticks; seq++) {
+      client.send({ t: 'input', seq, dir: RIGHT });
+      tick();
+    }
+    tick(10);
+
+    const player = client.session.player?.entity ?? -1;
+    expect(chunkCoord(ctx.entities.get(player, 'position')?.x ?? NaN)).toBe(startChunk + 2);
+    expect(received().has(startChunk + 3)).toBe(true);
+    const unloaded = client.received.flatMap((m) => (m.t === 'chunkUnload' ? [m.cx] : []));
+    expect(unloaded).toContain(startChunk - 2);
   });
 });

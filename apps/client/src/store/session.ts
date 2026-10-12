@@ -21,6 +21,8 @@ interface SessionState {
   rejectReason: RejectReason | null;
   /** Chunks currently received from the server (dev info). */
   loadedChunks: number;
+  /** Feet of the local player, in tiles (dev info). */
+  playerPosition: { x: number; y: number } | null;
   /** Center of the free camera, in tiles (dev mode); null when the camera follows the player. */
   debugCamera: { x: number; y: number } | null;
   /** Rendering figures (dev mode). */
@@ -34,6 +36,7 @@ export const useSessionStore = create<SessionState>()(() => ({
   player: null,
   rejectReason: null,
   loadedChunks: 0,
+  playerPosition: null,
   debugCamera: null,
   debugStats: null,
 }));
