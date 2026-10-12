@@ -1,9 +1,11 @@
 import {
   type ClientMessage,
   type Content,
+  chunkCoord,
+  createMovementWorld,
   decodeServerMessage,
   encodeMessage,
-  type Facing,
+  type MovementWorld,
   NET,
   PROTOCOL_VERSION,
   type ServerMessage,
@@ -11,6 +13,7 @@ import {
 } from '@8box/shared';
 import { useSessionStore } from '../store/session';
 import type { ClientEventBus } from './events';
+import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
 import { ChunkCache } from './world/ChunkCache';
 
 export function toWebSocketUrl(serverUrl: string): string {
@@ -40,8 +43,6 @@ export interface GameClientOptions {
 export class GameClient {
   /** Chunks received from the server. */
   readonly chunks: ChunkCache;
-  /** The player of this connection as the server last showed it; undefined when not in the world. */
-  player: { entity: number; x: number; y: number; facing: Facing } | undefined;
   private readonly createSocket: (url: string) => WebSocket;
   private readonly now: () => number;
   private socket: WebSocket | undefined;
@@ -58,6 +59,8 @@ export class GameClient {
   private direction = 0;
   private sentDirection = 0;
   private inputSeq = 0;
+  /** The player of this connection, predicted; undefined when not in the world. */
+  private local: LocalPlayerState | undefined;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly options: GameClientOptions) {
@@ -78,12 +81,21 @@ export class GameClient {
       }
     });
     bus.on('input.direction', ({ dir }) => {
+      const starting = this.direction === 0 && dir !== 0;
       this.direction = dir;
+      if (starting && this.inputTimer !== undefined) {
+        this.restartInputs(); // Answer the key at once rather than on the next interval.
+      }
     });
     bus.on('debug.stats', (stats) => useSessionStore.setState({ debugStats: stats }));
     for (const event of ['chunk.loaded', 'chunk.unloaded'] as const) {
       bus.on(event, () => this.syncUiSoon());
     }
+  }
+
+  /** Where to draw the player of this client now (predicted); undefined when not in the world. */
+  localView(): LocalView | undefined {
+    return this.local?.view(this.now());
   }
 
   /** Joins the game with a dev name. */
@@ -134,17 +146,18 @@ export class GameClient {
         if (this.view) {
           this.send({ t: 'viewport', ...this.view });
         }
-        this.player = { entity, x: position.x, y: position.y, facing: 'down' };
-        this.options.bus.emit('player.spawned', { entity, position });
+        this.local = new LocalPlayerState(
+          entity,
+          position,
+          this.movementWorld(position.layer),
+          NET.clientInputIntervalMs,
+        );
         this.startPing();
         this.startInputs();
         return;
       }
       case 'snapshot':
-        if (this.player) {
-          Object.assign(this.player, message.you);
-        }
-        this.options.bus.emit('player.moved', message.you);
+        this.local?.snapshot(message.ackSeq, message.you, this.now());
         this.syncUiSoon();
         return;
       case 'pong':
@@ -190,10 +203,7 @@ export class GameClient {
   /** Connection lost or left: stop pinging and forget the world (the server sends it again). */
   private goOffline(): void {
     this.online = false;
-    if (this.player) {
-      this.player = undefined;
-      this.options.bus.emit('player.despawned', {});
-    }
+    this.local = undefined;
     this.stopPing();
     clearInterval(this.inputTimer);
     this.inputTimer = undefined;
@@ -209,16 +219,35 @@ export class GameClient {
 
   /** Sends the held direction 20 times per second (one input per server tick), from seq 0. */
   private startInputs(): void {
-    clearInterval(this.inputTimer);
     this.inputSeq = 0;
     this.sentDirection = 0;
-    this.inputTimer = setInterval(() => {
-      if (this.direction === 0 && this.sentDirection === 0) {
-        return; // Still, and the server knows it.
-      }
-      this.send({ t: 'input', seq: this.inputSeq++, dir: this.direction });
-      this.sentDirection = this.direction;
-    }, NET.clientInputIntervalMs);
+    this.restartInputs();
+  }
+
+  /** Sends an input now, then one per interval. */
+  private restartInputs(): void {
+    clearInterval(this.inputTimer);
+    this.sendInput();
+    this.inputTimer = setInterval(() => this.sendInput(), NET.clientInputIntervalMs);
+  }
+
+  /** Sends the held direction and predicts it; nothing while still and the server knows it. */
+  private sendInput(): void {
+    if (this.direction === 0 && this.sentDirection === 0) {
+      return;
+    }
+    const seq = this.inputSeq++;
+    this.send({ t: 'input', seq, dir: this.direction });
+    this.sentDirection = this.direction;
+    this.local?.input(seq, this.direction, this.now());
+  }
+
+  /** Movement view of the chunks received: a tile not loaded is solid. */
+  private movementWorld(layer: number): MovementWorld {
+    return createMovementWorld(
+      (x, y, slot) => this.chunks.getTile(layer, x, y, slot),
+      (x, y) => this.chunks.get(layer, chunkCoord(x), chunkCoord(y)) !== undefined,
+    );
   }
 
   private stopPing(): void {
@@ -233,7 +262,7 @@ export class GameClient {
     }
     this.uiSyncTimer = setTimeout(() => {
       this.uiSyncTimer = undefined;
-      const player = this.player;
+      const player = this.localView();
       useSessionStore.setState({
         loadedChunks: this.chunks.size,
         playerPosition: player ? { x: player.x, y: player.y } : null,

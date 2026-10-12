@@ -16,8 +16,8 @@ import { SpriteTextures } from '../world/SpriteTextures';
 
 /** The game world: ground and objects of the streamed chunks, entities sorted with them, and the camera. */
 export class WorldScene extends Phaser.Scene {
-  private debugCamera: DebugCamera | undefined;
-  private localPlayer: LocalPlayer | undefined;
+  /** What runs every frame; set by `create`. */
+  private onFrame: ((timeMs: number, deltaMs: number) => void) | undefined;
 
   constructor() {
     super('world');
@@ -30,7 +30,6 @@ export class WorldScene extends Phaser.Scene {
     const objects = new ObjectLayer(this, textures, content);
     const entities = new EntityLayer(this, textures);
     const localPlayer = new LocalPlayer(entities);
-    this.localPlayer = localPlayer;
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -55,11 +54,15 @@ export class WorldScene extends Phaser.Scene {
           }
         })
       : undefined;
-    this.debugCamera = debugCamera;
-    const spawnPlayer = (entity: number, position: { x: number; y: number }) => {
-      playerSprite = localPlayer.spawn(entity, position);
-      if (!debugCamera?.isActive) {
-        camera.follow(playerSprite);
+    this.onFrame = (timeMs, deltaMs) => {
+      debugCamera?.update(deltaMs);
+      // The player of this client, where the prediction puts it; the camera follows it.
+      const sprite = localPlayer.update(gameClient.localView(), timeMs);
+      if (sprite !== playerSprite) {
+        playerSprite = sprite;
+        if (sprite && !debugCamera?.isActive) {
+          camera.follow(sprite);
+        }
       }
     };
     if (import.meta.env.DEV) {
@@ -78,9 +81,6 @@ export class WorldScene extends Phaser.Scene {
     for (const chunk of gameClient.chunks.all()) {
       showChunk(chunk);
     }
-    if (gameClient.player) {
-      spawnPlayer(gameClient.player.entity, gameClient.player);
-    }
     const unsubscribe = [
       eventBus.on('chunk.loaded', ({ chunk }) => showChunk(chunk)),
       eventBus.on('tile.changed', ({ chunk, x, y, slot }) => {
@@ -94,14 +94,6 @@ export class WorldScene extends Phaser.Scene {
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
       }),
-      eventBus.on('player.spawned', ({ entity, position }) => spawnPlayer(entity, position)),
-      eventBus.on('player.moved', ({ x, y, facing }) =>
-        localPlayer.move(x, y, facing, this.time.now),
-      ),
-      eventBus.on('player.despawned', () => {
-        localPlayer.remove();
-        playerSprite = undefined;
-      }),
     ];
 
     let cleaned = false;
@@ -110,6 +102,7 @@ export class WorldScene extends Phaser.Scene {
         return;
       }
       cleaned = true;
+      this.onFrame = undefined;
       for (const off of unsubscribe) {
         off();
       }
@@ -126,7 +119,6 @@ export class WorldScene extends Phaser.Scene {
   }
 
   override update(time: number, deltaMs: number): void {
-    this.debugCamera?.update(deltaMs);
-    this.localPlayer?.update(time);
+    this.onFrame?.(time, deltaMs);
   }
 }
