@@ -25,6 +25,8 @@ export const NET = {
   helloTimeoutMs: 10 * SECOND_MS,
   /** Interval of the WebSocket heartbeat that measures latency and drops dead connections, in ms. */
   heartbeatIntervalMs: 5 * SECOND_MS,
+  /** On shutdown, time given to clients to acknowledge the close before their socket is cut, in ms. */
+  closeGraceMs: SECOND_MS,
   /** Interval of the client `ping` messages used to show the ping, in ms. */
   clientPingIntervalMs: 2 * SECOND_MS,
   /** First wait before the client reconnects; doubled after each failure, in ms. */

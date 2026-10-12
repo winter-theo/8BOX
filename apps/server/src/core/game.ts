@@ -1,4 +1,5 @@
 import { CONFIG, type Content, type GameConfig } from '@8box/shared';
+import { NetServer } from '../net/net';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
 import { GameLoop, type TickStats } from './loop';
@@ -15,6 +16,10 @@ export interface ContextOptions {
   config: GameConfig;
   content: Content;
   log: Logger;
+  /** Accept dev logins (`hello { devName }`). Default: false. */
+  devAuth?: boolean;
+  /** Clock of the network layer, in ms (default: performance.now). */
+  now?: () => number;
 }
 
 /** Duration of a tick, in ms. */
@@ -22,19 +27,27 @@ export function tickMs(config: GameConfig): number {
   return 1000 / config.net.tickRateHz;
 }
 
-export function createContext({ config, content, log }: ContextOptions): ServerContext {
+export function createContext({
+  config,
+  content,
+  log,
+  devAuth = false,
+  now,
+}: ContextOptions): ServerContext {
   const events = createEventBus();
+  const scheduler = new Scheduler({
+    tickMs: tickMs(config),
+    onError: (error, task) => log.error({ err: error, task }, 'scheduled task failed'),
+  });
   return {
     config,
     content,
     log,
     events,
+    scheduler,
     entities: new EntityStore(events),
-    scheduler: new Scheduler({
-      tickMs: tickMs(config),
-      onError: (error, task) => log.error({ err: error, task }, 'scheduled task failed'),
-    }),
     systems: new SystemRegistry(),
+    net: new NetServer({ config, log, events, scheduler, devAuth, ...(now && { now }) }),
   };
 }
 
@@ -49,6 +62,7 @@ export interface GameOptions {
   log: Logger;
   modules: readonly GameModule[];
   config?: GameConfig;
+  devAuth?: boolean;
 }
 
 export interface Game {
@@ -59,10 +73,16 @@ export interface Game {
 }
 
 /** Builds the server context, initializes the modules and prepares the fixed-step loop. */
-export function createGame({ content, log, modules, config = CONFIG }: GameOptions): Game {
-  const ctx = createContext({ config, content, log });
+export function createGame({
+  content,
+  log,
+  modules,
+  config = CONFIG,
+  devAuth = false,
+}: GameOptions): Game {
+  const ctx = createContext({ config, content, log, devAuth });
   const order = initModules(ctx, modules);
-  log.info({ modules: order }, 'modules initialized');
+  log.info({ modules: order, devAuth }, 'modules initialized');
 
   const loop = new GameLoop({
     tickMs: tickMs(config),
