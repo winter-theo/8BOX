@@ -14,8 +14,11 @@ import {
 } from 'drizzle-orm/pg-core';
 
 /** Binary data (PostgreSQL `bytea`), read and written as a Uint8Array. */
-const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({
+const bytea = customType<{ data: Uint8Array; driverData: Buffer }>({
   dataType: () => 'bytea',
+  // The driver writes a Buffer as bytea (a plain Uint8Array would not be).
+  toDriver: (value) => Buffer.from(value.buffer, value.byteOffset, value.byteLength),
+  fromDriver: (value) => new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
 });
 
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
