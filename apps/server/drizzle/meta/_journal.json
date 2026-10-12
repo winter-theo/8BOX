@@ -15,6 +15,13 @@
       "when": 1791838267962,
       "tag": "0001_nullable_player_name",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791839451242,
+      "tag": "0002_admin_audit",
+      "breakpoints": true
     }
   ]
 }

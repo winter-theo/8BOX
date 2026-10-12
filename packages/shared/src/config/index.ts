@@ -1,3 +1,4 @@
+import { ADMIN } from './admin';
 import { BUILDING } from './building';
 import { CHAT } from './chat';
 import { COMBAT } from './combat';
@@ -20,6 +21,7 @@ import { WORLDGEN } from './worldgen';
 
 export { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from './units';
 export {
+  ADMIN,
   BUILDING,
   CHAT,
   COMBAT,
@@ -43,6 +45,7 @@ export {
 
 /** Every config section, e.g. `CONFIG.player.speedTilesPerSecond` (the server context exposes it). */
 export const CONFIG = {
+  admin: ADMIN,
   building: BUILDING,
   chat: CHAT,
   combat: COMBAT,

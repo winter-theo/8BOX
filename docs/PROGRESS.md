@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 ### Étape 12 — Onglet admin v1 (branche `step/12-admin-v1`)
-- [ ] Table `admin_audit` (migration) et stockage admin (base + mémoire pour les tests)
+- [x] Table `admin_audit` (migration) et stockage admin (base + mémoire pour les tests)
 - [ ] Service admin et API HTTP `/admin/*` : garde (jeton Clerk + rôle admin), demandes en attente, joueurs,
       journal ; approuver, refuser, bannir, débannir, expulser ; chaque action dans l'audit
 - [ ] Effets immédiats côté réseau : bannissement, refus et expulsion déconnectent avec le bon écran ; un joueur

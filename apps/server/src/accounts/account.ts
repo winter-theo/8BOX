@@ -1,6 +1,8 @@
+import type { PlayerRole, PlayerStatus } from '@8box/shared';
+
 /** Where a player stands on the whitelist. */
-export type AccountStatus = 'pending' | 'approved' | 'denied' | 'banned';
-export type AccountRole = 'player' | 'admin';
+export type AccountStatus = PlayerStatus;
+export type AccountRole = PlayerRole;
 
 /** A player account (a `players` row). */
 export interface Account {
