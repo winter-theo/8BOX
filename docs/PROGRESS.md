@@ -5,7 +5,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ## En cours
 **Étape 00 — Monorepo et outillage** (démarrée le 2026-10-11)
 - [x] 1. Git, `.gitignore`, version de Node (`engines`, `.nvmrc`), `pnpm-workspace.yaml`
-- [ ] 2. Racine : `package.json` (scripts), `tsconfig.base.json` strict, Biome, Vitest
+- [x] 2. Racine : `package.json` (scripts), `tsconfig.base.json` strict, Biome, Vitest
 - [ ] 3. `packages/shared` : `PROTOCOL_VERSION = 1` + test
 - [ ] 4. `apps/server` : Fastify `/health`, ws `/ws` (ping → pong), `env.ts` (zod), pino, test `/health`
 - [ ] 5. `apps/client` : Vite + React 19 + Phaser 4 (`BootScene` « 8Box »), bandeau d'état WebSocket
