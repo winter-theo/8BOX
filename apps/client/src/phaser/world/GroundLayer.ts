@@ -75,6 +75,23 @@ export class GroundLayer {
     this.redrawNeighborBorders(chunk);
   }
 
+  /** Redraws tile (x, y) and its 8 neighbors, whose edges depend on it (after a `tileUpdate`). */
+  updateTile(layer: number, x: number, y: number): void {
+    const redrawn = new Set<ShownChunk>();
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const entry = this.shown.get(textureKey(layer, chunkCoord(x + dx), chunkCoord(y + dy)));
+        if (entry) {
+          this.drawTile(entry, localCoord(x + dx), localCoord(y + dy));
+          redrawn.add(entry);
+        }
+      }
+    }
+    for (const entry of redrawn) {
+      entry.texture.refresh();
+    }
+  }
+
   hide(layer: number, cx: number, cy: number): void {
     const key = textureKey(layer, cx, cy);
     const entry = this.shown.get(key);

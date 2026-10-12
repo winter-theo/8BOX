@@ -65,7 +65,7 @@ export class ChunkCache {
     }
     chunk.slot(slot)[tileIndex(localCoord(x), localCoord(y))] =
       tile === null ? EMPTY_TILE : tileCode(this.content, tile);
-    this.bus.emit('chunk.changed', { chunk });
+    this.bus.emit('tile.changed', { chunk, x, y, slot });
   }
 
   /** Forgets every chunk (connection lost: the server sends them again). */

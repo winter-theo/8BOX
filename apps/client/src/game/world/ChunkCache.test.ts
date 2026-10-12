@@ -18,7 +18,9 @@ function setup() {
   const log: string[] = [];
   bus.on('chunk.loaded', ({ chunk }) => log.push(`loaded ${chunk.cx},${chunk.cy}`));
   bus.on('chunk.unloaded', ({ cx, cy }) => log.push(`unloaded ${cx},${cy}`));
-  bus.on('chunk.changed', ({ chunk }) => log.push(`changed ${chunk.cx},${chunk.cy}`));
+  bus.on('tile.changed', ({ chunk, x, y, slot }) =>
+    log.push(`changed ${chunk.cx},${chunk.cy} ${x},${y} ${slot}`),
+  );
   return { cache: new ChunkCache(content, bus), log };
 }
 
@@ -65,7 +67,7 @@ describe('ChunkCache', () => {
     expect(cache.getTile(0, 5, 6, 'floor')?.id).toBe('base:sand');
     cache.applyTileUpdate({ t: 'tileUpdate', layer: 0, x: 5, y: 6, slot: 'floor', tile: null });
     expect(cache.getTile(0, 5, 6, 'floor')).toBeUndefined();
-    expect(log).toEqual(['loaded 0,0', 'changed 0,0', 'changed 0,0']);
+    expect(log).toEqual(['loaded 0,0', 'changed 0,0 5,6 floor', 'changed 0,0 5,6 floor']);
   });
 
   it('unloads one chunk or all of them', () => {

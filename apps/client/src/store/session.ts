@@ -1,5 +1,6 @@
 import type { RejectReason } from '@8box/shared';
 import { create } from 'zustand';
+import type { DebugStats } from '../game/events';
 
 /**
  * `idle`: not connected (login screen); `connecting`: first attempt; `online`: welcomed by the server;
@@ -20,8 +21,10 @@ interface SessionState {
   rejectReason: RejectReason | null;
   /** Chunks currently received from the server (dev info). */
   loadedChunks: number;
-  /** Center of the free debug camera, in tiles (dev mode). */
+  /** Position of the test character followed by the camera, in tiles (dev mode). */
   debugCamera: { x: number; y: number } | null;
+  /** Rendering figures (dev mode). */
+  debugStats: DebugStats | null;
 }
 
 /** Written by the GameClient only; the UI reads it with selectors. */
@@ -32,4 +35,5 @@ export const useSessionStore = create<SessionState>()(() => ({
   rejectReason: null,
   loadedChunks: 0,
   debugCamera: null,
+  debugStats: null,
 }));

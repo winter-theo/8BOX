@@ -28,6 +28,7 @@ export const PALETTE = {
   berry: '#b8433c',
   petal: '#e7c64a',
   blossom: '#d58ca4',
+  skin: '#e2b48c',
 } as const;
 
 export type PaletteColor = (typeof PALETTE)[keyof typeof PALETTE];

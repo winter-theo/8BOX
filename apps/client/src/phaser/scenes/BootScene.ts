@@ -8,7 +8,16 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    const startWorld = () => this.scene.start('world');
+    // The game can be destroyed before the atlas check answers (React remounts it in dev).
+    let destroyed = false;
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
+      destroyed = true;
+    });
+    const startWorld = () => {
+      if (!destroyed) {
+        this.scene.start('world');
+      }
+    };
     void atlasExists().then((exists) => {
       if (!exists) {
         startWorld();

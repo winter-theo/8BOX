@@ -69,6 +69,7 @@ export class GameClient {
         this.send({ t: 'debugCamera', x, y });
       }
     });
+    bus.on('debug.stats', (stats) => useSessionStore.setState({ debugStats: stats }));
     for (const event of ['chunk.loaded', 'chunk.unloaded'] as const) {
       bus.on(event, () => this.syncUiSoon());
     }

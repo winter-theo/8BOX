@@ -1,22 +1,33 @@
-import { DEBUG, VIEW, WORLD } from '@8box/shared';
-import * as Phaser from 'phaser';
+import { DEBUG, WORLD } from '@8box/shared';
+import type * as Phaser from 'phaser';
 import { eventBus } from '../game/events';
+import type { CameraController } from './CameraController';
+import type { EntityLayer } from './world/EntityLayer';
 
-const TILE_PX = WORLD.tileSizePx;
+/** Id of the test character in the entity layer: server entity ids are positive. */
+const TEST_ENTITY_ID = -1;
+const TEST_ENTITY_SPRITE = 'char.default';
+const MAP_TILES = WORLD.layerSizeTiles;
 
 /**
- * Dev mode only: a free camera moved with the arrow keys and zoomed with + / - or the mouse wheel,
- * to look around before the player can walk. The server streams the chunks around it.
+ * Dev mode only: a test character walked with the arrow keys (Shift: slowly) and followed by the camera,
+ * to look around before the player can walk and to check the depth sorting (behind or in front of a
+ * tree). It is local: the server only streams the chunks around it.
  */
 export class DebugCamera {
-  private readonly keys: Record<'up' | 'down' | 'left' | 'right', Phaser.Input.Keyboard.Key>;
+  private readonly keys: Record<
+    'up' | 'down' | 'left' | 'right' | 'slow',
+    Phaser.Input.Keyboard.Key
+  >;
+  /** Feet of the test character, in tiles. */
+  private position = { x: MAP_TILES / 2, y: MAP_TILES / 2 };
   private lastSentAt = Number.NEGATIVE_INFINITY;
   private moved = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
-    /** Called after the zoom changed. */
-    private readonly onZoom: () => void,
+    private readonly entities: EntityLayer,
+    camera: CameraController,
   ) {
     const keyboard = scene.input.keyboard;
     if (!keyboard) {
@@ -24,54 +35,40 @@ export class DebugCamera {
     }
     // No capture: the keys keep working in the HTML fields (login name…).
     this.keys = keyboard.addKeys(
-      { up: 'UP', down: 'DOWN', left: 'LEFT', right: 'RIGHT' },
+      { up: 'UP', down: 'DOWN', left: 'LEFT', right: 'RIGHT', slow: 'SHIFT' },
       false,
     ) as typeof this.keys;
-    // Zoom follows the printed symbol, wherever it sits on the keyboard (+ is Shift+= in QWERTY).
-    keyboard.on('keydown', (event: KeyboardEvent) => {
-      if (event.key === '+' || event.key === '=') {
-        this.zoomBy(1);
-      } else if (event.key === '-' || event.key === '_') {
-        this.zoomBy(-1);
-      }
-    });
-    scene.input.on(
-      Phaser.Input.Events.POINTER_WHEEL,
-      (_pointer: unknown, _objects: unknown, _dx: number, dy: number) =>
-        this.zoomBy(dy > 0 ? -1 : 1),
-    );
+    camera.follow(this.entities.set(TEST_ENTITY_ID, TEST_ENTITY_SPRITE, this.position));
+  }
+
+  /** Puts the test character (and the view) at a position in tiles. */
+  moveTo(position: { x: number; y: number }): void {
+    this.position = { x: position.x, y: position.y };
+    this.entities.set(TEST_ENTITY_ID, TEST_ENTITY_SPRITE, this.position);
   }
 
   update(deltaMs: number): void {
     if (document.activeElement instanceof HTMLInputElement) {
-      return; // Typing in a field, not steering the camera.
+      return; // Typing in a field, not walking.
     }
-    const camera = this.scene.cameras.main;
-    const step = (DEBUG.cameraSpeedTilesPerSecond * TILE_PX * deltaMs) / 1000;
+    const speed = this.keys.slow.isDown
+      ? DEBUG.cameraSlowSpeedTilesPerSecond
+      : DEBUG.cameraSpeedTilesPerSecond;
+    const step = (speed * deltaMs) / 1000;
     const dx = (this.keys.right.isDown ? 1 : 0) - (this.keys.left.isDown ? 1 : 0);
     const dy = (this.keys.down.isDown ? 1 : 0) - (this.keys.up.isDown ? 1 : 0);
     if (dx !== 0 || dy !== 0) {
-      camera.scrollX += dx * step;
-      camera.scrollY += dy * step;
+      this.moveTo({
+        x: Math.min(MAP_TILES, Math.max(0, this.position.x + dx * step)),
+        y: Math.min(MAP_TILES, Math.max(0, this.position.y + dy * step)),
+      });
       this.moved = true;
     }
     const now = this.scene.time.now;
     if (this.moved && now - this.lastSentAt >= DEBUG.cameraSendIntervalMs) {
       this.moved = false;
       this.lastSentAt = now;
-      eventBus.emit('debugCamera.moved', {
-        x: camera.midPoint.x / TILE_PX,
-        y: camera.midPoint.y / TILE_PX,
-      });
-    }
-  }
-
-  private zoomBy(step: number): void {
-    const camera = this.scene.cameras.main;
-    const zoom = Phaser.Math.Clamp(Math.round(camera.zoom) + step, VIEW.minZoom, VIEW.maxZoom);
-    if (zoom !== camera.zoom) {
-      camera.setZoom(zoom);
-      this.onZoom();
+      eventBus.emit('debugCamera.moved', { ...this.position });
     }
   }
 }

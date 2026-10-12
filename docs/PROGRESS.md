@@ -98,6 +98,7 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   - message `debugCamera` ; le serveur centre alors la diffusion sur la caméra au lieu du joueur ;
   - flèches à 40 cases/s ;
   - zoom de 1 à 8 (4 au départ), avec + / - (selon le symbole imprimé, `event.key`) ou la molette.
+  - Remplacée à l'étape 06 par un personnage de test (voir plus bas).
 - (05, retouche des tuiles) La palette PICO-8 est remplacée par une palette sourde de 24 couleurs, inspirée des
   images envoyées par l'auteur. `docs/design/10-graphismes-son.md` parle encore de PICO-8 : à mettre à jour si
   tu valides. Un seul fichier à modifier : `apps/client/src/assets/palette.ts`.
@@ -110,9 +111,58 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   les ids de sprite du contenu (`ground.grass`…). Le design parle de `tile.grass`, mais j'ai gardé les ids du
   contenu.
 - (05) `PROTOCOL_VERSION` passe à 2 (`welcome` donne la position du joueur, et de nouveaux messages sont apparus).
-- (05) Les objets (arbres, fleurs, buissons) ne sont pas encore dessinés : c'est l'étape 06.
+- (06) Placeholders des objets : chêne 8 × 16 (3 variantes, dont une avec des pommes), buisson à baies (2), hautes
+  herbes (3), fleurs (3), mur et porte en bois 8 × 16 (`obj.wooden_wall`, `obj.wooden_door`, pas encore dans le
+  contenu : étape 18), personnage `char.default` (une seule image). Nouvelle couleur `skin` dans la palette.
+- (06) Tri en profondeur : la profondeur d'un sprite est le Y de ses pieds, en pixels du monde. À Y égal, une entité
+  passe devant un objet. Un objet est ancré au milieu du bas de sa case (un sprite d'atlas plus large que 8 px reste
+  centré sur sa case).
+- (06) Zoom :
+  - au plus 150 cases sur le plus **long** côté de la vue (la fiche dit « de large ») : zoom ×2 au minimum en
+    1280 × 720 ;
+  - au départ, la largeur / 320 arrondie (≈ 40 cases) : ×4 en 1280 px, ×6 en 1920 px. `VIEW.maxZoom` reste à 8 :
+    un écran de 3840 px CSS de large verra donc 60 cases ;
+  - tant que le joueur n'a pas zoomé, un redimensionnement reprend le zoom par défaut ; ensuite son choix est
+    gardé, borné ;
+  - + et − : un palier par appui, la répétition automatique est ignorée. Pincement : un palier quand l'écart entre
+    les doigts change de 25 % (`VIEW.pinchStepRatio`) ;
+  - la molette ne zoome plus : d'après le design 02, elle choisira l'objet de la barre.
+- (06) Mode dev : la caméra libre devient un personnage de test, déplacé aux flèches (Maj : 3 cases/s) et suivi
+  par la caméra. Le serveur diffuse toujours les chunks autour de lui. L'encart dev affiche les FPS, le zoom et le
+  nombre de sprites d'objets.
+- (06) Pool d'objets : les sprites libérés restent dans la liste d'affichage de Phaser, cachés, et le pool ne
+  rétrécit jamais. Autour du spawn, la vue par défaut compte environ 5 400 sprites d'objets (16 chunks), et 6 700
+  au zoom ×2.
+- (06) FPS mesurés : 58 à 60 dans le navigateur intégré, à tous les zooms. Comme ce panneau était caché, la boucle
+  tournait sur `setTimeout` le temps de la mesure. **À confirmer sur ton PC** avec l'encart dev.
+- (06) Écran à `devicePixelRatio` non entier (1,25 ou 1,5, fréquent sur les portables Windows) : le canvas est
+  à la taille CSS et agrandi par le navigateur en « pixelated ». Pas de flou, mais des pixels de tailles inégales.
+  Rendre à la résolution de l'écran reste à étudier.
+- (06) Phaser rejoue les touches d'une même image à chaque nouvel événement clavier. Les touches de zoom passent
+  donc par les événements DOM de `window`.
 
 ## Historique
+
+### 2026-10-12 — Étape 06 : Vue 3/4, profondeur, caméra et zoom ✅
+- Objets en 3/4 : un sprite par objet, ancré en bas de sa case. Les objets hauts (8 × 16) dépassent sur la case du
+  dessus. Tri par le Y des pieds (`depth.ts`, testé). Les sprites sont recyclés (pool) au rythme des chunks.
+- Placeholders : chêne, buisson, hautes herbes, fleurs, mur et porte en bois, personnage. `pnpm tools:tiles`
+  dessine maintenant les objets, et sa planche accepte les sprites 8 × 16.
+- Calque des entités trié avec les objets. En dev, un personnage de test suivi par la caméra le montre.
+- Caméra : zoom par paliers entiers (+ / −, pincement), bornes calculées depuis la taille de la vue (`zoom.ts`,
+  testé), limites de la carte, suivi d'une cible. Moniteur de FPS dans l'encart dev.
+- `tileUpdate` : seule la case change. Le sol redessine la case et ses 8 voisines ; l'objet change de sprite.
+- Vérifié dans le navigateur :
+  - personnage de test caché par le feuillage derrière un arbre, et devant le tronc une case plus bas ;
+  - zoom de ×8 à ×2, un palier à la fois ;
+  - caméra arrêtée au coin de la carte ;
+  - 58 à 60 FPS.
+- Écarts par rapport à la fiche :
+  - l'événement client `chunk.changed` devient `tile.changed` ;
+  - la molette ne zoome plus ;
+  - la caméra de debug devient un personnage de test ;
+  - correctif : `BootScene` ne démarre plus le monde d'un jeu déjà détruit (erreur en dev) ;
+  - `.claude/launch.json` ajouté pour l'aperçu (`pnpm dev`).
 
 ### 2026-10-12 — Retouche de l'étape 05 : tuiles du sol
 - À la demande de l'auteur, et dans l'esprit de ses images de référence : nouvelle palette sourde, et sprites du

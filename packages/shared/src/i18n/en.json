@@ -27,8 +27,9 @@
     "dev": {
       "chunks_one": "{{count}} chunk loaded",
       "chunks_other": "{{count}} chunks loaded",
-      "camera": "camera: {{x}}, {{y}}",
-      "controls": "Arrows: move · + / - or wheel: zoom"
+      "stats": "{{fps}} FPS · zoom ×{{zoom}} · {{objects}} objects",
+      "camera": "test character: {{x}}, {{y}}",
+      "controls": "Arrows: test character (Shift: slowly) · + / -: zoom"
     },
     "language": {
       "label": "Language",
