@@ -15,6 +15,8 @@ export class CameraController {
   private range: ZoomRange;
   /** Distance between the two fingers when the pinch started or last zoomed, in screen pixels. */
   private pinchStart: number | undefined;
+  /** Until the player zooms, a resized view gets the default zoom again (about 40 tiles across). */
+  private zoomedByPlayer = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -28,7 +30,9 @@ export class CameraController {
     this.camera.setZoom(defaultZoom(width, height));
     this.camera.centerOn(WORLD_PX / 2, WORLD_PX / 2);
 
-    scene.input.keyboard?.on('keydown', this.onKeyDown);
+    // DOM events rather than Phaser's keyboard plugin: it replays the keydowns of a frame on each new
+    // key event, so two quick presses would zoom several steps.
+    window.addEventListener('keydown', this.onKeyDown);
     scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.onPointerMove);
     scene.scale.on(Phaser.Scale.Events.RESIZE, this.onResize);
   }
@@ -48,14 +52,18 @@ export class CameraController {
   }
 
   destroy(): void {
-    this.scene.input.keyboard?.off('keydown', this.onKeyDown);
+    window.removeEventListener('keydown', this.onKeyDown);
     this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.onPointerMove);
     this.scene.scale.off(Phaser.Scale.Events.RESIZE, this.onResize);
   }
 
   private readonly onKeyDown = (event: KeyboardEvent) => {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-      return; // Typing in a field.
+    if (
+      event.repeat ||
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    ) {
+      return; // One step per press; typing in a field is not zooming.
     }
     // Zoom follows the printed symbol, wherever it sits on the keyboard (+ is Shift+= in QWERTY).
     if (event.key === '+' || event.key === '=') {
@@ -84,12 +92,16 @@ export class CameraController {
   };
 
   private readonly onResize = () => {
-    this.range = zoomRange(this.scene.scale.width, this.scene.scale.height);
-    this.camera.setZoom(stepZoom(this.camera.zoom, 0, this.range));
+    const { width, height } = this.scene.scale;
+    this.range = zoomRange(width, height);
+    this.camera.setZoom(
+      this.zoomedByPlayer ? stepZoom(this.camera.zoom, 0, this.range) : defaultZoom(width, height),
+    );
     this.onViewChange();
   };
 
   private zoomBy(step: number): void {
+    this.zoomedByPlayer = true;
     const zoom = stepZoom(this.camera.zoom, step, this.range);
     if (zoom !== this.camera.zoom) {
       this.camera.setZoom(zoom);

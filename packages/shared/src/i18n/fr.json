@@ -27,7 +27,8 @@
     "dev": {
       "chunks_one": "{{count}} chunk chargé",
       "chunks_other": "{{count}} chunks chargés",
-      "camera": "caméra : {{x}}, {{y}}",
+      "stats": "{{fps}} FPS · zoom ×{{zoom}} · {{objects}} objets",
+      "camera": "personnage de test : {{x}}, {{y}}",
       "controls": "Flèches : personnage de test (Maj : lentement) · + / - : zoom"
     },
     "language": {

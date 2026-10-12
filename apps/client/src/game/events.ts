@@ -15,9 +15,18 @@ export type ClientEvents = {
   'player.spawned': { position: WorldPosition };
   /** Phaser → game: size of the game view, in CSS pixels, and camera zoom. */
   'view.changed': { w: number; h: number; zoom: number };
-  /** Phaser → game (dev mode): center of the free debug camera, in tiles. */
+  /** Phaser → game (dev mode): position of the test character followed by the camera, in tiles. */
   'debugCamera.moved': { x: number; y: number };
+  /** Phaser → game (dev mode): frames per second, camera zoom and object sprites shown. */
+  'debug.stats': DebugStats;
 };
+
+/** Rendering figures shown in the dev info. */
+export interface DebugStats {
+  fps: number;
+  zoom: number;
+  objects: number;
+}
 
 export type ClientEventBus = TypedEmitter<ClientEvents>;
 

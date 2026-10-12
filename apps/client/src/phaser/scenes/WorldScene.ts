@@ -1,4 +1,4 @@
-import type { Chunk } from '@8box/shared';
+import { type Chunk, DEBUG } from '@8box/shared';
 import * as Phaser from 'phaser';
 import { AssetRegistry } from '../../assets/registry';
 import { gameClient } from '../../game/client';
@@ -41,6 +41,18 @@ export class WorldScene extends Phaser.Scene {
     emitView();
     const debugCamera = import.meta.env.DEV ? new DebugCamera(this, entities, camera) : undefined;
     this.debugCamera = debugCamera;
+    if (import.meta.env.DEV) {
+      this.time.addEvent({
+        delay: DEBUG.fpsSampleIntervalMs,
+        loop: true,
+        callback: () =>
+          eventBus.emit('debug.stats', {
+            fps: Math.round(this.game.loop.actualFps),
+            zoom: camera.zoom,
+            objects: objects.counts.shown,
+          }),
+      });
+    }
 
     for (const chunk of gameClient.chunks.all()) {
       showChunk(chunk);
