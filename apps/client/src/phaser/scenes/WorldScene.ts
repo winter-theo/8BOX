@@ -11,6 +11,7 @@ import { atlasFromScene } from '../world/atlasFromScene';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundLayer } from '../world/GroundLayer';
 import { LocalPlayer } from '../world/LocalPlayer';
+import { NameLabels } from '../world/NameLabels';
 import { ObjectLayer } from '../world/ObjectLayer';
 import { RemotePlayers } from '../world/RemotePlayers';
 import { SpriteTextures } from '../world/SpriteTextures';
@@ -31,7 +32,8 @@ export class WorldScene extends Phaser.Scene {
     const objects = new ObjectLayer(this, textures, content);
     const entities = new EntityLayer(this, textures);
     const localPlayer = new LocalPlayer(entities);
-    const remotePlayers = new RemotePlayers(entities);
+    const labels = new NameLabels(this);
+    const remotePlayers = new RemotePlayers(entities, labels);
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -115,6 +117,7 @@ export class WorldScene extends Phaser.Scene {
       ground.destroy();
       objects.destroy();
       entities.destroy();
+      labels.destroy();
       textures.destroy();
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);

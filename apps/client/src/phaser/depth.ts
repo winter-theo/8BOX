@@ -8,6 +8,8 @@ const TILE_PX = WORLD.tileSizePx;
  */
 export const DEPTH = {
   ground: -1,
+  /** Names above heads: over everything in the world (far beyond any world Y). */
+  labels: 1_000_000,
 } as const;
 
 /** What a Y-sorted sprite is: at the same Y, an entity is drawn over an object. */
