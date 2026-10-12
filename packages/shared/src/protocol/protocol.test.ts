@@ -13,6 +13,8 @@ import { PROTOCOL_VERSION } from './version';
 const clientMessages: ClientMessage[] = [
   { t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana_42' },
   { t: 'hello', version: PROTOCOL_VERSION },
+  { t: 'hello', version: PROTOCOL_VERSION, token: 'eyJhbGciOi.payload.signature' },
+  { t: 'setName', name: 'Ana' },
   { t: 'ping', time: 123456.789 },
   { t: 'input', seq: 12, dir: 3 },
   { t: 'viewport', w: 1280, h: 720, zoom: 4 },
