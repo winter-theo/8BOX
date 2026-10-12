@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 **Étape 01 — Socle partagé : contenu, config, i18n** (démarrée le 2026-10-11)
-- [ ] 1. RNG seedé (`util/rng.ts`) et tests
+- [x] 1. RNG seedé (`util/rng.ts`) et tests
 - [ ] 2. Émetteur d'événements typé (`util/events.ts`) et tests
 - [ ] 3. Schémas zod du contenu (`content/schemas.ts`)
 - [ ] 4. Chargeur et registres (`content/load.ts`), références croisées, tests (1 cas valide, 3+ erreurs)
