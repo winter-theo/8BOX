@@ -13,6 +13,15 @@ export {
 } from './content/load';
 export { Registry } from './content/registry';
 export * from './content/schemas';
+export {
+  contentNameKey,
+  DEFAULT_LANGUAGE,
+  i18nResources,
+  isLanguage,
+  LANGUAGES,
+  type Language,
+  resolveLanguage,
+} from './i18n/index';
 export { PROTOCOL_VERSION } from './protocol/version';
 export { type Listener, TypedEmitter } from './util/events';
 export { createRng, hashSeed, type Rng } from './util/rng';

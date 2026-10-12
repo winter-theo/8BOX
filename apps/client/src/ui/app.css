@@ -50,3 +50,29 @@ body,
 .connection-banner--offline .connection-banner__dot {
   background: #f87171;
 }
+
+.language-select {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+}
+
+.language-select select {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 60%);
+  color: #f4f4f4;
+  font: inherit;
+  font-size: 14px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
