@@ -22,6 +22,13 @@ export {
   type Language,
   resolveLanguage,
 } from './i18n/index';
+export {
+  decodeServerMessage,
+  encodeMessage,
+  type ParseResult,
+  parseClientMessage,
+} from './protocol/codec';
+export * from './protocol/messages';
 export { PROTOCOL_VERSION } from './protocol/version';
 export { type Listener, TypedEmitter } from './util/events';
 export { createRng, hashSeed, type Rng } from './util/rng';
