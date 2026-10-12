@@ -1,5 +1,6 @@
 import Fastify, { type FastifyBaseLogger } from 'fastify';
 import type { TickStats } from './core/loop';
+import { type DevRoutesOptions, devRoutes } from './http/dev';
 import { healthRoutes } from './http/health';
 import type { NetServer } from './net/net';
 import { attachWebSocket } from './net/websocket';
@@ -12,12 +13,17 @@ export interface AppOptions {
   net?: NetServer;
   /** Tick time statistics of the running game, shown by `/health`. */
   tickStats?: () => TickStats;
+  /** Development routes (`POST /dev/tile`…); never given in production. */
+  dev?: DevRoutesOptions;
 }
 
 /** Builds the HTTP + WebSocket server without listening, so tests can use `inject`. */
 export function buildApp(options: AppOptions = {}) {
   const app = Fastify(options.logger ? { loggerInstance: options.logger } : { logger: false });
   app.register(healthRoutes, { tickStats: options.tickStats });
+  if (options.dev) {
+    app.register(devRoutes, options.dev);
+  }
   attachWebSocket(app, { allowedOrigins: options.allowedOrigins ?? [], net: options.net });
   return app;
 }

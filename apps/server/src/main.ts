@@ -95,6 +95,8 @@ const app = buildApp({
   allowedOrigins: env.ALLOWED_ORIGINS,
   net: game.ctx.net,
   tickStats: () => game.stats(),
+  // Development routes only: they change the world without any check.
+  ...(env.NODE_ENV !== 'production' && { dev: { world, content } }),
 });
 
 /** Stops the game, writes what is not saved yet (waiting a little at most), then quits. */
