@@ -54,15 +54,38 @@ export class World {
 
   /** Generates every chunk of the surface from the seed. */
   static generate(options: WorldOptions): World {
+    return World.load(options, []).world;
+  }
+
+  /**
+   * The saved chunks of the surface, and the missing ones generated from the seed. Returns the world and
+   * the chunks it had to generate (to be saved, so that the world no longer depends on the generator).
+   */
+  static load(
+    options: WorldOptions,
+    saved: readonly Chunk[],
+  ): { world: World; generated: Chunk[] } {
     const generator = createSurfaceGenerator(options);
     const side = chunksPerSide(options.layerSizeTiles);
-    const surface: Chunk[] = [];
-    for (let cy = 0; cy < side; cy++) {
-      for (let cx = 0; cx < side; cx++) {
-        surface.push(generator.generateChunk(cx, cy));
+    const savedByKey = new Map<string, Chunk>();
+    for (const chunk of saved) {
+      if (chunk.layer === LAYER.surface) {
+        savedByKey.set(`${chunk.cx}:${chunk.cy}`, chunk);
       }
     }
-    return new World(options, generator.spawn, surface);
+    const surface: Chunk[] = [];
+    const generated: Chunk[] = [];
+    for (let cy = 0; cy < side; cy++) {
+      for (let cx = 0; cx < side; cx++) {
+        let chunk = savedByKey.get(`${cx}:${cy}`);
+        if (!chunk) {
+          chunk = generator.generateChunk(cx, cy);
+          generated.push(chunk);
+        }
+        surface.push(chunk);
+      }
+    }
+    return { world: new World(options, generator.spawn, surface), generated };
   }
 
   get chunkCount(): number {

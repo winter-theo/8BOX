@@ -9,8 +9,14 @@ import {
 import { pino } from 'pino';
 import { buildApp } from './app';
 import { createGame } from './core/game';
+import { openPgStore } from './db/pgStore';
 import { env } from './env';
 import { MODULES } from './modules';
+import { saveEverything } from './modules/persistence';
+import { Persistence } from './persistence/Persistence';
+import type { GameStore } from './persistence/store';
+import { WriteQueue } from './persistence/writeQueue';
+import { deserializeChunk } from './world/chunkSerializer';
 import { randomSeed } from './world/seed';
 import { World } from './world/World';
 
@@ -26,16 +32,47 @@ try {
 }
 log.info(contentSizes(content), 'content loaded');
 
-const seed = env.WORLD_SEED === undefined ? randomSeed() : parseSeed(env.WORLD_SEED);
-const generationStart = performance.now();
-const world = World.generate({ seed, content, layerSizeTiles: CONFIG.world.layerSizeTiles });
+let store: GameStore;
+try {
+  store = await openPgStore(env.DATABASE_URL);
+} catch (error) {
+  log.fatal(error, 'database unavailable (is it started? pnpm db:up)');
+  process.exit(1);
+}
+
+// The world: its seed and its saved chunks; the missing chunks are generated, then saved.
+const loadStart = performance.now();
+let seed = await store.loadSeed();
+if (seed === undefined) {
+  seed = env.WORLD_SEED === undefined ? randomSeed() : parseSeed(env.WORLD_SEED);
+  await store.saveSeed(seed);
+  log.info({ seed }, 'new world');
+}
+const savedChunks = (await store.loadChunks()).map((saved) => {
+  const { chunk, unknownIds } = deserializeChunk(saved, content);
+  if (unknownIds.length > 0) {
+    log.warn({ cx: chunk.cx, cy: chunk.cy, unknownIds }, 'saved tiles no longer exist: emptied');
+  }
+  return chunk;
+});
+const { world, generated } = World.load(
+  { seed, content, layerSizeTiles: CONFIG.world.layerSizeTiles },
+  savedChunks,
+);
+const writes = new WriteQueue({
+  store,
+  onError: (error) => log.error({ err: error }, 'save failed, will try again'),
+});
+const persistence = new Persistence(content, writes, await store.loadCharacters());
+persistence.saveChunks(generated);
 log.info(
   {
     seed,
-    chunks: world.chunkCount,
-    ms: Math.round(performance.now() - generationStart),
+    loadedChunks: savedChunks.length,
+    generatedChunks: generated.length,
+    ms: Math.round(performance.now() - loadStart),
   },
-  'world generated',
+  'world loaded',
 );
 
 // Dev logins without an account are never allowed in production.
@@ -50,6 +87,7 @@ const game = createGame({
   world,
   modules: MODULES,
   devAuth,
+  persistence,
 });
 
 const app = buildApp({
@@ -59,11 +97,24 @@ const app = buildApp({
   tickStats: () => game.stats(),
 });
 
+/** Stops the game, writes what is not saved yet (waiting a little at most), then quits. */
+async function shutDown(signal: string): Promise<void> {
+  log.info({ signal }, 'shutting down');
+  game.stop();
+  saveEverything(game.ctx);
+  const timeout = new Promise<'timeout'>((resolve) => {
+    setTimeout(() => resolve('timeout'), CONFIG.persistence.shutdownFlushTimeoutMs).unref();
+  });
+  if ((await Promise.race([persistence.flush(), timeout])) === 'timeout') {
+    log.error({ pending: writes.pending }, 'shutdown: some data could not be saved');
+  }
+  await store.close();
+  await app.close();
+}
+
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
-    log.info({ signal }, 'shutting down');
-    game.stop();
-    app.close().then(
+    shutDown(signal).then(
       () => process.exit(0),
       (error: unknown) => {
         log.error(error, 'shutdown failed');

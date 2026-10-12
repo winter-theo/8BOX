@@ -2,6 +2,7 @@ import type { GameModule } from '../core/module';
 import { chunksModule } from './chunks';
 import { debugModule } from './debug';
 import { movementModule } from './movement';
+import { persistenceModule } from './persistence';
 import { playersModule } from './players';
 import { snapshotsModule } from './snapshots';
 
@@ -11,5 +12,6 @@ export const MODULES: readonly GameModule[] = [
   movementModule,
   chunksModule,
   snapshotsModule,
+  persistenceModule,
   debugModule,
 ];
