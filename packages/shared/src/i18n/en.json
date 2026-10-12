@@ -30,12 +30,22 @@
       "stats": "{{fps}} FPS · zoom ×{{zoom}} · {{objects}} objects",
       "player": "player: {{x}}, {{y}}",
       "camera": "free camera: {{x}}, {{y}}",
-      "controls": "WASD or arrows: walk · + / -: zoom · F2: free camera (arrows, Shift: slowly)"
+      "controls": "WASD or arrows: walk · + / -: zoom · F2: free camera (arrows, Shift: slowly)",
+      "longPress": "tile {{x}}, {{y}}"
     },
     "language": {
       "label": "Language",
       "fr": "Français",
       "en": "English"
+    },
+    "mobile": {
+      "joystick": "Movement joystick",
+      "use": "Hit",
+      "action": "Action",
+      "inventory": "Bag",
+      "rotate": "Turn your phone",
+      "rotateHint": "8Box is played in landscape.",
+      "fullscreen": "Full screen"
     }
   },
   "content": {

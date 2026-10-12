@@ -196,8 +196,54 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
     `gameClient.localView()` et `remoteViews()` à chaque image.
 - (08) Phaser 4 : `RetroFont.Parse` renvoie l'entrée de cache complète, contrairement à Phaser 3 et à l'exemple de
   la fiche « skills ».
+- (09) Mode tactile : détecté par `(pointer: coarse)` (téléphones et tablettes). Un PC à écran tactile reste au
+  clavier. En dev, `?touch=1` force les contrôles tactiles.
+- (09) Joystick « flottant » :
+  - il apparaît sous le pouce, dans une grande zone à gauche (45 % de la largeur, au-dessus de la barre d'objets) ;
+  - rayon de 56 px, zone morte de 25 %, 8 secteurs de 45° ;
+  - le bouton du joystick bouge par le DOM, sans re-rendu React.
+- (09) Boutons :
+  - Frapper (84 px), Action et Sac (60 px) émettent `input.button`, que rien ne traite encore (étapes 14, 15
+    et 22) ;
+  - « Sac » plutôt qu'« Inventaire », pour tenir dans le bouton ;
+  - le bouton de chat en haut (design 02) viendra avec l'étape 13.
+- (09) Appui long :
+  - 500 ms ; annulé si le doigt bouge de plus de 12 px ou si un second doigt se pose (pincement) ;
+  - bulle de debug en dev seulement : rien en production avant l'étape 15, qui vérifiera aussi la portée.
+- (09) Plein écran : bouton en haut à gauche ; il verrouille le paysage quand le navigateur le permet (Android). Il
+  est masqué quand c'est impossible (iPhone). En portrait, « Tourne ton téléphone » couvre tout, écran de connexion
+  compris.
+- (09) Gestes du navigateur bloqués :
+  - `touch-action: none`, pas de défilement élastique, pas de sélection ni de menu d'appui long ;
+  - balise viewport `maximum-scale=1` et `user-scalable=no`, `gesturestart` bloqué pour iOS ;
+  - menu contextuel bloqué sur le jeu en mode tactile.
+- (09) Sur un téléphone en paysage (740 px de large), le zoom par défaut est ×2, soit environ 46 cases de large :
+  les sprites sont petits. Faut-il un réglage par défaut propre aux téléphones (environ 30 cases, par exemple) ?
+- (09) Vérifié seulement en émulation Chrome, avec des touchers simulés : pas encore sur un vrai téléphone. Pour
+  tester sur ton téléphone en réseau local, voir la note (00) sur `HOST=0.0.0.0`.
+- (09) `.claude/launch.json` a maintenant deux entrées, `server` (port 3000) et `client` (5173) : l'outil d'aperçu
+  impose `PORT` à chaque processus.
 
 ## Historique
+
+### 2026-10-12 — Étape 09 : Contrôles mobiles ✅
+- Mode tactile détecté (`?touch=1` pour le forcer en dev). HUD React en paysage :
+  - joystick flottant qui envoie le même `input` que le clavier (direction testée) ;
+  - boutons Frapper, Action et Sac (48 px au moins), place réservée en bas pour la barre d'objets ;
+  - bouton plein écran avec verrouillage en paysage.
+- Appui long sur le monde : événement `world.longPress` avec la case, et bulle de debug.
+- Pincement : le zoom change par paliers (caméra de l'étape 06). Gestes du navigateur bloqués. Écran « Tourne ton
+  téléphone » en portrait.
+- Vérifié en émulation mobile :
+  - portrait : le message s'affiche ;
+  - paysage, avec des touchers simulés : le joystick fait avancer de 5,25 cases en 1 s, la page ne bouge pas ;
+  - le pincement passe le zoom de ×2 à ×4, sans zoom du navigateur ;
+  - l'appui long montre la bonne case, un simple tap ne fait rien.
+  Sur PC, rien ne change.
+- Écarts par rapport à la fiche :
+  - option `?touch=1` ;
+  - encart dev adapté au tactile ;
+  - le joystick suit le pouce, au lieu d'avoir une base fixe.
 
 ### 2026-10-12 — Étape 08 : Prédiction, interpolation, multijoueur ✅
 - Protocole 4 :
