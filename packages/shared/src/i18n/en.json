@@ -1,0 +1,34 @@
+{
+  "ui": {
+    "connection": {
+      "online": "Connected",
+      "offline": "Offline",
+      "protocol": "protocol {{version}}"
+    },
+    "language": {
+      "label": "Language",
+      "fr": "Français",
+      "en": "English"
+    }
+  },
+  "content": {
+    "base": {
+      "grass": { "name": "Grass" },
+      "dirt": { "name": "Dirt" },
+      "sand": { "name": "Sand" },
+      "shallow_water": { "name": "Shallow water" },
+      "deep_water": { "name": "Deep water" },
+      "oak_tree": { "name": "Oak tree" },
+      "berry_bush": { "name": "Berry bush" },
+      "tall_grass": { "name": "Tall grass" },
+      "flowers": { "name": "Flowers" },
+      "oak_log": { "name": "Oak log" },
+      "plank": { "name": "Plank" },
+      "stick": { "name": "Stick" },
+      "fiber": { "name": "Fiber" },
+      "berries": { "name": "Berries" },
+      "apple": { "name": "Apple" },
+      "gold": { "name": "Gold" }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { ConnectionBanner } from './ConnectionBanner';
+import { LanguageSelect } from './LanguageSelect';
 import { PhaserGame } from './PhaserGame';
 
 export function App() {
@@ -6,6 +7,7 @@ export function App() {
     <>
       <PhaserGame />
       <ConnectionBanner />
+      <LanguageSelect />
     </>
   );
 }

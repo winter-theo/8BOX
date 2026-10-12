@@ -1,7 +1,5 @@
+import { NET } from '@8box/shared';
 import { useConnectionStore } from '../store/connection';
-
-/** Wait before trying to reconnect after the socket closed, in milliseconds. */
-const RECONNECT_DELAY_MS = 2000;
 
 export function toWebSocketUrl(serverUrl: string): string {
   const url = new URL('/ws', serverUrl);
@@ -31,7 +29,7 @@ export function startConnection(serverUrl: string): () => void {
     ws.addEventListener('close', () => {
       setStatus('offline');
       if (!stopped) {
-        retryTimer = setTimeout(connect, RECONNECT_DELAY_MS);
+        retryTimer = setTimeout(connect, NET.reconnectDelayMs);
       }
     });
   };

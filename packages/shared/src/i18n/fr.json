@@ -1,0 +1,34 @@
+{
+  "ui": {
+    "connection": {
+      "online": "Connecté",
+      "offline": "Hors ligne",
+      "protocol": "protocole {{version}}"
+    },
+    "language": {
+      "label": "Langue",
+      "fr": "Français",
+      "en": "English"
+    }
+  },
+  "content": {
+    "base": {
+      "grass": { "name": "Herbe" },
+      "dirt": { "name": "Terre" },
+      "sand": { "name": "Sable" },
+      "shallow_water": { "name": "Eau peu profonde" },
+      "deep_water": { "name": "Eau profonde" },
+      "oak_tree": { "name": "Chêne" },
+      "berry_bush": { "name": "Buisson à baies" },
+      "tall_grass": { "name": "Hautes herbes" },
+      "flowers": { "name": "Fleurs" },
+      "oak_log": { "name": "Bûche de chêne" },
+      "plank": { "name": "Planche" },
+      "stick": { "name": "Bâton" },
+      "fiber": { "name": "Fibre" },
+      "berries": { "name": "Baies" },
+      "apple": { "name": "Pomme" },
+      "gold": { "name": "Or" }
+    }
+  }
+}

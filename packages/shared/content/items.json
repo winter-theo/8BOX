@@ -1,0 +1,9 @@
+[
+  { "id": "base:oak_log", "sprite": "item.oak_log", "tags": ["wood"] },
+  { "id": "base:plank", "sprite": "item.plank", "tags": ["wood"] },
+  { "id": "base:stick", "sprite": "item.stick" },
+  { "id": "base:fiber", "sprite": "item.fiber" },
+  { "id": "base:berries", "sprite": "item.berries", "tags": ["food"], "food": { "hunger": 2 } },
+  { "id": "base:apple", "sprite": "item.apple", "tags": ["food"], "food": { "hunger": 4 } },
+  { "id": "base:gold", "sprite": "item.gold", "stack": 1000000, "tags": ["currency"] }
+]
