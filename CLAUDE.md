@@ -34,7 +34,8 @@ RimWorld et The Escapists (bâtiments), Zelda vu de dessus (combat).
 - `pnpm check` : typecheck + lint + tests. Doit passer avant chaque commit.
 - `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm format`.
 - À partir de l'étape 10 : `pnpm db:up` (PostgreSQL dans Docker), `pnpm db:generate`, `pnpm db:migrate`.
-- Outils : `pnpm tools:map` (carte du monde en PNG, étape 04), `pnpm tools:bots <n>` (clients robots, étape 08).
+- Outils : `pnpm tools:map` (carte du monde en PNG, étape 04), `pnpm tools:tiles` (aperçu PNG des tuiles du sol),
+  `pnpm tools:bots <n>` (clients robots, étape 08).
 
 ## Règles d'or
 1. Le serveur fait foi. Le client envoie des intentions (inputs, actions), jamais des résultats.
