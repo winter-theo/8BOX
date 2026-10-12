@@ -3,7 +3,13 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 09 — Contrôles mobiles
+- [ ] Détection du tactile (`?touch=1` pour forcer en dev) ; HUD mobile : joystick (direction testée) qui produit
+  le même `input` que le clavier, boutons à droite (≥ 48 px), place réservée pour la barre en bas.
+- [ ] Appui long sur le monde → événement « menu d'actions » et bulle de debug avec la case.
+- [ ] Pas de zoom ni de défilement du navigateur ; écran « Tourne ton téléphone » en portrait ; plein écran et
+  verrouillage en paysage.
+- [ ] Vérification en émulation mobile (paysage, portrait) et sur PC.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
