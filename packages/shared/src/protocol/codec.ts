@@ -3,8 +3,9 @@ import { z } from 'zod';
 import { type ClientMessage, clientMessageSchema, type ServerMessage } from './messages';
 
 /** Encodes a message to msgpack. Undefined fields are left out. */
-export function encodeMessage(message: ClientMessage | ServerMessage): Uint8Array {
-  return encode(message, { ignoreUndefined: true });
+export function encodeMessage(message: ClientMessage | ServerMessage): Uint8Array<ArrayBuffer> {
+  // msgpack always encodes into a plain ArrayBuffer (never a SharedArrayBuffer).
+  return encode(message, { ignoreUndefined: true }) as Uint8Array<ArrayBuffer>;
 }
 
 /** Decodes a server message. The client trusts the server: no validation. */

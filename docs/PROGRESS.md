@@ -7,7 +7,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] 1. Protocole partagé : schémas zod client → serveur, types serveur → client, codec msgpack, tests
 - [x] 2. Serveur `net/` : limiteur de débit, sessions, décodage et validation, battement (latence), fermeture, tests
 - [x] 3. Mode dev (`DEV_AUTH`) et module `players` : entité au spawn, `player.joined` / `player.left`, tests
-- [ ] 4. Client `GameClient` : connexion, reconnexion à délai croissant, `hello` / `welcome`, ping ; store Zustand
+- [x] 4. Client `GameClient` : connexion, reconnexion à délai croissant, `hello` / `welcome`, ping ; store Zustand
 - [ ] 5. UI : écran de connexion de dev (pseudo), ping affiché, refus (`outdated` → recharger), i18n FR/EN
 - [ ] 6. Critères d'acceptation (deux onglets), clôture, PR et fusion
 
