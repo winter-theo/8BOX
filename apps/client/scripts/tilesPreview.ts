@@ -35,6 +35,9 @@ const MAP_SCALE = 4;
 /** Size of the map excerpt, in tiles. */
 const MAP_WIDTH_TILES = 96;
 const MAP_HEIGHT_TILES = 64;
+/** Size of the close-up at the center of the excerpt, in tiles (shown without downscaling). */
+const CLOSE_UP_WIDTH_TILES = 30;
+const CLOSE_UP_HEIGHT_TILES = 20;
 /** Spacing of the candidate excerpt centers, in tiles. */
 const SEARCH_STEP_TILES = 48;
 const BACKGROUND = [27, 27, 36] as const;
@@ -131,33 +134,46 @@ function renderMap(seed: number, file: string): void {
     }
   }
 
-  const x0 = best.x - MAP_WIDTH_TILES / 2;
-  const y0 = best.y - MAP_HEIGHT_TILES / 2;
-  const canvas = new Canvas(
-    MAP_WIDTH_TILES * TILE * MAP_SCALE,
-    MAP_HEIGHT_TILES * TILE * MAP_SCALE,
-  );
-  for (let ty = 0; ty < MAP_HEIGHT_TILES; ty++) {
-    for (let tx = 0; tx < MAP_WIDTH_TILES; tx++) {
-      for (const draw of planGroundTile(x0 + tx, y0 + ty, lookup)) {
-        const placeholder = placeholderFor(draw.sprite);
-        if (!placeholder) {
-          continue;
+  const drawRegion = (
+    center: { x: number; y: number },
+    widthTiles: number,
+    heightTiles: number,
+    scale: number,
+    out: string,
+  ) => {
+    const x0 = Math.floor(center.x - widthTiles / 2);
+    const y0 = Math.floor(center.y - heightTiles / 2);
+    const canvas = new Canvas(widthTiles * TILE * scale, heightTiles * TILE * scale);
+    for (let ty = 0; ty < heightTiles; ty++) {
+      for (let tx = 0; tx < widthTiles; tx++) {
+        for (const draw of planGroundTile(x0 + tx, y0 + ty, lookup)) {
+          const placeholder = placeholderFor(draw.sprite);
+          if (placeholder) {
+            const variant = pickVariant(placeholder, draw.variant);
+            canvas.sprite(placeholder, variant, tx * TILE * scale, ty * TILE * scale, scale);
+          }
         }
-        const variant = pickVariant(placeholder, draw.variant);
-        canvas.sprite(
-          placeholder,
-          variant,
-          tx * TILE * MAP_SCALE,
-          ty * TILE * MAP_SCALE,
-          MAP_SCALE,
-        );
       }
     }
-  }
-  canvas.save(file);
-  process.stdout.write(
-    `map: seed ${seed}, tiles (${x0}, ${y0}) to (${x0 + MAP_WIDTH_TILES}, ${y0 + MAP_HEIGHT_TILES}) → ${file}\n`,
+    canvas.save(out);
+    process.stdout.write(
+      `map: seed ${seed}, tiles (${x0}, ${y0}) to (${x0 + widthTiles}, ${y0 + heightTiles}) → ${out}\n`,
+    );
+  };
+  drawRegion(best, MAP_WIDTH_TILES, MAP_HEIGHT_TILES, MAP_SCALE, file);
+  drawRegion(
+    best,
+    CLOSE_UP_WIDTH_TILES,
+    CLOSE_UP_HEIGHT_TILES,
+    MAP_SCALE,
+    file.replace('.png', '-zoom.png'),
+  );
+  drawRegion(
+    generator.spawn,
+    CLOSE_UP_WIDTH_TILES,
+    CLOSE_UP_HEIGHT_TILES,
+    MAP_SCALE,
+    file.replace('.png', '-spawn.png'),
   );
 }
 

@@ -5,6 +5,8 @@ import type { Corner, Side } from './placeholders';
 export interface SpriteDraw {
   sprite: string;
   variant: number;
+  /** Sprite drawn instead when `sprite` has no image (a patch without its own art…). Overlays have none. */
+  fallback?: string;
 }
 
 /** Sprite ids of the ground and floor at a tile; undefined when the tile is not known (not loaded). */
@@ -33,9 +35,11 @@ const PATCHED = new Set(['ground.grass']);
 const PATCH_SCALE_TILES = 6;
 /** Share of the noise range above which a tile is in a patch (0.6 ≈ a fifth of the area). */
 const PATCH_THRESHOLD = 0.6;
+/** Random spread added to the noise per tile, so that patch borders are ragged instead of square. */
+const PATCH_EDGE_JITTER = 0.14;
 
 /** Seeds that decorrelate the random choices of a tile (variants, edges, patches). */
-const SALT = { base: 0x6b1d, edge: 0x2c77, shore: 0x51f3, patch: 0x9e2a } as const;
+const SALT = { base: 0x6b1d, edge: 0x2c77, shore: 0x51f3, patch: 0x9e2a, jitter: 0x3d81 } as const;
 /** Range of the variant numbers drawn from a tile hash. */
 const VARIANT_RANGE = 1 << 16;
 
@@ -81,9 +85,15 @@ export function planGroundTile(x: number, y: number, lookup: GroundLookup): Spri
   }
   const inPatch =
     PATCHED.has(ground) &&
-    valueNoise(SALT.patch, x / PATCH_SCALE_TILES, y / PATCH_SCALE_TILES) > PATCH_THRESHOLD;
+    valueNoise(SALT.patch, x / PATCH_SCALE_TILES, y / PATCH_SCALE_TILES) +
+      (hashCoords(SALT.jitter, x, y) - 0.5) * PATCH_EDGE_JITTER >
+      PATCH_THRESHOLD;
   const draws: SpriteDraw[] = [
-    { sprite: inPatch ? `${ground}.patch` : ground, variant: variantAt(SALT.base, x, y) },
+    {
+      sprite: inPatch ? `${ground}.patch` : ground,
+      variant: variantAt(SALT.base, x, y),
+      fallback: ground,
+    },
   ];
 
   const rank = GROUND_RANK[ground];
@@ -136,7 +146,7 @@ export function planGroundTile(x: number, y: number, lookup: GroundLookup): Spri
   }
 
   if (here.floor) {
-    draws.push({ sprite: here.floor, variant: variantAt(SALT.base, x, y) });
+    draws.push({ sprite: here.floor, variant: variantAt(SALT.base, x, y), fallback: here.floor });
   }
   return draws;
 }

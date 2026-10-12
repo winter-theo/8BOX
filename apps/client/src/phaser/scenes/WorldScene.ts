@@ -20,7 +20,12 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
-    const ground = new GroundLayer(this, new AssetRegistry(atlasFromScene(this)), content);
+    const ground = new GroundLayer(
+      this,
+      new AssetRegistry(atlasFromScene(this)),
+      content,
+      gameClient.chunks,
+    );
     const camera = this.cameras.main;
     camera.setZoom(VIEW.defaultZoom);
     camera.setBounds(0, 0, WORLD_PX, WORLD_PX);

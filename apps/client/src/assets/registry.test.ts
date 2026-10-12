@@ -55,12 +55,14 @@ describe('AssetRegistry', () => {
     const { canvases, factory } = fakeCanvases();
     const registry = new AssetRegistry(undefined, factory);
 
+    // Sand weights 5, 5, 3, 1: numbers 0 to 4 pick the first variant, 5 to 9 the second.
     const a = registry.sprite('ground.sand', 0);
-    const b = registry.sprite('ground.sand', 2); // 2 variants: same as 0
-    registry.sprite('ground.sand', 1);
+    const b = registry.sprite('ground.sand', 4);
+    const c = registry.sprite('ground.sand', 5);
 
     expect(a).toBe(b);
-    expect(canvases).toHaveLength(2);
+    expect(c).not.toBe(a);
+    expect(canvases).toHaveLength(4);
     expect(a).toMatchObject({ sx: 0, sy: 0, width: 8, height: 8 });
   });
 
@@ -95,7 +97,28 @@ describe('AssetRegistry', () => {
     expect(registry.fromAtlas('ground.grass')).toBe(true);
     expect(registry.fromAtlas('ground.sand')).toBe(false);
     registry.sprite('ground.sand');
-    // Only the sand placeholder (2 variants) was drawn: grass comes from the atlas.
-    expect(canvases).toHaveLength(2);
+    // Only the sand placeholder (4 variants) was drawn: grass comes from the atlas.
+    expect(canvases).toHaveLength(4);
+  });
+});
+
+describe('AssetRegistry.optional', () => {
+  it('returns nothing for a sprite without art, instead of the missing checker', () => {
+    const { canvases, factory } = fakeCanvases();
+    const registry = new AssetRegistry(undefined, factory);
+
+    expect(registry.optional('ground.lava.edge.n')).toBeUndefined();
+    expect(canvases).toHaveLength(0);
+  });
+
+  it('draws edge overlays that leave most of the tile transparent', () => {
+    const { canvases, factory } = fakeCanvases();
+    const registry = new AssetRegistry(undefined, factory);
+
+    expect(registry.optional('ground.grass.edge.n')).toBeDefined();
+    const pixels = canvases[0];
+    expect(pixels?.size).toBeGreaterThan(8);
+    expect(pixels?.size).toBeLessThan(32);
+    expect(pixels?.get('0,7')).toBeUndefined();
   });
 });
