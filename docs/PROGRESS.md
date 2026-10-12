@@ -3,7 +3,13 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+**Étape 03 — Protocole et connexions** (démarrée le 2026-10-11, branche `step/03-protocole-connexions`)
+- [ ] 1. Protocole partagé : schémas zod client → serveur, types serveur → client, codec msgpack, tests
+- [ ] 2. Serveur `net/` : limiteur de débit, sessions, décodage et validation, battement (latence), fermeture, tests
+- [ ] 3. Mode dev (`DEV_AUTH`) et module `players` : entité au spawn, `player.joined` / `player.left`, tests
+- [ ] 4. Client `GameClient` : connexion, reconnexion à délai croissant, `hello` / `welcome`, ping ; store Zustand
+- [ ] 5. UI : écran de connexion de dev (pseudo), ping affiché, refus (`outdated` → recharger), i18n FR/EN
+- [ ] 6. Critères d'acceptation (deux onglets), clôture, PR et fusion
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._

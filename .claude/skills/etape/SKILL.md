@@ -14,7 +14,8 @@ disable-model-invocation: true
    - Une AUTRE étape est en cours et inachevée : arrête-toi et demande quoi faire.
    - Vérifie que les prérequis de la fiche sont ✅ dans `docs/ROADMAP.md`. Sinon, arrête-toi et dis-le.
 3. Lis la fiche, puis UNIQUEMENT les documents et sections qu'elle cite.
-4. Écris dans `docs/PROGRESS.md` (« En cours ») la liste des sous-tâches en cases à cocher.
+4. Crée la branche `step/<id>-<sujet>` depuis `main` à jour (si elle n'existe pas déjà).
+   Écris dans `docs/PROGRESS.md` (« En cours ») la liste des sous-tâches en cases à cocher.
    Passe l'étape à 🟡 dans `docs/ROADMAP.md`. Commit.
 5. Implémente sous-tâche par sous-tâche. Après chacune : vérifications utiles (`pnpm check` ou la partie
    concernée), case cochée, commit `step <id>: <sous-tâche>`.
@@ -22,6 +23,8 @@ disable-model-invocation: true
 7. Clôture : remplace le bloc « En cours » par une entrée d'historique en haut de l'historique
    (date, résumé en 3 à 6 lignes, écarts par rapport à la fiche, points « À valider »).
    Passe l'étape à ✅ dans `docs/ROADMAP.md`. `pnpm check` doit passer. Commit final.
+   Pousse la branche, ouvre une PR vers `main` (titre « Étape <id> : <nom> », description en français :
+   contenu et comment tester), fusionne-la (commit de fusion, branche supprimée), puis remets `main` local à jour.
 8. Termine par un message court à l'utilisateur : ce qui marche, comment le tester à la main
    (étapes concrètes), les points à valider. Ne commence PAS l'étape suivante.
 

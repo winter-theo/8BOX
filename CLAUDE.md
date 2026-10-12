@@ -53,6 +53,8 @@ RimWorld et The Escapists (bâtiments), Zelda vu de dessus (combat).
 - Lire uniquement ce que la fiche demande. Pas d'exploration large : Glob et Grep ciblés.
 - Modifier par petites éditions plutôt que réécrire des fichiers entiers.
 - Commit après chaque sous-tâche (`step <id>: ...`) pour pouvoir reprendre si la session est coupée.
+- Git : une branche par étape (`step/<id>-<sujet>`) créée depuis `main` ; à la clôture, PR vers `main` puis fusion.
+  Dépôt : `winter-theo/8BOX` (privé). Aucune mention de Claude (co-auteur, « Generated with ») dans les commits et PR.
 - Tenir `docs/PROGRESS.md` à jour (section « En cours », puis historique à la fin de l'étape).
 - Décision de design manquante : choisir le plus simple, le mettre en config, le noter dans
   `docs/PROGRESS.md` (« À valider »), et continuer.
