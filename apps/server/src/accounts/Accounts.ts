@@ -55,6 +55,17 @@ export class Accounts {
     return account;
   }
 
+  /** The existing account of a session token, without creating one (admin API). */
+  async findByToken(token: string): Promise<Account | undefined> {
+    const userId = await this.identity?.verify(token);
+    return userId === undefined ? undefined : this.store.findByClerkId(userId);
+  }
+
+  /** The existing account of a name (dev mode). */
+  findByName(name: string): Promise<Account | undefined> {
+    return this.store.findByName(name);
+  }
+
   /** Dev mode: the account of a name, created approved at the first sign-in. */
   async devSignIn(name: string): Promise<Account> {
     return (

@@ -26,7 +26,7 @@ export interface AdminPlayer {
   status: PlayerStatus;
   role: PlayerRole;
   banReason: string | null;
-  /** In the game right now. */
+  /** Connected right now: playing, or waiting for approval. */
   online: boolean;
   /** First sign-in (the date of the request, for a pending player). */
   createdAt: string;
@@ -62,8 +62,12 @@ export interface AdminAuditResponse {
   entries: AdminAuditEntry[];
 }
 
-/** Why an admin action was refused. */
+/** Why an admin request was refused. */
 export type AdminError =
+  /** 401: no session token, or an invalid one. */
+  | 'unauthorized'
+  /** 403: signed in, but not an admin. */
+  | 'forbidden'
   /** No such player. */
   | 'notFound'
   /** Admins cannot act on themselves… */
@@ -77,7 +81,7 @@ export type AdminError =
   /** Invalid body (ban reason empty or too long). */
   | 'invalidBody';
 
-/** Answer of a refused admin action (status 400, 404 or 409). */
+/** Answer of a refused admin request (status 400, 401, 403, 404 or 409). */
 export interface AdminErrorResponse {
   error: AdminError;
 }
