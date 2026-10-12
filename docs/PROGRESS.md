@@ -3,7 +3,15 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 12 — Onglet admin v1 (branche `step/12-admin-v1`)
+- [ ] Table `admin_audit` (migration) et stockage admin (base + mémoire pour les tests)
+- [ ] Service admin et API HTTP `/admin/*` : garde (jeton Clerk + rôle admin), demandes en attente, joueurs,
+      journal ; approuver, refuser, bannir, débannir, expulser ; chaque action dans l'audit
+- [ ] Effets immédiats côté réseau : bannissement, refus et expulsion déconnectent avec le bon écran ; un joueur
+      approuvé qui attend entre en jeu (raison de refus `kicked`, protocole 6)
+- [ ] Client : page `/admin` (tableaux, rafraîchissement toutes les 30 s, téléphone), lien dans le menu avec le
+      badge « N en attente », textes FR et EN
+- [ ] Tests (garde 403, approbation et bannissement avec audit, effets en direct) et vérification
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
