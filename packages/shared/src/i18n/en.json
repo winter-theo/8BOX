@@ -13,10 +13,37 @@
       "devMode": "Development mode: pick a name to play.",
       "name": "Name",
       "nameRules": "3 to 16 characters: letters, digits or _",
-      "play": "Play"
+      "play": "Play",
+      "google": "Sign in with Google",
+      "unavailable": "Sign-in is not set up on this server yet."
+    },
+    "account": {
+      "signOut": "Sign out",
+      "chooseName": "Choose your name",
+      "chooseNameHint": "Every player will see it. You will not be able to change it yourself.",
+      "confirmName": "Confirm",
+      "nameError": {
+        "invalid": "3 to 16 characters: letters, digits or _",
+        "forbidden": "This name is not allowed.",
+        "taken": "This name is already taken."
+      },
+      "pending": {
+        "title": "Waiting for approval",
+        "text": "Your request is sent. An admin has to approve it before you can play."
+      },
+      "denied": {
+        "title": "Request denied",
+        "text": "An admin denied your request to join."
+      },
+      "banned": {
+        "title": "Account banned",
+        "text": "You can no longer join this world.",
+        "reason": "Reason: {{reason}}"
+      }
     },
     "rejected": {
       "outdated": "A new version of the game is available.",
+      "invalidToken": "Your session expired: sign in again.",
       "devAuthDisabled": "Development login is disabled on this server.",
       "invalidName": "This name is not valid.",
       "replaced": "This name just connected somewhere else (another tab?).",

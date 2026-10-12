@@ -1,7 +1,10 @@
+import { CLERK_PUBLISHABLE_KEY } from '../env';
 import { useSessionStore } from '../store/session';
+import { AccountScreen } from './auth/AccountScreen';
+import { ClerkAutoConnect, SignOutButton } from './auth/ClerkLogin';
+import { LoginScreen } from './auth/LoginScreen';
 import { ConnectionBanner } from './ConnectionBanner';
 import { DevInfo } from './DevInfo';
-import { DevLogin } from './DevLogin';
 import { LanguageSelect } from './LanguageSelect';
 import { LongPressBubble } from './mobile/LongPressBubble';
 import { MobileControls } from './mobile/MobileControls';
@@ -23,9 +26,14 @@ export function App() {
       <LongPressBubble />
       <ConnectionBanner />
       <DevInfo />
-      {status === 'idle' && <DevLogin />}
+      {status === 'idle' && <LoginScreen />}
+      {status === 'account' && <AccountScreen />}
       {status === 'rejected' && <RejectedScreen />}
-      <LanguageSelect />
+      <div className="top-right">
+        {CLERK_PUBLISHABLE_KEY && <SignOutButton />}
+        <LanguageSelect />
+      </div>
+      {CLERK_PUBLISHABLE_KEY && <ClerkAutoConnect />}
       {touch && portrait && <RotatePhone />}
     </div>
   );

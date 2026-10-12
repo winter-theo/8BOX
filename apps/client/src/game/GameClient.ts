@@ -23,6 +23,12 @@ export function toWebSocketUrl(serverUrl: string): string {
   return url.toString();
 }
 
+/**
+ * How the player proves who they are: a dev name (DEV_AUTH servers only), or a signed-in Clerk session
+ * (a fresh, short-lived token for each connection).
+ */
+export type Credentials = { devName: string } | { getToken: () => Promise<string | null> };
+
 export interface GameClientOptions {
   /** Base HTTP URL of the server. */
   serverUrl: string;
@@ -51,7 +57,7 @@ export class GameClient {
   private readonly createSocket: (url: string) => WebSocket;
   private readonly now: () => number;
   private socket: WebSocket | undefined;
-  private name = '';
+  private credentials: Credentials | undefined;
   private attempt = 0;
   /** True when no reconnection must happen (rejected or left on purpose). */
   private stopped = true;
@@ -108,14 +114,19 @@ export class GameClient {
     return this.remotes.views(this.now());
   }
 
-  /** Joins the game with a dev name. */
-  connect(name: string): void {
+  /** Joins the game. */
+  connect(credentials: Credentials): void {
     this.disconnect();
-    this.name = name;
+    this.credentials = credentials;
     this.stopped = false;
     this.attempt = 0;
-    useSessionStore.setState({ status: 'connecting', rejectReason: null });
+    useSessionStore.setState({ status: 'connecting', rejectReason: null, account: null });
     this.open();
+  }
+
+  /** The name a new player chose (answer to the `needsName` status). */
+  setName(name: string): void {
+    this.send({ t: 'setName', name });
   }
 
   /** Leaves the game and goes back to the login screen. */
@@ -126,10 +137,42 @@ export class GameClient {
     this.socket = undefined;
     this.goOffline();
     socket?.close(1000, 'left');
-    useSessionStore.setState({ status: 'idle', player: null, pingMs: null, rejectReason: null });
+    useSessionStore.setState({
+      status: 'idle',
+      player: null,
+      pingMs: null,
+      rejectReason: null,
+      account: null,
+    });
   }
 
   private open(): void {
+    const credentials = this.credentials;
+    if (!credentials) {
+      return;
+    }
+    if ('devName' in credentials) {
+      this.openSocket({ devName: credentials.devName });
+      return;
+    }
+    // Clerk session tokens are short-lived: a fresh one for each connection.
+    credentials.getToken().then(
+      (token) => {
+        if (this.stopped || this.credentials !== credentials) {
+          return;
+        }
+        if (token === null) {
+          this.stopped = true;
+          useSessionStore.setState({ status: 'rejected', rejectReason: 'invalidToken' });
+          return;
+        }
+        this.openSocket({ token });
+      },
+      () => this.retryLater(),
+    );
+  }
+
+  private openSocket(proof: { devName: string } | { token: string }): void {
     const socket = this.createSocket(toWebSocketUrl(this.options.serverUrl));
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
@@ -137,7 +180,7 @@ export class GameClient {
       this.send({
         t: 'hello',
         version: this.options.protocolVersion ?? PROTOCOL_VERSION,
-        devName: this.name,
+        ...proof,
       });
     };
     socket.onmessage = (event: MessageEvent) => {
@@ -179,6 +222,21 @@ export class GameClient {
       case 'pong':
         useSessionStore.setState({ pingMs: Math.round(this.now() - message.time) });
         return;
+      case 'status':
+        // Signed in, but not in the game: a name to pick, the admin to wait for, or no entry.
+        this.attempt = 0;
+        if (message.state === 'denied' || message.state === 'banned') {
+          this.stopped = true; // The server closes the socket next.
+        }
+        useSessionStore.setState({
+          status: 'account',
+          account: {
+            state: message.state,
+            reason: message.reason ?? null,
+            nameError: message.nameError ?? null,
+          },
+        });
+        return;
       case 'rejected':
         // The server closes the socket next; never retry after a refusal.
         this.stopped = true;
@@ -210,6 +268,11 @@ export class GameClient {
     if (this.stopped) {
       return;
     }
+    this.retryLater();
+  }
+
+  /** Connects again after a growing delay. */
+  private retryLater(): void {
     const delay = Math.min(NET.reconnectDelayMs * 2 ** this.attempt, NET.reconnectMaxDelayMs);
     this.attempt++;
     useSessionStore.setState({ status: 'reconnecting', player: null });

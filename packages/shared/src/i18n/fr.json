@@ -13,10 +13,37 @@
       "devMode": "Mode développement : choisis un pseudo pour jouer.",
       "name": "Pseudo",
       "nameRules": "3 à 16 caractères : lettres, chiffres ou _",
-      "play": "Jouer"
+      "play": "Jouer",
+      "google": "Se connecter avec Google",
+      "unavailable": "La connexion n'est pas encore configurée sur ce serveur."
+    },
+    "account": {
+      "signOut": "Se déconnecter",
+      "chooseName": "Choisis ton pseudo",
+      "chooseNameHint": "Tous les joueurs le verront. Tu ne pourras pas le changer toi-même.",
+      "confirmName": "Valider",
+      "nameError": {
+        "invalid": "3 à 16 caractères : lettres, chiffres ou _",
+        "forbidden": "Ce pseudo n'est pas autorisé.",
+        "taken": "Ce pseudo est déjà pris."
+      },
+      "pending": {
+        "title": "En attente de validation",
+        "text": "Ta demande est envoyée. Un administrateur doit la valider avant que tu puisses jouer."
+      },
+      "denied": {
+        "title": "Demande refusée",
+        "text": "Un administrateur a refusé ta demande d'accès."
+      },
+      "banned": {
+        "title": "Compte banni",
+        "text": "Tu ne peux plus rejoindre ce monde.",
+        "reason": "Raison : {{reason}}"
+      }
     },
     "rejected": {
       "outdated": "Une nouvelle version du jeu est disponible.",
+      "invalidToken": "Ta session a expiré : reconnecte-toi.",
       "devAuthDisabled": "La connexion de développement est désactivée sur ce serveur.",
       "invalidName": "Ce pseudo n'est pas valide.",
       "replaced": "Ce pseudo vient de se connecter ailleurs (un autre onglet ?).",
