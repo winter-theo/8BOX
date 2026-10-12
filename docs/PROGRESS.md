@@ -10,7 +10,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] 4. `apps/server` : Fastify `/health`, ws `/ws` (ping → pong), `env.ts` (zod), pino, test `/health`
 - [x] 5. `apps/client` : Vite + React 19 + Phaser 4 (`BootScene` « 8Box »), bandeau d'état WebSocket
 - [x] 6. `.env.example` (serveur, client) et README racine
-- [ ] 7. CI GitHub Actions (`pnpm check`)
+- [x] 7. CI GitHub Actions (`pnpm check`)
 - [ ] 8. Vérifier les critères d'acceptation, mettre à jour « Commandes » de `CLAUDE.md` si besoin
 
 Notes :
