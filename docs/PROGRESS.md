@@ -3,7 +3,16 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 08 — Prédiction, interpolation, multijoueur
+- [ ] Protocole 4 et serveur : `snapshot.entities` (entités des chunks abonnés, champs compacts, pseudo à
+  l'apparition, `gone` à la disparition) ; test « pas d'entités hors de ses chunks ».
+- [ ] Client : prédiction avec `stepMovement`, inputs non acquittés, réconciliation (testée), correction douce,
+  rendu lissé entre deux pas.
+- [ ] Client : autres entités interpolées ~100 ms dans le passé (tampon testé), apparition et disparition.
+- [ ] Pseudos au-dessus des têtes en police pixel.
+- [ ] Outil `pnpm tools:bots <n>`.
+- [ ] Latence simulée en dev (`?lag=150`).
+- [ ] Vérification : 150 ms de latence, deux navigateurs et 20 bots, tick serveur moyen < 5 ms.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
