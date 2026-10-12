@@ -23,7 +23,8 @@ function ensureFont(scene: Phaser.Scene): void {
     texture.context.fillRect(x, y, 1, 1);
   });
   texture.refresh();
-  const data = Phaser.GameObjects.RetroFont.Parse(scene, {
+  // Phaser 4 returns the whole cache entry: { data, texture, frame }.
+  const entry = Phaser.GameObjects.RetroFont.Parse(scene, {
     image: FONT_KEY,
     width: PIXEL_FONT.cellWidth,
     height: PIXEL_FONT.cellHeight,
@@ -35,7 +36,7 @@ function ensureFont(scene: Phaser.Scene): void {
     'spacing.y': 0,
     lineSpacing: 0,
   });
-  scene.cache.bitmapFont.add(FONT_KEY, { data, texture: FONT_KEY, frame: null });
+  scene.cache.bitmapFont.add(FONT_KEY, entry);
 }
 
 /**
@@ -55,7 +56,7 @@ export class NameLabels {
     const text = fontText(name);
     if (!label) {
       label = this.scene.add
-        .bitmapText(0, 0, FONT_KEY, text, PIXEL_FONT.cellHeight)
+        .bitmapText(0, 0, FONT_KEY, text) // Its own size: one font pixel per world pixel.
         .setLetterSpacing(LETTER_SPACING_PX)
         .setOrigin(0.5, 1)
         .setDepth(DEPTH.labels);
