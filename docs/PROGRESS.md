@@ -3,7 +3,16 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 10 — Base de données et sauvegarde
+- [ ] PostgreSQL 18 dans Docker (`docker-compose.yml`), scripts `db:*`, Drizzle : tables `world_state`, `chunks`,
+  `players`, `characters`, migrations appliquées au démarrage, `DATABASE_URL`.
+- [ ] Sérialisation des chunks (palette d'identifiants texte) ; tests d'aller-retour et de réordonnancement.
+- [ ] File d'écriture hors tick qui regroupe les chunks sales (testée) ; service de persistance (base, et mémoire
+  pour les tests).
+- [ ] Démarrage : graine en base, chunks chargés ou générés ; écriture toutes les 30 s et à l'arrêt.
+- [ ] Personnages : position restaurée à la connexion, sauvée à la déconnexion et toutes les 60 s.
+- [ ] Route de dev `POST /dev/tile`.
+- [ ] Vérification : case modifiée gardée après redémarrage, retour au même endroit après reconnexion.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
