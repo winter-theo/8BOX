@@ -128,6 +128,37 @@
         "network": "The server does not answer."
       }
     },
+    "chat": {
+      "title": "Chat",
+      "tab": {
+        "proximity": "Nearby",
+        "private": "Private"
+      },
+      "message": "Message",
+      "pressEnter": "Press Enter to chat…",
+      "write": "Type a message…",
+      "replyTo": "Reply to {{name}}…",
+      "privateHint": "/msg name message",
+      "send": "Send",
+      "close": "Close the chat",
+      "from": "from {{name}}",
+      "to": "to {{name}}",
+      "emptyProximity": "Players within {{radius}} tiles hear you. Commands: /msg, /r, /report.",
+      "emptyPrivate": "Type /msg name message to talk to a player, wherever they are.",
+      "notice": {
+        "muted": "An admin muted you until {{time}}.",
+        "tooFast": "Slow down! Wait a little before chatting again.",
+        "tooLong": "Message too long: {{max}} characters at most.",
+        "unknownPlayer": "{{name}} cannot be found or is not in the game.",
+        "noReplyTarget": "Nobody has sent you a private message yet.",
+        "self": "You cannot do that to yourself.",
+        "unknownCommand": "Unknown command. Commands: /msg, /r, /report.",
+        "msgUsage": "Type /msg name message (or /r message to reply).",
+        "reportUsage": "Type /report name reason.",
+        "reported": "Report against {{name}} sent. Thank you!",
+        "reportFailed": "The report could not be sent: try again later."
+      }
+    },
     "dev": {
       "chunks_one": "{{count}} chunk loaded",
       "chunks_other": "{{count}} chunks loaded",
@@ -147,6 +178,7 @@
       "use": "Hit",
       "action": "Action",
       "inventory": "Bag",
+      "chat": "Chat",
       "rotate": "Turn your phone",
       "rotateHint": "8Box is played in landscape.",
       "fullscreen": "Full screen"

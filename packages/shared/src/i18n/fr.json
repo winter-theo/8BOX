@@ -128,6 +128,37 @@
         "network": "Le serveur ne répond pas."
       }
     },
+    "chat": {
+      "title": "Chat",
+      "tab": {
+        "proximity": "Proximité",
+        "private": "Privé"
+      },
+      "message": "Message",
+      "pressEnter": "Entrée pour écrire…",
+      "write": "Écrire…",
+      "replyTo": "Répondre à {{name}}…",
+      "privateHint": "/msg pseudo message",
+      "send": "Envoyer",
+      "close": "Fermer le chat",
+      "from": "de {{name}}",
+      "to": "à {{name}}",
+      "emptyProximity": "Les joueurs à moins de {{radius}} cases t'entendent. Commandes : /msg, /r, /signaler.",
+      "emptyPrivate": "Écris /msg pseudo message pour parler à un joueur, où qu'il soit.",
+      "notice": {
+        "muted": "Un administrateur t'a rendu muet jusqu'à {{time}}.",
+        "tooFast": "Doucement ! Attends un peu avant d'écrire à nouveau.",
+        "tooLong": "Message trop long : {{max}} caractères au plus.",
+        "unknownPlayer": "{{name}} est introuvable ou n'est pas en jeu.",
+        "noReplyTarget": "Personne ne t'a encore écrit en privé.",
+        "self": "Tu ne peux pas faire ça avec toi-même.",
+        "unknownCommand": "Commande inconnue. Commandes : /msg, /r, /signaler.",
+        "msgUsage": "Écris /msg pseudo message (ou /r message pour répondre).",
+        "reportUsage": "Écris /signaler pseudo raison.",
+        "reported": "Signalement contre {{name}} envoyé. Merci !",
+        "reportFailed": "Le signalement n'a pas pu être envoyé : réessaie plus tard."
+      }
+    },
     "dev": {
       "chunks_one": "{{count}} chunk chargé",
       "chunks_other": "{{count}} chunks chargés",
@@ -147,6 +178,7 @@
       "use": "Frapper",
       "action": "Action",
       "inventory": "Sac",
+      "chat": "Chat",
       "rotate": "Tourne ton téléphone",
       "rotateHint": "8Box se joue en paysage.",
       "fullscreen": "Plein écran"

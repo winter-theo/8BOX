@@ -21,6 +21,8 @@ export type ClientEvents = {
   'view.changed': { w: number; h: number; zoom: number };
   /** Phaser → game (dev mode): center of the free camera in tiles, or null when it follows the player. */
   'debugCamera.moved': { at: { x: number; y: number } | null };
+  /** Game → Phaser: a player nearby said something: a bubble above the head of `entity`. */
+  'chat.said': { entity: number; text: string };
   /** Phaser → game (dev mode): frames per second, camera zoom and object sprites shown. */
   'debug.stats': DebugStats;
 };

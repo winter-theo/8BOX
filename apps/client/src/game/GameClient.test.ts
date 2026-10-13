@@ -13,6 +13,7 @@ import {
   TypedEmitter,
 } from '@8box/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useChatStore } from '../store/chat';
 import { useSessionStore } from '../store/session';
 import type { ClientEvents } from './events';
 import { GameClient, toWebSocketUrl } from './GameClient';
@@ -429,5 +430,66 @@ describe('GameClient accounts', () => {
 
     expect(sockets).toHaveLength(0);
     expect(state()).toMatchObject({ status: 'rejected', rejectReason: 'invalidToken' });
+  });
+
+  it('sends chat lines, keeps what it receives, and asks for bubbles of lines said nearby', () => {
+    const client = createClient();
+    const said: ClientEvents['chat.said'][] = [];
+    bus.on('chat.said', (event) => said.push(event));
+    client.connect({ devName: 'Ana' });
+    lastSocket().open();
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', position: SPAWN },
+      tick: 1,
+    });
+
+    client.say('salut');
+    client.say('ok', 'Bob');
+    expect(lastSocket().sent.filter((message) => message.t === 'chat')).toEqual([
+      { t: 'chat', text: 'salut' },
+      { t: 'chat', text: 'ok', to: 'Bob' },
+    ]);
+
+    const ts = 1_760_000_000_000;
+    lastSocket().receive({
+      t: 'chat',
+      channel: 'proximity',
+      from: 'Ana',
+      entity: 3,
+      text: 'salut',
+      ts,
+    });
+    lastSocket().receive({ t: 'chat', channel: 'private', from: 'Bob', to: 'Ana', text: 'yo', ts });
+    lastSocket().receive({ t: 'chatNotice', notice: 'tooFast' });
+
+    expect(said).toEqual([{ entity: 3, text: 'salut' }]);
+    const chat = useChatStore.getState();
+    expect(chat.entries).toEqual([
+      {
+        id: expect.any(Number),
+        kind: 'line',
+        channel: 'proximity',
+        from: 'Ana',
+        text: 'salut',
+        ts,
+        own: true,
+      },
+      {
+        id: expect.any(Number),
+        kind: 'line',
+        channel: 'private',
+        from: 'Bob',
+        to: 'Ana',
+        text: 'yo',
+        ts,
+        own: false,
+      },
+      { id: expect.any(Number), kind: 'notice', notice: 'tooFast' },
+    ]);
+    expect(chat.partner).toBe('Bob');
+
+    client.disconnect();
+    expect(useChatStore.getState().entries).toEqual([]);
   });
 });

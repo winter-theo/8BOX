@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { eventBus, type TouchButton } from '../../game/events';
+import { unreadCount, useChatStore } from '../../store/chat';
 import { FullscreenButton } from './FullscreenButton';
 import { Joystick } from './Joystick';
 
@@ -9,12 +10,31 @@ const BUTTONS: readonly { button: TouchButton; label: string }[] = [
   { button: 'inventory', label: 'ui.mobile.inventory' },
 ];
 
+/** Opens the chat panel; shows how many lines were not read yet. */
+function ChatButton() {
+  const { t } = useTranslation();
+  const unread = useChatStore(
+    (state) => unreadCount(state, 'proximity') + unreadCount(state, 'private'),
+  );
+  return (
+    <button
+      type="button"
+      className="touch-button touch-button--chat"
+      onClick={() => useChatStore.setState({ open: true })}
+    >
+      {t('ui.mobile.chat')}
+      {unread > 0 && <span className="badge">{unread}</span>}
+    </button>
+  );
+}
+
 /**
- * Touch controls in landscape: the joystick on the left, the buttons on the right, room kept at the
- * bottom for the item bar (step 14), and a full screen button.
+ * Touch controls in landscape: the joystick on the left, the buttons (and the chat) on the right, room
+ * kept at the bottom for the item bar (step 14), and a full screen button.
  */
 export function MobileControls() {
   const { t } = useTranslation();
+  const chatOpen = useChatStore((state) => state.open);
   return (
     <div className="mobile-controls">
       <Joystick />
@@ -29,6 +49,7 @@ export function MobileControls() {
             {t(label)}
           </button>
         ))}
+        {!chatOpen && <ChatButton />}
       </div>
       <div className="hotbar-slot" aria-hidden="true" />
       <FullscreenButton />

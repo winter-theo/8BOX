@@ -5,6 +5,7 @@ import { AccountScreen } from './auth/AccountScreen';
 import { ClerkAutoConnect, SignOutButton } from './auth/ClerkLogin';
 import { LoginScreen } from './auth/LoginScreen';
 import { ConnectionBanner } from './ConnectionBanner';
+import { ChatPanel } from './chat/ChatPanel';
 import { DevInfo } from './DevInfo';
 import { LanguageSelect } from './LanguageSelect';
 import { LongPressBubble } from './mobile/LongPressBubble';
@@ -24,6 +25,7 @@ export function App() {
     <div className={touch ? 'app app--touch' : 'app'}>
       <PhaserGame />
       {touch && status === 'online' && <MobileControls />}
+      {status === 'online' && <ChatPanel touch={touch} />}
       <LongPressBubble />
       <ConnectionBanner />
       <DevInfo />
