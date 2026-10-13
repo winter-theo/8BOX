@@ -447,7 +447,44 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   « Sac »). Elle ferme l'inventaire, et inversement. La barre de progression est celle des actions ; la fenêtre dit
   aussi combien de fabrications il reste. Protocole passé à la version 12.
 
+- (18) Portes : l'état est `open: true` dans la `meta` de la case (absent = fermée), envoyé par le nouveau message
+  `tileMeta` (protocole 13) et sauvegardé avec le chunk. Un nouvel objet sur la case (ou plus d'objet) efface sa
+  `meta`. Ouvrir / Fermer sont instantanés, touche E (priorité 15, au-dessus de Casser). Tout le monde peut ouvrir et
+  fermer (serrures en P2) ; fermer est refusé si un personnage est dans l'encadrement (« La place est prise »).
+- (18) Raccords des murs : un mur se raccorde aux murs et aux portes de ses 4 côtés (pas les diagonales). Sprites
+  `obj.wooden_wall.<côtés>` (`n`, `e`, `s`, `w` dans cet ordre, ou `none`), 16 placeholders. Mur plein : son dessus
+  couvre toute la case au-dessus, bordé là où rien ne se raccorde ; avec un mur en dessous, le dessus continue au lieu
+  de la face. Sans sprite de raccord (atlas futur incomplet), le sprite de base du mur est utilisé.
+- (18) Porte : un seul sprite fermé et un ouvert (`obj.wooden_door.open`), pensés pour une porte dans un mur
+  horizontal (son dessus n'a pas de bord sur les côtés). Pas de sprite propre à une porte dans un mur vertical.
+- (18) « Dormir ici » : instantané, permis dans la zone sûre ; il enregistre la case du lit dans le personnage
+  (composant `spawnPoint`, colonne `spawn_point` qui existait déjà, sauvegardée avec le personnage) et affiche
+  « Point de réapparition enregistré ». Casser le lit n'efface pas le point : l'étape 20 vérifiera que le lit existe
+  encore au moment de réapparaître.
+- (18) `has_player_build` : marqué quand un joueur pose un objet, et quand il casse un objet posable (une case
+  qu'un objet pose) ; jamais remis à faux. Les chunks sauvegardés avant cette étape restent à faux.
+- (18) Casser : n'importe quel joueur peut casser toutes les constructions et récupère l'objet (aucun propriétaire
+  n'est enregistré) ; la protection viendra avec les parcelles (P2).
+- (18) Règles de pose gardées de l'étape 17 : un sol ou une torche peut se poser sous un personnage, seuls les objets
+  solides (mur, porte, établi, lit) sont refusés sur un personnage ; les objets au sol ne gênent pas. Un mur se pose
+  sur un sol, un sol ne se pose pas sous un objet.
+- (18) Torche : `light: {}` vaut un rayon de 6 cases (`LIGHT.defaultRadiusTiles`), comme demandé.
+
 ## Historique
+
+### 2026-10-13 — Étape 18 : Construction : sols, murs, portes, meubles ✅
+- Shared : drapeaux de contenu `wall`, `door`, `bed` (dans l'emplacement `object`), état des portes dans la `meta`
+  (`isDoorOpen`, `tileBlocks`), collisions qui laissent passer une porte ouverte, actions Ouvrir / Fermer / Dormir
+  ici, `meta` dans la cible d'une action, message `tileMeta` (protocole 13).
+- Serveur : `meta` du monde (`getMeta`, `setMeta`, effacée avec l'objet), module `building` (portes, lit → point de
+  réapparition), `spawnPoint` lu et sauvegardé avec le personnage, `has_player_build` marqué et sauvegardé.
+- Client : `meta` des chunks (prédiction et actions), raccords des murs par voisins (16 sprites, redessinés aussi
+  au bord des chunks), porte ouverte, message « Point de réapparition enregistré ».
+- Tests : règles de pose (portée, mur sur sol), pièce avec porte (bloque fermée, laisse passer ouverte, pas de
+  fermeture sur quelqu'un), table voisins → sprite (ligne, angle, croix, T), lit → point sauvegardé et relu.
+- Non vérifié dans un navigateur pendant la session (tests automatisés, plus un rendu PNG des murs hors jeu).
+- Écarts : les ids d'action sont `openDoor` et `closeDoor` (libellés « Ouvrir » et « Fermer ») ; le chunk est aussi
+  marqué quand on casse une construction ; pas de propriétaire des constructions.
 
 ### 2026-10-13 — Étape 17 : Craft, établi et outils ✅
 - Shared : 12 recettes du tableau « Objets de départ », objets (torche, établi, outils et épée en bois, mur, sol,

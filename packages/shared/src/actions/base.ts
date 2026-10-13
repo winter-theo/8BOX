@@ -1,7 +1,7 @@
 import { INTERACTION } from '../config/interaction';
 import { addItems } from '../inventory/inventory';
 import { type ActionDef, tileThing } from './actions';
-import { placeAction } from './building';
+import { buildingActions } from './building';
 import { harvestActions } from './harvest';
 
 /** Takes a pile of items lying on the ground (as much of it as fits). Performed by the inventory module. */
@@ -37,5 +37,5 @@ export const baseActions: readonly ActionDef[] = [
   pickUpAction,
   examineAction,
   ...harvestActions,
-  placeAction,
+  ...buildingActions,
 ];

@@ -1,5 +1,9 @@
 import { PALETTE } from './palette';
 import { type Legend, type Placeholder, pixelSprite } from './pixelSprite';
+import { SIDE_BITS, WALL_MASKS, wallSpriteId } from './wallArt';
+
+/** Size of a tile, in pixels. */
+const TILE_PX = 8;
 
 const P = PALETTE;
 
@@ -189,42 +193,79 @@ const flowers = pixelSprite(FLOWERS, [
 
 const WOOD: Legend = { O: P.ink, B: P.soilDark, b: P.soil, L: P.soilLight, y: P.petal };
 
-/** Top of a wall seen from above: it covers the tile above the wall. */
-const WALL_TOP = [
+/** Grain of the top of a wall seen from above, row by row ('b' = darker wood), every 8 rows. */
+const WALL_GRAIN = [
+  '........',
+  '........',
+  '...b....',
+  '........',
+  '.....b..',
+  '..b.....',
+  '........',
+  '........',
+];
+
+/** Front face of a wall: planks, its foot in shadow. */
+const WALL_FACE = [
+  'bbbBbbbb',
+  'bbbBbbbb',
   'BBBBBBBB',
-  'BLLLLLLB',
-  'BLLbLLLB',
-  'BLLLLLLB',
-  'BLLLLbLB',
-  'BLbLLLLB',
-  'BLLLLLLB',
+  'bBbbbbBb',
+  'bBbbbbBb',
+  'BBBBBBBB',
+  'bbbBbbbb',
+  'OOOOOOOO',
+];
+
+/**
+ * A wooden wall joined to its neighbors on the sides of `mask` (`SIDE_BITS`), 8 × 16. Its top, seen from
+ * above, covers the tile above the wall and is edged on the sides where nothing joins; with a wall below,
+ * the top goes on down to the next wall, otherwise the front face shows.
+ */
+function woodenWall(mask: number): Placeholder {
+  const joined = (side: keyof typeof SIDE_BITS) => (mask & SIDE_BITS[side]) !== 0;
+  const topRows = joined('s') ? 2 * TILE_PX : TILE_PX;
+  return {
+    width: TILE_PX,
+    height: 2 * TILE_PX,
+    weights: [1],
+    draw(paint) {
+      for (let y = 0; y < 2 * TILE_PX; y++) {
+        for (let x = 0; x < TILE_PX; x++) {
+          const sideEdge = (x === 0 && !joined('w')) || (x === TILE_PX - 1 && !joined('e'));
+          if (y < topRows) {
+            const edge =
+              sideEdge || (y === 0 && !joined('n')) || (y === topRows - 1 && !joined('s'));
+            const grain = WALL_GRAIN[y % TILE_PX]?.[x] === 'b';
+            paint(x, y, edge ? P.soilDark : grain ? P.soil : P.soilLight);
+          } else {
+            const face = WALL_FACE[y - TILE_PX]?.[x] ?? 'b';
+            paint(x, y, face === 'O' ? P.ink : sideEdge || face === 'B' ? P.soilDark : P.soil);
+          }
+        }
+      }
+    },
+  };
+}
+
+/** Top of a door seen from above: like a wall top, open on its sides (doors sit in wall lines). */
+const DOOR_TOP = [
+  'BBBBBBBB',
+  'LLLLLLLL',
+  'LLLbLLLL',
+  'LLLLLLLL',
+  'LLLLLbLL',
+  'LbLLLLLL',
+  'LLLLLLLL',
   'BBBBBBBB',
 ];
 
-/** Wall with its front face. The face shows only without a wall below (step 18 picks the sprite). */
-const woodenWall = pixelSprite(WOOD, [
-  {
-    weight: 1,
-    rows: [
-      ...WALL_TOP,
-      'bbbBbbbb',
-      'bbbBbbbb',
-      'BBBBBBBB',
-      'bBbbbbBb',
-      'bBbbbbBb',
-      'BBBBBBBB',
-      'bbbBbbbb',
-      'OOOOOOOO',
-    ],
-  },
-]);
-
-/** A closed door set in a wall, under the wall top. */
+/** A closed door set in a wall, under the top of the wall. */
 const woodenDoor = pixelSprite(WOOD, [
   {
     weight: 1,
     rows: [
-      ...WALL_TOP,
+      ...DOOR_TOP,
       'BBBBBBBB',
       'BOOOOOOB',
       'BObbbbOB',
@@ -236,6 +277,30 @@ const woodenDoor = pixelSprite(WOOD, [
     ],
   },
 ]);
+
+/** An open door: the doorway shows the ground, the door folded against its left post. */
+const woodenDoorOpen = pixelSprite(WOOD, [
+  {
+    weight: 1,
+    rows: [
+      ...DOOR_TOP,
+      'BBBBBBBB',
+      'BbO....B',
+      'BLO....B',
+      'BbO....B',
+      'ByO....B',
+      'BLO....B',
+      'BbO....B',
+      'OOO....O',
+    ],
+  },
+]);
+
+/** The wooden wall joined every way (`obj.wooden_wall.<sides>`), and alone (`obj.wooden_wall`). */
+const WOODEN_WALLS: Record<string, Placeholder> = { 'obj.wooden_wall': woodenWall(0) };
+for (let mask = 0; mask < WALL_MASKS; mask++) {
+  WOODEN_WALLS[wallSpriteId('obj.wooden_wall', mask)] = woodenWall(mask);
+}
 
 /**
  * A frame of a character skin drawn by the author, facing right (flipped to face left): its body (the
@@ -361,8 +426,9 @@ export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.berry_bush_picked': berryBushPicked,
   'obj.tall_grass': tallGrass,
   'obj.flowers': flowers,
-  'obj.wooden_wall': woodenWall,
+  ...WOODEN_WALLS,
   'obj.wooden_door': woodenDoor,
+  'obj.wooden_door.open': woodenDoorOpen,
   'obj.workbench': workbench,
   'obj.torch': torch,
   'obj.bed': bed,

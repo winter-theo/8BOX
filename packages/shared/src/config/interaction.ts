@@ -12,6 +12,9 @@ export const INTERACTION = {
    */
   priorities: {
     pickUp: 20,
+    openDoor: 15,
+    closeDoor: 15,
+    sleep: 15,
     pick: 10,
     cut: 10,
     uproot: 10,

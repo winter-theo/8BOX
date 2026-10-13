@@ -14,6 +14,8 @@ export class Chunk {
   readonly object = new Uint16Array(CHUNK_AREA);
   /** Sparse per-tile state, by tile index. */
   readonly meta = new Map<number, TileMeta>();
+  /** A player built or broke a construction in it: the regeneration of P12 spares it (server only). */
+  hasPlayerBuild = false;
 
   constructor(
     readonly layer: LayerId,

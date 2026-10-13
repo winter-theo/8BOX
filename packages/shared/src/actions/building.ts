@@ -3,9 +3,11 @@ import { PLAYER } from '../config/player';
 import type { Content } from '../content/load';
 import type { TileDef, TileSlot } from '../content/schemas';
 import { heldStack } from '../inventory/inventory';
+import { isDoorOpen } from '../world/doors';
 import { inSafeZone } from '../world/safeZone';
-import type { ActionDef, Actor } from './actions';
+import type { ActionDef, ActionSubject, Actor } from './actions';
 import type { TilePoint } from './aim';
+import { tileTarget } from './harvest';
 
 /** Margin that keeps a box flush against a tile edge from counting as inside the tile, in tiles. */
 const EDGE_EPSILON = 1e-6;
@@ -19,7 +21,7 @@ export function heldPlaceable(actor: Actor, content: Content): TileDef | undefin
 
 /**
  * Whether a tile is free for `tile`: its slot and the object slot are empty (nothing goes under a tree
- * or a wall), and its ground does not block (deep water). The finer rules come with step 18.
+ * or a wall), and its ground does not block (deep water).
  */
 export function hasRoomFor(
   tiles: Partial<Record<TileSlot, string>>,
@@ -72,3 +74,60 @@ export const placeAction: ActionDef = {
     return { ok: true };
   },
 };
+
+/** Whether the door on the aimed tile is open; undefined when there is no door. */
+function aimedDoorOpen(subject: ActionSubject, content: Content): boolean | undefined {
+  const target = tileTarget(subject, content);
+  if (subject.kind !== 'tile' || target?.tile.door !== true) {
+    return undefined;
+  }
+  return isDoorOpen(subject.meta);
+}
+
+/** Opens a closed door: it no longer blocks. Performed by the building module. */
+export const openDoorAction: ActionDef = {
+  id: 'openDoor',
+  targets: ['tile'],
+  priority: INTERACTION.priorities.openDoor,
+  labelKey: 'ui.actions.openDoor',
+  appliesTo: (subject, content) => aimedDoorOpen(subject, content) === false,
+  canPerform: () => ({ ok: true }),
+};
+
+/**
+ * Closes an open door: it blocks again. Not on someone standing in the doorway (the building module
+ * also checks the other characters).
+ */
+export const closeDoorAction: ActionDef = {
+  id: 'closeDoor',
+  targets: ['tile'],
+  priority: INTERACTION.priorities.closeDoor,
+  labelKey: 'ui.actions.closeDoor',
+  appliesTo: (subject, content) => aimedDoorOpen(subject, content) === true,
+  canPerform: ({ actor, subject }) =>
+    subject.kind === 'tile' &&
+    boxOverlapsTile(actor, PLAYER.hitboxSizeTiles / 2, subject.x, subject.y)
+      ? { ok: false, reason: 'occupied' }
+      : { ok: true },
+};
+
+/**
+ * Sleeps in a bed, for now only to make it the respawn point of the player (used when they die, step
+ * 20). Performed by the building module.
+ */
+export const sleepAction: ActionDef = {
+  id: 'sleep',
+  targets: ['tile'],
+  priority: INTERACTION.priorities.sleep,
+  labelKey: 'ui.actions.sleep',
+  appliesTo: (subject, content) => tileTarget(subject, content)?.tile.bed === true,
+  canPerform: () => ({ ok: true }),
+};
+
+/** The building actions: place, then use what was built. */
+export const buildingActions: readonly ActionDef[] = [
+  placeAction,
+  openDoorAction,
+  closeDoorAction,
+  sleepAction,
+];

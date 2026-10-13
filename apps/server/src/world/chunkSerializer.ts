@@ -29,6 +29,8 @@ export interface SavedChunk {
   data: Uint8Array;
   /** Per-tile state: [tile index, meta] pairs. */
   meta: [number, TileMeta][];
+  /** A player built or broke a construction in it (`Chunk.hasPlayerBuild`); absent: no. */
+  hasPlayerBuild?: boolean;
 }
 
 export function serializeChunk(chunk: Chunk, content: Content): SavedChunk {
@@ -44,6 +46,7 @@ export function serializeChunk(chunk: Chunk, content: Content): SavedChunk {
     palette: encoded.palette,
     data,
     meta: encoded.meta,
+    hasPlayerBuild: chunk.hasPlayerBuild,
   };
 }
 
@@ -82,6 +85,7 @@ export function deserializeChunk(saved: SavedChunk, content: Content): LoadedChu
       target[i] = codes[index] ?? EMPTY_TILE;
     }
   });
+  chunk.hasPlayerBuild = saved.hasPlayerBuild ?? false;
   for (const [index, meta] of saved.meta) {
     chunk.meta.set(index, meta);
   }

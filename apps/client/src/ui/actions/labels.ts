@@ -41,6 +41,8 @@ export function feedbackText(t: TFunction, feedback: ActionFeedback): string {
       return t('ui.crafting.cancelled');
     case 'craftDone':
       return t('ui.crafting.done');
+    case 'respawnSet':
+      return t('ui.actions.respawnSet');
     case 'broken':
       return t('ui.actions.broken', { name: t(contentNameKey(feedback.item)) });
   }

@@ -33,7 +33,13 @@ function setup(
   } = {},
 ) {
   const player = options.player ?? { x: 10.5, y: 10.5, facing: 'down' as Facing };
-  const objects = new Map([['11,10', 'base:oak_tree']]);
+  const objects = new Map([
+    ['11,10', 'base:oak_tree'],
+    ['10,11', 'base:wooden_door'],
+    ['9,11', 'base:wooden_door'],
+  ]);
+  // The door on (10, 11) is open, the one on (9, 11) closed.
+  const metas = new Map([['10,11', { open: true }]]);
   const interaction = new Interaction(
     {
       player: () => ({ layer: 0, ...player }),
@@ -47,6 +53,7 @@ function setup(
               : undefined;
         return id === undefined ? undefined : content.tiles.get(id);
       },
+      meta: (_layer, x, y) => metas.get(`${x},${y}`),
       remotes: () => options.remotes ?? [],
       admin: () => false,
     },
@@ -107,6 +114,14 @@ describe('Interaction subjects and options', () => {
     expect(full.optionsAt(11, 10)[0]?.check).toEqual({ ok: false, reason: 'inventoryFull' });
   });
 
+  it('opens a closed door and closes an open one, from the state the chunks have', () => {
+    const interaction = setup();
+    const ids = (x: number, y: number) =>
+      interaction.optionsAt(x, y).map((option) => option.action.id);
+    expect(interaction.subjectsAt(10, 11)[0]).toMatchObject({ meta: { open: true } });
+    expect(ids(10, 11)).toEqual(['closeDoor', 'break', 'examine']);
+    expect(ids(9, 11)).toEqual(['openDoor', 'break', 'examine']);
+  });
   it('offers nothing before the inventory arrives', () => {
     expect(setup({ inventory: null }).optionsAt(11, 10)).toEqual([]);
   });

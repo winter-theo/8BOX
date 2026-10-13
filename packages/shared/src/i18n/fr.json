@@ -265,6 +265,10 @@
         "occupied": "La place est prise"
       },
       "place": "Poser ici",
+      "openDoor": "Ouvrir ({{name}})",
+      "closeDoor": "Fermer ({{name}})",
+      "sleep": "Dormir ici",
+      "respawnSet": "Point de réapparition enregistré.",
       "broken": "Objet brisé : {{name}}."
     },
     "crafting": {

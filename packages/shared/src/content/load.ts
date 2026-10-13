@@ -182,6 +182,15 @@ function checkReferences(content: Content, issues: ContentIssue[]): void {
     if (tile.regrow) {
       expectSameSlot(tile, tile.regrow.into, 'regrow.into');
     }
+    // The meta of a tile (an open door) belongs to its object.
+    if ((tile.wall || tile.door || tile.bed) && tile.slot !== 'object') {
+      issues.push({
+        file: 'tiles',
+        id: tile.id,
+        field: 'slot',
+        message: 'a wall, a door or a bed goes in the object slot',
+      });
+    }
   }
 
   for (const item of content.items.all) {

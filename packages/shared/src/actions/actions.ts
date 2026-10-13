@@ -2,6 +2,7 @@ import type { Content } from '../content/load';
 import type { TileSlot } from '../content/schemas';
 import type { Inventory } from '../inventory/inventory';
 import type { EntityKind } from '../protocol/messages';
+import type { TileMeta } from '../world/chunk';
 import type { SafeZone } from '../world/safeZone';
 
 /** What an action can be aimed at: a tile, an entity standing there, or the player themselves. */
@@ -18,7 +19,14 @@ export type ActionTarget =
  * chunks and snapshots it received. Coordinates are in tiles, on the layer of the player.
  */
 export type ActionSubject =
-  | { kind: 'tile'; x: number; y: number; tiles: Partial<Record<TileSlot, string>> }
+  | {
+      kind: 'tile';
+      x: number;
+      y: number;
+      tiles: Partial<Record<TileSlot, string>>;
+      /** State of the tile (an open door); none when it has none. */
+      meta?: TileMeta;
+    }
   | {
       kind: 'entity';
       id: number;

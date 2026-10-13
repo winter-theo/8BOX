@@ -56,6 +56,9 @@ describe('ActionRegistry', () => {
   it('sorts the actions by priority, highest first', () => {
     expect(registry.all.map((action) => action.id)).toEqual([
       'pickUp',
+      'closeDoor',
+      'openDoor',
+      'sleep',
       'break',
       'cut',
       'pick',

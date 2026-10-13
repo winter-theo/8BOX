@@ -331,6 +331,18 @@ export interface TileUpdateMessage {
 }
 
 /**
+ * The state of one tile changed in a subscribed chunk (a door opened or closed): its new meta, or null
+ * when it has none. A `tileUpdate` of the object slot also clears the meta of its tile.
+ */
+export interface TileMetaMessage {
+  t: 'tileMeta';
+  layer: number;
+  x: number;
+  y: number;
+  meta: TileMeta | null;
+}
+
+/**
  * Hit points of a tile being broken, in a subscribed chunk: after each hit that does not break it, and
  * when it got them all back (`hp` = `maxHp`). Forget it when the tile changes.
  */
@@ -525,6 +537,7 @@ export type ServerMessage =
   | ChunkMessage
   | ChunkUnloadMessage
   | TileUpdateMessage
+  | TileMetaMessage
   | TileDamageMessage
   | ChatLineMessage
   | ChatNoticeMessage

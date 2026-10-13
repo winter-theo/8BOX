@@ -1,4 +1,5 @@
 import type { Skin, StoredInventory } from '@8box/shared';
+import type { SpawnPoint } from '../core/entities';
 import type { SavedChunk } from '../world/chunkSerializer';
 
 /** Where the character of a player (`players.id`) was when last saved, how it looked, what it carried. */
@@ -10,6 +11,8 @@ export interface SavedCharacter {
   y: number;
   skin: Skin;
   inventory: StoredInventory;
+  /** The bed it last slept in (step 18); absent: the spawn of the world. */
+  spawnPoint?: SpawnPoint;
 }
 
 /**

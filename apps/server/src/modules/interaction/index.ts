@@ -50,7 +50,8 @@ function subjectOf(
           tiles[slot] = tile.id;
         }
       }
-      return { kind: 'tile', x, y, tiles };
+      const meta = ctx.world.getMeta(layer as LayerId, x, y);
+      return { kind: 'tile', x, y, tiles, ...(meta && { meta }) };
     }
     case 'entity': {
       const kind = ctx.entities.typeOf(target.id);

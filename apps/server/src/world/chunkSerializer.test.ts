@@ -46,7 +46,19 @@ describe('chunk serialization', () => {
     expect([loaded.layer, loaded.cx, loaded.cy]).toEqual([LAYER.surface, 3, 7]);
     expect(idsOf(loaded, content)).toEqual(idsOf(chunk, content));
     expect(loaded.meta.get(10)).toEqual({ hp: 4 });
+    expect(loaded.hasPlayerBuild).toBe(false);
     expect(unknownIds).toEqual([]);
+  });
+
+  it('keeps whether a player built in the chunk (absent in older saves: no)', () => {
+    const chunk = sampleChunk(content);
+    chunk.hasPlayerBuild = true;
+
+    const saved = serializeChunk(chunk, content);
+    expect(saved.hasPlayerBuild).toBe(true);
+    expect(deserializeChunk(saved, content).chunk.hasPlayerBuild).toBe(true);
+    const { hasPlayerBuild: _, ...older } = saved;
+    expect(deserializeChunk(older, content).chunk.hasPlayerBuild).toBe(false);
   });
 
   it('keeps the tiles when the content changes order (codes change, ids stay)', () => {

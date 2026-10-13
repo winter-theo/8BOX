@@ -6,7 +6,7 @@ import {
   TypedEmitter,
 } from '@8box/shared';
 import type { Session } from '../net/session';
-import type { TileChange } from '../world/World';
+import type { TileChange, TileMetaChange } from '../world/World';
 import type { EntityId, EntityType } from './entities';
 
 /**
@@ -31,6 +31,8 @@ export type ServerEvents = {
   'player.left': { entity: EntityId; name: string; reason: string };
   /** A tile slot of the world changed (`World.setTile`). */
   'tile.changed': TileChange;
+  /** The state of a tile changed (`World.setMeta`): a door opened or closed. */
+  'tile.meta': TileMetaChange;
   /** A player broke a tile (its slot is already empty): cut, uprooted or broken. */
   'tile.broken': {
     layer: LayerId;

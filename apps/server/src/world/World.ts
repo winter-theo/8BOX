@@ -8,6 +8,7 @@ import {
   type LayerId,
   localCoord,
   type TileDef,
+  type TileMeta,
   type TileSlot,
   tileCode,
   tileIndex,
@@ -22,6 +23,15 @@ export interface TileChange {
   slot: TileSlot;
   /** New tile id, or null when the slot is now empty. */
   tile: string | null;
+}
+
+/** The state (meta) of one tile changed. */
+export interface TileMetaChange {
+  layer: LayerId;
+  x: number;
+  y: number;
+  /** New meta, or null when the tile has none now. */
+  meta: TileMeta | null;
 }
 
 export interface WorldOptions {
@@ -42,6 +52,7 @@ export class World {
   private readonly surface: Chunk[];
   private readonly dirty = new Set<Chunk>();
   private changeListener: ((change: TileChange) => void) | undefined;
+  private metaListener: ((change: TileMetaChange) => void) | undefined;
 
   private constructor(options: WorldOptions, spawn: { x: number; y: number }, surface: Chunk[]) {
     this.seed = options.seed;
@@ -116,21 +127,69 @@ export class World {
     return tileOfCode(this.content, code);
   }
 
-  /** Puts a tile in a slot (`null` empties it) and marks its chunk as modified. */
+  /**
+   * Puts a tile in a slot (`null` empties it) and marks its chunk as modified. A new object (or none)
+   * also clears the meta of the tile: the meta belongs to the object (an open door).
+   */
   setTile(layer: LayerId, x: number, y: number, slot: TileSlot, id: string | null): void {
-    const chunk = this.isInside(x, y) && this.getChunk(layer, chunkCoord(x), chunkCoord(y));
-    if (!chunk) {
-      throw new RangeError(`Tile (${x}, ${y}) of layer ${layer} is outside the world`);
-    }
+    const chunk = this.chunkOf(layer, x, y);
     const code = id === null ? 0 : tileCode(this.content, id);
-    chunk.slot(slot)[tileIndex(localCoord(x), localCoord(y))] = code;
+    const index = tileIndex(localCoord(x), localCoord(y));
+    chunk.slot(slot)[index] = code;
+    if (slot === 'object') {
+      chunk.meta.delete(index);
+    }
     this.dirty.add(chunk);
     this.changeListener?.({ layer, x, y, slot, tile: id });
+  }
+
+  /** State of tile (x, y) (an open door); undefined when it has none or is outside the world. */
+  getMeta(layer: LayerId, x: number, y: number): TileMeta | undefined {
+    const chunk = this.isInside(x, y) && this.getChunk(layer, chunkCoord(x), chunkCoord(y));
+    return chunk ? chunk.meta.get(tileIndex(localCoord(x), localCoord(y))) : undefined;
+  }
+
+  /** Sets the state of tile (x, y) (`undefined` clears it) and marks its chunk as modified. */
+  setMeta(layer: LayerId, x: number, y: number, meta: TileMeta | undefined): void {
+    const chunk = this.chunkOf(layer, x, y);
+    const index = tileIndex(localCoord(x), localCoord(y));
+    if (meta === undefined) {
+      chunk.meta.delete(index);
+    } else {
+      chunk.meta.set(index, meta);
+    }
+    this.dirty.add(chunk);
+    this.metaListener?.({ layer, x, y, meta: meta ?? null });
+  }
+
+  /**
+   * Marks the chunk of tile (x, y) as holding a player construction (`has_player_build`): the
+   * regeneration of P12 spares it.
+   */
+  markPlayerBuild(layer: LayerId, x: number, y: number): void {
+    const chunk = this.chunkOf(layer, x, y);
+    if (!chunk.hasPlayerBuild) {
+      chunk.hasPlayerBuild = true;
+      this.dirty.add(chunk);
+    }
   }
 
   /** Called after every `setTile` (the server context turns it into a `tile.changed` event). */
   onChange(listener: (change: TileChange) => void): void {
     this.changeListener = listener;
+  }
+
+  /** Called after every `setMeta` (the server context turns it into a `tile.meta` event). */
+  onMetaChange(listener: (change: TileMetaChange) => void): void {
+    this.metaListener = listener;
+  }
+
+  private chunkOf(layer: LayerId, x: number, y: number): Chunk {
+    const chunk = this.isInside(x, y) && this.getChunk(layer, chunkCoord(x), chunkCoord(y));
+    if (!chunk) {
+      throw new RangeError(`Tile (${x}, ${y}) of layer ${layer} is outside the world`);
+    }
+    return chunk;
   }
 
   /** Chunks modified since the last call (for saving, step 10). */

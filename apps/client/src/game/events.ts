@@ -11,6 +11,8 @@ export type ClientEvents = {
   'chunk.unloaded': { layer: number; cx: number; cy: number };
   /** A slot of tile (x, y) of a loaded chunk changed: redraw that tile. */
   'tile.changed': { chunk: Chunk; x: number; y: number; slot: TileSlot };
+  /** The state of tile (x, y) of a loaded chunk changed (a door opened): redraw its object. */
+  'tile.meta': { chunk: Chunk; x: number; y: number };
   /**
    * Game → Phaser: HP left of tile (x, y), being broken (`hp` = `maxHp`: it got them all back). Forget
    * it when the tile changes or its chunk is unloaded.

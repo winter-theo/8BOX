@@ -7,6 +7,8 @@ import {
   EMPTY_TILE,
   localCoord,
   type TileDef,
+  type TileMeta,
+  type TileMetaMessage,
   type TileSlot,
   type TileUpdateMessage,
   tileCode,
@@ -57,15 +59,42 @@ export class ChunkCache {
     }
   }
 
-  /** Applies a `tileUpdate`; ignored for a chunk that is not loaded. */
+  /** State of tile (x, y) (an open door); undefined when it has none or is not loaded. */
+  getMeta(layer: number, x: number, y: number): TileMeta | undefined {
+    const chunk = this.get(layer, chunkCoord(x), chunkCoord(y));
+    return chunk?.meta.get(tileIndex(localCoord(x), localCoord(y)));
+  }
+
+  /**
+   * Applies a `tileUpdate`; ignored for a chunk that is not loaded. A new object (or none) clears the
+   * meta of its tile, as on the server.
+   */
   applyTileUpdate({ layer, x, y, slot, tile }: TileUpdateMessage): void {
     const chunk = this.get(layer, chunkCoord(x), chunkCoord(y));
     if (!chunk) {
       return;
     }
-    chunk.slot(slot)[tileIndex(localCoord(x), localCoord(y))] =
-      tile === null ? EMPTY_TILE : tileCode(this.content, tile);
+    const index = tileIndex(localCoord(x), localCoord(y));
+    chunk.slot(slot)[index] = tile === null ? EMPTY_TILE : tileCode(this.content, tile);
+    if (slot === 'object') {
+      chunk.meta.delete(index);
+    }
     this.bus.emit('tile.changed', { chunk, x, y, slot });
+  }
+
+  /** Applies a `tileMeta`; ignored for a chunk that is not loaded. */
+  applyTileMeta({ layer, x, y, meta }: TileMetaMessage): void {
+    const chunk = this.get(layer, chunkCoord(x), chunkCoord(y));
+    if (!chunk) {
+      return;
+    }
+    const index = tileIndex(localCoord(x), localCoord(y));
+    if (meta === null) {
+      chunk.meta.delete(index);
+    } else {
+      chunk.meta.set(index, meta);
+    }
+    this.bus.emit('tile.meta', { chunk, x, y });
   }
 
   /** Forgets every chunk (connection lost: the server sends them again). */

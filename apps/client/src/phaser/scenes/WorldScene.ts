@@ -38,7 +38,7 @@ export class WorldScene extends Phaser.Scene {
     shareRegistryWithIcons(registry);
     const ground = new GroundLayer(this, registry, content, gameClient.chunks);
     const textures = new SpriteTextures(this.textures, registry);
-    const objects = new ObjectLayer(this, textures, content);
+    const objects = new ObjectLayer(this, textures, content, gameClient.chunks);
     const entities = new EntityLayer(this, textures);
     const localPlayer = new LocalPlayer(entities);
     const labels = new NameLabels(this);
@@ -116,6 +116,7 @@ export class WorldScene extends Phaser.Scene {
           ground.updateTile(chunk.layer, x, y);
         }
       }),
+      eventBus.on('tile.meta', ({ chunk, x, y }) => objects.updateTile(chunk, x, y)),
       eventBus.on('tile.damaged', ({ layer, x, y, hp, maxHp }) =>
         damageBars.show(layer, x, y, hp, maxHp),
       ),

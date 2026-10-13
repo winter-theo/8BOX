@@ -70,6 +70,7 @@ export function createContext({
   const reports = stores.reports ?? new MemoryReportStore(memoryAccounts);
   const events = createEventBus();
   world.onChange((change) => events.emit('tile.changed', change));
+  world.onMetaChange((change) => events.emit('tile.meta', change));
   const scheduler = new Scheduler({
     tickMs: tickMs(config),
     onError: (error, task) => log.error({ err: error, task }, 'scheduled task failed'),
