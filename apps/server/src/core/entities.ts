@@ -36,8 +36,18 @@ export interface Components {
   inputAck: number;
   /** What a player character carries. Never mutate it in place: `set` a new one (shared operations). */
   inventory: Inventory;
+  /** Where a player character comes back after death (step 20): the bed it last slept in. */
+  spawnPoint: SpawnPoint;
   /** Items lying on the ground. */
   groundItem: GroundItem;
+}
+
+/** A tile of the world: the bed where a player character comes back (`spawnPoint`). */
+export interface SpawnPoint {
+  layer: number;
+  /** Tile coordinates. */
+  x: number;
+  y: number;
 }
 
 /** A pile of items on the ground (`groundItem` entities). */

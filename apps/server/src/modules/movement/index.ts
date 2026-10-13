@@ -35,6 +35,7 @@ function movementWorld(ctx: ServerContext, layer: LayerId): MovementWorld {
   return createMovementWorld(
     (x, y, slot) => ctx.world.getTile(layer, x, y, slot),
     (x, y) => ctx.world.isInside(x, y),
+    (x, y) => ctx.world.getMeta(layer, x, y),
   );
 }
 

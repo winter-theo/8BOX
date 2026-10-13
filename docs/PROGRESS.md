@@ -6,7 +6,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ### Étape 18 — Construction : sols, murs, portes, meubles (branche `step/18-construction`)
 - [x] Shared : contenu (`wall`, `door`, `bed`), état des portes dans `meta`, collisions avec la `meta`, actions
   Ouvrir / Fermer / Dormir ici, `meta` dans la cible d'une action, message `tileMeta` (protocole 13), i18n, tests.
-- [ ] Serveur : `meta` du monde (porte), chunk marqué `has_player_build` (sauvegardé), déplacement et cible avec la
+- [x] Serveur : `meta` du monde (porte), chunk marqué `has_player_build` (sauvegardé), déplacement et cible avec la
   `meta`, module `building` (portes, lit → point de réapparition sauvegardé), tests.
 - [ ] Client : `meta` des chunks, collisions et actions avec les portes, raccords des murs (table voisins → sprite),
   sprites des murs et de la porte ouverte, message « Point de réapparition enregistré », tests.

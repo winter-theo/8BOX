@@ -23,8 +23,8 @@ function interestOptions(ctx: ServerContext): InterestOptions {
 
 /**
  * Streams the world to each client: the chunks around its player (or its debug camera) as they come
- * into view, `chunkUnload` for the ones left behind, and `tileUpdate` for every change in a subscribed
- * chunk.
+ * into view, `chunkUnload` for the ones left behind, and `tileUpdate` (`tileMeta` for a state, such as
+ * a door) for every change in a subscribed chunk.
  */
 export const chunksModule: GameModule = {
   id: 'chunks',
@@ -97,6 +97,15 @@ export const chunksModule: GameModule = {
       for (const [session, state] of states) {
         if (state.subscriptions.has(ref)) {
           ctx.net.send(session, { t: 'tileUpdate', layer, x, y, slot, tile });
+        }
+      }
+    });
+
+    ctx.events.on('tile.meta', ({ layer, x, y, meta }) => {
+      const ref = { layer, cx: chunkCoord(x), cy: chunkCoord(y) };
+      for (const [session, state] of states) {
+        if (state.subscriptions.has(ref)) {
+          ctx.net.send(session, { t: 'tileMeta', layer, x, y, meta });
         }
       }
     });

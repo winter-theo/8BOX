@@ -5,7 +5,8 @@ import type { SavedCharacter } from './store';
 
 /**
  * What to save of a player character, from its components: where it stands, how it looks, what it
- * carries. Without an inventory component (a test without the inventory module), the saved one stays.
+ * carries, where it comes back (its bed). Without an inventory component (a test without the inventory
+ * module), the saved one stays.
  */
 export function characterToSave(ctx: ServerContext, entity: EntityId): SavedCharacter | undefined {
   const player = ctx.entities.get(entity, 'player');
@@ -17,6 +18,7 @@ export function characterToSave(ctx: ServerContext, entity: EntityId): SavedChar
     ctx.entities.get(entity, 'inventory') ??
     ctx.persistence.character(player.playerId)?.inventory ??
     emptyInventory();
+  const spawnPoint = ctx.entities.get(entity, 'spawnPoint');
   return {
     playerId: player.playerId,
     layer: position.layer,
@@ -24,5 +26,6 @@ export function characterToSave(ctx: ServerContext, entity: EntityId): SavedChar
     y: position.y,
     skin: ctx.entities.get(entity, 'skin') ?? DEFAULT_SKIN,
     inventory: { slots: inventory.slots, equipment: inventory.equipment, purse: inventory.purse },
+    ...(spawnPoint && { spawnPoint }),
   };
 }

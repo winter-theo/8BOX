@@ -21,8 +21,8 @@ function savedPosition(ctx: ServerContext, playerId: number): Position | undefin
 /**
  * Turns authenticated sessions into player entities, and removes them when the session ends. A player
  * comes back where their character was saved (on leaving, and every 60 s by the persistence module),
- * with its skin (and its inventory, given by the inventory module); a new player starts at the spawn
- * with the default skin.
+ * with its skin and its spawn point (and its inventory, given by the inventory module); a new player
+ * starts at the spawn with the default skin.
  */
 export const playersModule: GameModule = {
   id: 'players',
@@ -34,12 +34,14 @@ export const playersModule: GameModule = {
         return;
       }
       const position = savedPosition(ctx, playerId) ?? spawnPosition(ctx.world);
-      const skin = ctx.persistence.character(playerId)?.skin ?? DEFAULT_SKIN;
+      const saved = ctx.persistence.character(playerId);
+      const skin = saved?.skin ?? DEFAULT_SKIN;
       const entity = ctx.entities.create('player', {
         position,
         player: { name, playerId },
         facing: 'down',
         skin,
+        ...(saved?.spawnPoint && { spawnPoint: saved.spawnPoint }),
       });
       session.player = { entity, name, skin, position: { ...position } };
       ctx.log.info({ name, entity, session: session.id }, 'player joined');

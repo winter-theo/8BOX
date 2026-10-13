@@ -5,13 +5,14 @@ import { chunks } from './schema';
 
 export async function readChunks(db: Database): Promise<SavedChunk[]> {
   const rows = await db.select().from(chunks);
-  return rows.map(({ layer, cx, cy, palette, data, meta }) => ({
+  return rows.map(({ layer, cx, cy, palette, data, meta, hasPlayerBuild }) => ({
     layer,
     cx,
     cy,
     palette,
     data,
     meta,
+    hasPlayerBuild,
   }));
 }
 
@@ -29,6 +30,7 @@ export async function writeChunks(db: Database, saved: readonly SavedChunk[]): P
         palette: sql`excluded.palette`,
         data: sql`excluded.data`,
         meta: sql`excluded.meta`,
+        hasPlayerBuild: sql`excluded.has_player_build`,
         version: sql`excluded.version`,
         updatedAt: sql`now()`,
       },
