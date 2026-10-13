@@ -7,6 +7,8 @@ export const VIEW = {
   maxVisibleTiles: 150,
   /** Tiles shown across the width of the game view at the starting zoom (about; zoom is whole). */
   defaultVisibleTiles: 40,
+  /** Time a roof takes to fade out (player entering its room) or back in, in ms. */
+  roofFadeMs: 250,
   /** Time each of the two walking frames of a character is shown, in ms. */
   walkFrameMs: 150,
   /** Change of the distance between two fingers that zooms one step (1.25 = 25 % wider or narrower). */

@@ -1,5 +1,6 @@
 import {
   boxOverlapsTile,
+  closesRooms,
   doorMeta,
   heldPlaceable,
   type LayerId,
@@ -8,6 +9,7 @@ import {
 } from '@8box/shared';
 import type { PerformAction } from '../../core/actions';
 import type { GameModule, ServerContext } from '../../core/module';
+import { updateRoomsAround } from '../../world/rooms';
 
 /** Farthest a character's feet can be from the center of a tile its box overlaps, in tiles. */
 const OVERLAP_SEARCH_TILES = 1.5;
@@ -34,7 +36,9 @@ function someoneOn(ctx: ServerContext, self: number, layer: number, x: number, y
  * on another character. Then what was built is used: a door opens and closes (its state is in the meta
  * of its tile, which the clients receive), and sleeping in a bed makes it the player's spawn point
  * (saved with the character, used when they die from step 20). Placing a construction, or breaking one
- * (a tile some item places), marks its chunk `has_player_build`.
+ * (a tile some item places), marks its chunk `has_player_build`. Placing or breaking a wall or a door
+ * finds the rooms around it again (`updateRoomsAround`): their tiles get a room id in their meta, which
+ * the clients receive (`tileMeta`) and roof.
  */
 export const buildingModule: GameModule = {
   id: 'building',
@@ -65,6 +69,9 @@ export const buildingModule: GameModule = {
       ctx.world.setTile(layer, x, y, tile.slot, tile.id);
       ctx.world.markPlayerBuild(layer, x, y);
       ctx.events.emit('tile.placed', { layer, x, y, slot: tile.slot, tile: tile.id, by: entity });
+      if (closesRooms(tile)) {
+        updateRoomsAround(ctx.world, layer, x, y, ctx.config.building.maxRoofedRoomTiles);
+      }
       return undefined;
     });
 
@@ -98,6 +105,9 @@ export const buildingModule: GameModule = {
     ctx.events.on('tile.broken', ({ layer, x, y, tile }) => {
       if (built.has(tile)) {
         ctx.world.markPlayerBuild(layer, x, y);
+      }
+      if (closesRooms(ctx.content.tiles.get(tile))) {
+        updateRoomsAround(ctx.world, layer, x, y, ctx.config.building.maxRoofedRoomTiles);
       }
     });
   },

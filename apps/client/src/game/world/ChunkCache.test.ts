@@ -89,6 +89,11 @@ describe('ChunkCache', () => {
     cache.applyTileUpdate({ t: 'tileUpdate', layer: 0, x: 5, y: 6, slot: 'object', tile: null });
     expect(cache.getMeta(0, 5, 6)).toBeUndefined();
     expect(log.slice(1, 3)).toEqual(['meta 0,0 5,6', 'meta 0,0 5,6']);
+
+    // The room of a tile stays when its object changes.
+    cache.applyTileMeta({ t: 'tileMeta', layer: 0, x: 5, y: 6, meta: { room: 7, open: true } });
+    cache.applyTileUpdate({ t: 'tileUpdate', layer: 0, x: 5, y: 6, slot: 'object', tile: null });
+    expect(cache.getMeta(0, 5, 6)).toEqual({ room: 7 });
   });
   it('unloads one chunk or all of them', () => {
     const { cache, log } = setup();

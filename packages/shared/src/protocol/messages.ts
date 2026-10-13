@@ -331,8 +331,9 @@ export interface TileUpdateMessage {
 }
 
 /**
- * The state of one tile changed in a subscribed chunk (a door opened or closed): its new meta, or null
- * when it has none. A `tileUpdate` of the object slot also clears the meta of its tile.
+ * The state of one tile changed in a subscribed chunk (a door opened or closed, a room roofed or
+ * opened): its new meta, or null when it has none. A `tileUpdate` of the object slot also clears the
+ * meta of its tile, but its room (`metaAfterObjectChange`).
  */
 export interface TileMetaMessage {
   t: 'tileMeta';

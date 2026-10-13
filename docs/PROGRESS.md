@@ -470,7 +470,33 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   sur un sol, un sol ne se pose pas sous un objet.
 - (18) Torche : `light: {}` vaut un rayon de 6 cases (`LIGHT.defaultRadiusTiles`), comme demandé.
 
+- (19) Pièce : zone reliée par les 4 côtés (pas les diagonales : un coin manquant ne l'ouvre pas), fermée seulement par
+  des murs et des portes (ouvertes ou non), sans porte obligatoire ; une zone qui touche le bord du monde est ouverte.
+  64 cases au plus : la valeur existante `BUILDING.maxRoofedRoomTiles` est utilisée (la fiche dit
+  `building.maxRoomSize`).
+- (19) Id de pièce : `room` dans la `meta` de chaque case intérieure, égal à l'index (y × taille du monde + x) de sa
+  première case. Sauvegardé avec le chunk, envoyé par `tileMeta` (une case par message, jusqu'à 64 à la fois) ; il
+  reste quand l'objet de la case change (lit, torche posés dedans). Protocole passé à la version 14.
+- (19) Le toit couvre les cases intérieures (pas les murs ni la porte), dessiné une case plus haut pour reposer sur les
+  murs ; il passe au-dessus des objets et des personnages, sous les barres de PV et le contour de visée. Placeholder
+  `roof.default` (bardeaux bruns).
+- (19) On est « dans » une pièce quand ses pieds sont sur une de ses cases : dans l'encadrement de la porte, le toit
+  reste visible. Fondu de 250 ms (`VIEW.roofFadeMs`).
+
 ## Historique
+
+### 2026-10-13 — Étape 19 : Pièces et toits automatiques ✅
+- Shared : id de pièce dans la `meta` (`roomOf`, `withRoom`), gardé quand l'objet de la case change
+  (`metaAfterObjectChange`, serveur et cache client), `closesRooms` (mur ou porte).
+- Serveur : `world/rooms.ts` retrouve les pièces autour d'un mur ou d'une porte posé ou cassé (remplissage borné à
+  64 cases, n'écrit que les cases dont la pièce change) ; appelé par le module `building`, diffusé par `tileMeta`.
+- Client : calque des toits (`RoofLayer`) au-dessus des objets et des personnages, fondu sur la pièce du joueur local.
+- Tests : pièce fermée, ouverte puis fermée puis rouverte, 64 cases et trop grande, deux pièces collées (fusion et
+  recoupe), pièce gardée sous un lit, recalcul d'une pièce de 64 cases sous 2 ms ; module (porte posée → toit envoyé,
+  mur cassé → toit retiré) ; cache client ; fondu.
+- Non vérifié dans un navigateur pendant la session (tests automatisés seulement).
+- Écarts : la config garde le nom `maxRoofedRoomTiles` ; le recalcul est déclenché par le module `building`
+  (`tile.placed` et `tile.broken`) ; protocole 14.
 
 ### 2026-10-13 — Étape 18 : Construction : sols, murs, portes, meubles ✅
 - Shared : drapeaux de contenu `wall`, `door`, `bed` (dans l'emplacement `object`), état des portes dans la `meta`

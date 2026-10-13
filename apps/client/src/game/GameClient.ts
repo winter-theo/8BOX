@@ -14,6 +14,7 @@ import {
   mainAction,
   NET,
   PROTOCOL_VERSION,
+  roomOf,
   type ServerMessage,
   type Skin,
   type SlotRef,
@@ -200,6 +201,11 @@ export class GameClient {
   /** Where to draw the player of this client now (predicted); undefined when not in the world. */
   localView(): LocalView | undefined {
     return this.local?.view(this.now());
+  }
+
+  /** Room (roofed area) where the feet of the player of this client are; undefined outside rooms. */
+  localRoom(view = this.localView()): number | undefined {
+    return view && roomOf(this.chunks.getMeta(this.layer, Math.floor(view.x), Math.floor(view.y)));
   }
 
   /** Where to draw the other entities now (smoothly, a little in the past). */

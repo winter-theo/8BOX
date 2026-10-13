@@ -419,6 +419,23 @@ const woodenFloor = pixelSprite(WOOD, [
   },
 ]);
 
+/** Roof shingles, covering a whole tile of a room (drawn one tile higher, on top of the walls). */
+const roof = pixelSprite({ d: P.brownDark, b: P.brown, o: P.ink }, [
+  {
+    weight: 1,
+    rows: [
+      'bbbdbbbb',
+      'bbbdbbbb',
+      'dddddddd',
+      'bbbbbbbd',
+      'bbbbbbbd',
+      'dddddddd',
+      'bdbbbbbb',
+      'odoooooo',
+    ],
+  },
+]);
+
 /** Placeholders of the objects and characters, by sprite id. */
 export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.oak_tree': oakTree,
@@ -433,6 +450,7 @@ export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.torch': torch,
   'obj.bed': bed,
   'floor.wooden_floor': woodenFloor,
+  'roof.default': roof,
   // Only the feet move: apart at rest, then striding and together in turn.
   'char.theo.idle': theoFrame('.ogoogo.'),
   'char.theo.walk1': theoFrame('ogo..ogo'),

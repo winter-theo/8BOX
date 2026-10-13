@@ -1,4 +1,4 @@
-import { type Chunk, DEBUG } from '@8box/shared';
+import { type Chunk, DEBUG, VIEW } from '@8box/shared';
 import * as Phaser from 'phaser';
 import { shareRegistryWithIcons } from '../../assets/itemIcons';
 import { AssetRegistry } from '../../assets/registry';
@@ -22,9 +22,13 @@ import { LocalPlayer } from '../world/LocalPlayer';
 import { NameLabels } from '../world/NameLabels';
 import { ObjectLayer } from '../world/ObjectLayer';
 import { RemotePlayers } from '../world/RemotePlayers';
+import { RoofLayer } from '../world/RoofLayer';
 import { SpriteTextures } from '../world/SpriteTextures';
 
-/** The game world: ground and objects of the streamed chunks, entities sorted with them, and the camera. */
+/**
+ * The game world: ground and objects of the streamed chunks, entities sorted with them, the roofs of the
+ * rooms over them, and the camera.
+ */
 export class WorldScene extends Phaser.Scene {
   /** What runs every frame; set by `create`. */
   private onFrame: ((timeMs: number, deltaMs: number) => void) | undefined;
@@ -39,6 +43,7 @@ export class WorldScene extends Phaser.Scene {
     const ground = new GroundLayer(this, registry, content, gameClient.chunks);
     const textures = new SpriteTextures(this.textures, registry);
     const objects = new ObjectLayer(this, textures, content, gameClient.chunks);
+    const roofs = new RoofLayer(this, textures, VIEW.roofFadeMs);
     const entities = new EntityLayer(this, textures);
     const localPlayer = new LocalPlayer(entities);
     const labels = new NameLabels(this);
@@ -51,6 +56,7 @@ export class WorldScene extends Phaser.Scene {
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
       objects.show(chunk);
+      roofs.show(chunk);
     };
     const emitView = () => {
       eventBus.emit('view.changed', {
@@ -80,7 +86,10 @@ export class WorldScene extends Phaser.Scene {
       const remotes = gameClient.remoteViews();
       remotePlayers.update(remotes, timeMs);
       groundItems.update(remotes);
-      const sprite = localPlayer.update(gameClient.localView(), timeMs);
+      const view = gameClient.localView();
+      const sprite = localPlayer.update(view, timeMs);
+      // The roof of the room where the player stands fades out.
+      roofs.update(gameClient.localRoom(view), deltaMs);
       actionInput.update();
       aim.update(gameClient.interaction.aimedTile());
       if (sprite !== playerSprite) {
@@ -116,7 +125,10 @@ export class WorldScene extends Phaser.Scene {
           ground.updateTile(chunk.layer, x, y);
         }
       }),
-      eventBus.on('tile.meta', ({ chunk, x, y }) => objects.updateTile(chunk, x, y)),
+      eventBus.on('tile.meta', ({ chunk, x, y }) => {
+        objects.updateTile(chunk, x, y);
+        roofs.updateTile(chunk, x, y);
+      }),
       eventBus.on('tile.damaged', ({ layer, x, y, hp, maxHp }) =>
         damageBars.show(layer, x, y, hp, maxHp),
       ),
@@ -124,6 +136,7 @@ export class WorldScene extends Phaser.Scene {
         damageBars.clearChunk(layer, cx, cy);
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
+        roofs.hide(layer, cx, cy);
       }),
       eventBus.on('chat.said', ({ entity, text }) => bubbles.say(entity, text)),
     ];
@@ -148,6 +161,7 @@ export class WorldScene extends Phaser.Scene {
       debugCamera?.destroy();
       ground.destroy();
       objects.destroy();
+      roofs.destroy();
       entities.destroy();
       groundItems.destroy();
       labels.destroy();

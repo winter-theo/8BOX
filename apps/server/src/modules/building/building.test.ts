@@ -234,6 +234,45 @@ describe('building module', () => {
     expect(ana.walk(UP, 8).y).toBeCloseTo(Y + 0.3);
   });
 
+  it('roofs a room closed by the door placed, and opens it when a wall breaks', async () => {
+    const { ctx, tick, join, X, Y } = setup();
+    // A room of one tile, (X + 8, Y), with walls on 3 sides; the door closes it on the left.
+    for (const [x, y] of [
+      [X + 9, Y],
+      [X + 8, Y - 1],
+      [X + 8, Y + 1],
+    ] as const) {
+      ctx.world.setTile(0, x, y, 'object', WALL);
+    }
+    const ana = await join('Ana');
+    tick(10); // The chunks reach the client.
+    ana.hold([{ item: DOOR, count: 1 }]);
+    const room = { room: Y * ctx.world.layerSizeTiles + X + 8 };
+
+    expect(ana.place(X + 7, Y)[0]?.outcome).toBe('done');
+    expect(ctx.world.getMeta(0, X + 8, Y)).toEqual(room);
+    expect(ana.received()).toContainEqual({ t: 'tileMeta', layer: 0, x: X + 8, y: Y, meta: room });
+
+    ctx.world.setTile(0, X + 9, Y, 'object', null);
+    ctx.events.emit('tile.broken', {
+      layer: 0,
+      x: X + 9,
+      y: Y,
+      slot: 'object',
+      tile: WALL,
+      by: ana.entity,
+    });
+    tick(1);
+    expect(ctx.world.getMeta(0, X + 8, Y)).toBeUndefined();
+    expect(ana.received()).toContainEqual({
+      t: 'tileMeta',
+      layer: 0,
+      x: X + 8,
+      y: Y,
+      meta: null,
+    });
+  });
+
   it('forgets the state of a door broken or replaced', async () => {
     const { ctx, X, Y } = setup();
     ctx.world.setTile(0, X + 6, Y, 'object', DOOR);
