@@ -9,9 +9,11 @@ import {
 import { pino } from 'pino';
 import { Accounts } from './accounts/Accounts';
 import { clerkIdentity } from './accounts/clerkIdentity';
+import { Admin } from './admin/Admin';
 import { buildApp } from './app';
 import { createGame } from './core/game';
 import { pgAccountStore } from './db/accounts.repo';
+import { pgAdminStore } from './db/admin.repo';
 import { type DatabaseConnection, openDatabase } from './db/database';
 import { pgGameStore } from './db/pgStore';
 import { env } from './env';
@@ -116,6 +118,16 @@ const app = buildApp({
   allowedOrigins: env.ALLOWED_ORIGINS,
   net: game.ctx.net,
   tickStats: () => game.stats(),
+  admin: {
+    admin: new Admin({
+      store: pgAdminStore(connection.db),
+      sessions: game.ctx.net,
+      log: log.child({ scope: 'admin' }),
+      auditListSize: CONFIG.admin.auditListSize,
+    }),
+    accounts,
+    devAuth,
+  },
   // Development routes only: they change the world without any check.
   ...(env.NODE_ENV !== 'production' && { dev: { world, content } }),
 });

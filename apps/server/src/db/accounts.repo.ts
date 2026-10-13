@@ -6,9 +6,9 @@ import { players } from './schema';
 /** PostgreSQL error code of a unique constraint violation. */
 const UNIQUE_VIOLATION = '23505';
 
-type PlayerRow = typeof players.$inferSelect;
+export type PlayerRow = typeof players.$inferSelect;
 
-function toAccount(row: PlayerRow): Account {
+export function toAccount(row: PlayerRow): Account {
   return {
     playerId: row.id,
     clerkUserId: row.clerkUserId,

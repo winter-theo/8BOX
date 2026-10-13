@@ -1,8 +1,10 @@
+import { ADMIN_ACTIONS } from '@8box/shared';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
   customType,
   doublePrecision,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -77,6 +79,25 @@ export const players = pgTable(
   },
   // Names are unique whatever their case: "Ana" and "ana" are the same player.
   (table) => [uniqueIndex('players_name_lower_idx').on(sql`lower(${table.name})`)],
+);
+
+/** Every admin action: who did what, to whom, when. */
+export const adminAudit = pgTable(
+  'admin_audit',
+  {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    adminId: integer('admin_id')
+      .notNull()
+      .references(() => players.id),
+    action: text('action', { enum: ADMIN_ACTIONS }).notNull(),
+    targetId: integer('target_id')
+      .notNull()
+      .references(() => players.id),
+    /** Ban reason. */
+    reason: text('reason'),
+    createdAt: createdAt(),
+  },
+  (table) => [index('admin_audit_created_at_idx').on(table.createdAt)],
 );
 
 /** The character of each player: where it is (survival and inventory columns come with their steps). */

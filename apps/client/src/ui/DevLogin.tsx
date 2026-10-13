@@ -1,23 +1,13 @@
 import { isValidPlayerName } from '@8box/shared';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { readStoredDevName, storeDevName } from '../devName';
 import { gameClient } from '../game/client';
-
-/** localStorage key of the last dev name used on this browser. */
-const DEV_NAME_STORAGE_KEY = '8box.devName';
-
-function readStoredName(): string {
-  try {
-    return localStorage.getItem(DEV_NAME_STORAGE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
 
 /** Dev mode only: play with a simple name, without an account (bots, tests, several tabs). */
 export function DevLoginForm() {
   const { t } = useTranslation();
-  const [name, setName] = useState(readStoredName);
+  const [name, setName] = useState(readStoredDevName);
   const valid = isValidPlayerName(name);
 
   const play = (event: FormEvent) => {
@@ -25,11 +15,7 @@ export function DevLoginForm() {
     if (!valid) {
       return;
     }
-    try {
-      localStorage.setItem(DEV_NAME_STORAGE_KEY, name);
-    } catch {
-      // Storage disabled: the name is just not remembered.
-    }
+    storeDevName(name);
     gameClient.connect({ devName: name });
   };
 

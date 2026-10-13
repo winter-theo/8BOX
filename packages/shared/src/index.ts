@@ -23,6 +23,7 @@ export {
   resolveLanguage,
 } from './i18n/index';
 export { checkPlayerName, type NameError } from './moderation/names';
+export * from './protocol/admin';
 export { decodeChunk, encodeChunk } from './protocol/chunk';
 export {
   decodeServerMessage,

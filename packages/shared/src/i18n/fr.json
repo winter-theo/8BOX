@@ -29,7 +29,7 @@
       },
       "pending": {
         "title": "En attente de validation",
-        "text": "Ta demande est envoyée. Un administrateur doit la valider avant que tu puisses jouer."
+        "text": "Ta demande est envoyée. Un administrateur doit la valider : garde cette page ouverte, tu entreras en jeu dès qu'elle le sera."
       },
       "denied": {
         "title": "Demande refusée",
@@ -47,9 +47,86 @@
       "devAuthDisabled": "La connexion de développement est désactivée sur ce serveur.",
       "invalidName": "Ce pseudo n'est pas valide.",
       "replaced": "Ce pseudo vient de se connecter ailleurs (un autre onglet ?).",
+      "kicked": "Un administrateur t'a expulsé du jeu. Tu peux revenir.",
       "unavailable": "Le serveur ne peut pas accueillir de joueur pour le moment.",
       "reload": "Recharger",
       "back": "Retour"
+    },
+    "admin": {
+      "link": "Admin",
+      "pendingBadge": "{{count}} en attente",
+      "title": "Administration",
+      "backToGame": "Retour au jeu",
+      "refresh": "Actualiser",
+      "updatedAt": "Mis à jour à {{time}}",
+      "loading": "Chargement…",
+      "signIn": "Connecte-toi avec ton compte Google d'administrateur.",
+      "signInButton": "Se connecter avec Google",
+      "pending": {
+        "title": "En attente",
+        "empty": "Aucune demande en attente."
+      },
+      "players": {
+        "title": "Joueurs",
+        "empty": "Aucun joueur."
+      },
+      "audit": {
+        "title": "Journal",
+        "empty": "Aucune action pour l'instant."
+      },
+      "column": {
+        "name": "Pseudo",
+        "email": "Email",
+        "requestedAt": "Demande",
+        "status": "Statut",
+        "online": "En ligne",
+        "lastSeen": "Dernière connexion",
+        "actions": "Actions",
+        "date": "Date",
+        "admin": "Admin",
+        "action": "Action",
+        "target": "Joueur",
+        "reason": "Raison"
+      },
+      "noName": "(pseudo pas encore choisi)",
+      "never": "jamais",
+      "online": "en ligne",
+      "offline": "hors ligne",
+      "adminRole": "admin",
+      "status": {
+        "pending": "en attente",
+        "approved": "approuvé",
+        "denied": "refusé",
+        "banned": "banni"
+      },
+      "action": {
+        "approve": "Approuver",
+        "deny": "Refuser",
+        "ban": "Bannir",
+        "unban": "Débannir",
+        "kick": "Expulser"
+      },
+      "audited": {
+        "approve": "approuvé",
+        "deny": "refusé",
+        "ban": "banni",
+        "unban": "débanni",
+        "kick": "expulsé"
+      },
+      "banReason": "Raison du bannissement",
+      "confirmBan": "Bannir",
+      "cancel": "Annuler",
+      "error": {
+        "unauthorized": "Ta session a expiré : reconnecte-toi.",
+        "forbidden": "Cette page est réservée aux administrateurs.",
+        "notFound": "Ce joueur n'existe pas.",
+        "self": "Tu ne peux pas agir sur ton propre compte.",
+        "targetIsAdmin": "On ne peut pas agir sur un autre administrateur.",
+        "wrongStatus": "Le statut de ce joueur a changé : la liste est actualisée.",
+        "notOnline": "Ce joueur n'est plus connecté.",
+        "invalidBody": "La raison doit faire entre 1 et 200 caractères.",
+        "network": "Le serveur ne répond pas."
+      }
     },
     "dev": {
       "chunks_one": "{{count}} chunk chargé",

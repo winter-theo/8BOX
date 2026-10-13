@@ -1,5 +1,6 @@
 import Fastify, { type FastifyBaseLogger } from 'fastify';
 import type { TickStats } from './core/loop';
+import { type AdminRoutesOptions, adminRoutes } from './http/admin';
 import { type DevRoutesOptions, devRoutes } from './http/dev';
 import { healthRoutes } from './http/health';
 import type { NetServer } from './net/net';
@@ -13,6 +14,8 @@ export interface AppOptions {
   net?: NetServer;
   /** Tick time statistics of the running game, shown by `/health`. */
   tickStats?: () => TickStats;
+  /** The admin API (`/admin/*`); off when omitted. */
+  admin?: Omit<AdminRoutesOptions, 'allowedOrigins'>;
   /** Development routes (`POST /dev/tile`…); never given in production. */
   dev?: DevRoutesOptions;
 }
@@ -21,6 +24,9 @@ export interface AppOptions {
 export function buildApp(options: AppOptions = {}) {
   const app = Fastify(options.logger ? { loggerInstance: options.logger } : { logger: false });
   app.register(healthRoutes, { tickStats: options.tickStats });
+  if (options.admin) {
+    app.register(adminRoutes, { ...options.admin, allowedOrigins: options.allowedOrigins ?? [] });
+  }
   if (options.dev) {
     app.register(devRoutes, options.dev);
   }
