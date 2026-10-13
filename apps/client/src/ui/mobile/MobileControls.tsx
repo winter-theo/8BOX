@@ -26,11 +26,7 @@ function ChatButton() {
     (state) => unreadCount(state, 'proximity') + unreadCount(state, 'private'),
   );
   return (
-    <button
-      type="button"
-      className="touch-button touch-button--chat"
-      onClick={openChat}
-    >
+    <button type="button" className="touch-button touch-button--chat" onClick={openChat}>
       {t('ui.mobile.chat')}
       {unread > 0 && <span className="badge">{unread}</span>}
     </button>
