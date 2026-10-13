@@ -54,6 +54,12 @@ describe('tileDefSchema', () => {
     ).toBe(false);
   });
 
+  it('accepts the wall, door and bed flags', () => {
+    const wall = tileDefSchema.parse({ ...tile, wall: true, door: false, bed: true });
+    expect([wall.wall, wall.door, wall.bed]).toEqual([true, false, true]);
+    expect(tileDefSchema.safeParse({ ...tile, door: 'yes' }).success).toBe(false);
+  });
+
   it('accepts a speed factor between 0 (excluded) and 1', () => {
     expect(tileDefSchema.parse({ ...tile, speedFactor: 0.5 }).speedFactor).toBe(0.5);
     expect(tileDefSchema.safeParse({ ...tile, speedFactor: 0 }).success).toBe(false);

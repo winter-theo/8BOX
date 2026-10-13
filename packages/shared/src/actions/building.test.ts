@@ -3,9 +3,16 @@ import { baseContent } from '../content/base';
 import { loadContent } from '../content/load';
 import type { TileSlot } from '../content/schemas';
 import { emptyInventory, type Inventory } from '../inventory/inventory';
+import type { TileMeta } from '../world/chunk';
 import { spawnSafeZone } from '../world/safeZone';
 import { type ActionSubject, type Actor, actionApplies } from './actions';
-import { boxOverlapsTile, placeAction } from './building';
+import {
+  boxOverlapsTile,
+  closeDoorAction,
+  openDoorAction,
+  placeAction,
+  sleepAction,
+} from './building';
 
 const content = loadContent(baseContent);
 // A small surface (64 tiles): the spawn is at (32.5, 32.5), the safe zone 10 tiles around it.
@@ -86,5 +93,50 @@ describe('boxOverlapsTile', () => {
   it('does not count a box flush against the tile', () => {
     expect(boxOverlapsTile({ x: 1.7, y: 0.5 }, 0.3, 2, 0)).toBe(false);
     expect(boxOverlapsTile({ x: 1.71, y: 0.5 }, 0.3, 2, 0)).toBe(true);
+  });
+});
+
+describe('door actions', () => {
+  const door = (meta?: TileMeta): ActionSubject => ({
+    ...tile(2, 2, { object: 'base:wooden_door' }),
+    ...(meta && { meta }),
+  });
+  const someone = actor(2.5, 3.5, null);
+  const applies = (subject: ActionSubject) =>
+    [openDoorAction, closeDoorAction].filter((action) =>
+      actionApplies(action, subject, content, someone),
+    );
+
+  it('opens a closed door and closes an open one', () => {
+    expect(applies(door())).toEqual([openDoorAction]);
+    expect(applies(door({ open: true }))).toEqual([closeDoorAction]);
+    expect(applies(tile(2, 2, { object: 'base:wooden_wall' }))).toEqual([]);
+    expect(openDoorAction.canPerform({ actor: someone, subject: door(), content })).toEqual({
+      ok: true,
+    });
+  });
+
+  it('does not close a door on the player standing in the doorway', () => {
+    const open = door({ open: true });
+    expect(closeDoorAction.canPerform({ actor: someone, subject: open, content })).toEqual({
+      ok: true,
+    });
+    expect(
+      closeDoorAction.canPerform({ actor: actor(2.5, 2.5, null), subject: open, content }),
+    ).toEqual({ ok: false, reason: 'occupied' });
+  });
+});
+
+describe('sleep action', () => {
+  it('applies to a bed, in the safe zone too', () => {
+    const bed = tile(32, 32, { object: 'base:bed' });
+    const sleeper = actor(32.5, 33.5, null);
+    expect(actionApplies(sleepAction, bed, content, sleeper)).toBe(true);
+    expect(sleepAction.canPerform({ actor: sleeper, subject: bed, content, safeZone })).toEqual({
+      ok: true,
+    });
+    expect(
+      actionApplies(sleepAction, tile(2, 2, { object: 'base:workbench' }), content, sleeper),
+    ).toBe(false);
   });
 });

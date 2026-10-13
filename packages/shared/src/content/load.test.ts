@@ -176,6 +176,16 @@ describe('loadContent', () => {
     ]);
   });
 
+  it('reports a wall, a door or a bed out of the object slot', () => {
+    const raw = validContent();
+    raw.tiles[0] = { ...raw.tiles[0], door: true };
+    raw.tiles[1] = { ...raw.tiles[1], wall: true, bed: true };
+
+    expect(issuesOf(raw).map((issue) => `${issue.id}/${issue.field}: ${issue.message}`)).toEqual([
+      'base:grass/slot: a wall, a door or a bed goes in the object slot',
+    ]);
+  });
+
   it('reports a file that is not an array', () => {
     expect(issuesOf({ ...validContent(), loot: { id: 'base:oak_tree' } })).toEqual([
       { file: 'loot', message: 'expected a JSON array of entries' },

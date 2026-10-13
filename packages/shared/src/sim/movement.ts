@@ -1,5 +1,7 @@
 import { PLAYER } from '../config/player';
 import type { TileDef, TileSlot } from '../content/schemas';
+import type { TileMeta } from '../world/chunk';
+import { tileBlocks } from '../world/doors';
 
 /** Where a character looks: the last direction it moved in (aim and hits use it). */
 export type Facing = 'up' | 'down' | 'left' | 'right';
@@ -70,14 +72,20 @@ const SLOTS: readonly TileSlot[] = ['ground', 'floor', 'object'];
 
 /**
  * Movement view of a tile store. `isKnown` tells whether a tile exists (inside the map and loaded);
- * a tile is solid when any of its slots is. The speed factor is the floor's, or else the ground's.
+ * a tile is solid when any of its slots blocks (`tileBlocks`: an open door does not, given the meta of
+ * the tile from `metaAt`). The speed factor is the floor's, or else the ground's.
  */
 export function createMovementWorld(
   tileAt: (x: number, y: number, slot: TileSlot) => TileDef | undefined,
   isKnown: (x: number, y: number) => boolean,
+  metaAt: (x: number, y: number) => TileMeta | undefined = () => undefined,
 ): MovementWorld {
+  const blocks = (x: number, y: number, slot: TileSlot) => {
+    const tile = tileAt(x, y, slot);
+    return tile !== undefined && tileBlocks(tile, tile.door ? metaAt(x, y) : undefined);
+  };
   return {
-    isSolid: (x, y) => !isKnown(x, y) || SLOTS.some((slot) => tileAt(x, y, slot)?.solid === true),
+    isSolid: (x, y) => !isKnown(x, y) || SLOTS.some((slot) => blocks(x, y, slot)),
     speedFactor: (x, y) => (tileAt(x, y, 'floor') ?? tileAt(x, y, 'ground'))?.speedFactor ?? 1,
   };
 }

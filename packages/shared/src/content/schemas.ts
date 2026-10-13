@@ -77,6 +77,15 @@ export const tileDefSchema = z.strictObject({
     .optional(),
   /** Crafting station this tile provides (recipes refer to it with `station`). */
   station: contentIdSchema.optional(),
+  /** A wall: drawn joined to the walls and doors on its 4 sides (sprite `<sprite>.<sides>`). */
+  wall: z.boolean().optional(),
+  /**
+   * A door: players open and close it, its state is in the meta of its tile (`open`). Open, it does not
+   * block even when `solid` (sprite `<sprite>.open`).
+   */
+  door: z.boolean().optional(),
+  /** A bed: "sleep here" makes it the respawn point of the player. */
+  bed: z.boolean().optional(),
 });
 
 export const itemDefSchema = z

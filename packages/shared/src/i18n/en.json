@@ -265,6 +265,10 @@
         "occupied": "Something is in the way"
       },
       "place": "Place here",
+      "openDoor": "Open ({{name}})",
+      "closeDoor": "Close ({{name}})",
+      "sleep": "Sleep here",
+      "respawnSet": "Respawn point saved.",
       "broken": "Item broken: {{name}}."
     },
     "crafting": {

@@ -27,7 +27,16 @@ export {
   tileInReach,
 } from './actions/aim';
 export { baseActions, examineAction, pickUpAction } from './actions/base';
-export { boxOverlapsTile, hasRoomFor, heldPlaceable, placeAction } from './actions/building';
+export {
+  boxOverlapsTile,
+  buildingActions,
+  closeDoorAction,
+  hasRoomFor,
+  heldPlaceable,
+  openDoorAction,
+  placeAction,
+  sleepAction,
+} from './actions/building';
 export {
   breakAction,
   cutAction,
@@ -129,6 +138,7 @@ export {
   localCoord,
   tileIndex,
 } from './world/coords';
+export { doorMeta, isDoorOpen, tileBlocks } from './world/doors';
 export {
   createSurfaceGenerator,
   type SurfaceGenerator,
