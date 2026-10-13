@@ -134,9 +134,9 @@ describe('WriteQueue', () => {
   it('writes each character once, with its latest position', async () => {
     const { queue, characters } = setup();
 
-    queue.saveCharacter({ playerId: 1, layer: 0, x: 1, y: 1 });
-    queue.saveCharacter({ playerId: 1, layer: 0, x: 2, y: 1 });
-    queue.saveCharacter({ playerId: 2, layer: 0, x: 5, y: 5 });
+    queue.saveCharacter({ playerId: 1, layer: 0, x: 1, y: 1, skin: 'default' });
+    queue.saveCharacter({ playerId: 1, layer: 0, x: 2, y: 1, skin: 'default' });
+    queue.saveCharacter({ playerId: 2, layer: 0, x: 5, y: 5, skin: 'default' });
     await queue.flush();
 
     expect(characters).toEqual([['1@2', '2@5']]);

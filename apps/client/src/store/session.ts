@@ -1,4 +1,4 @@
-import type { AccountState, NameError, RejectReason } from '@8box/shared';
+import type { AccountState, NameError, RejectReason, Skin } from '@8box/shared';
 import { create } from 'zustand';
 import type { DebugStats } from '../game/events';
 
@@ -27,6 +27,8 @@ export interface AccountScreen {
 export interface LocalPlayer {
   entity: number;
   name: string;
+  /** As the server confirmed it. */
+  skin: Skin;
 }
 
 interface SessionState {

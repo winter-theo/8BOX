@@ -209,6 +209,12 @@
       "fr": "Français",
       "en": "English"
     },
+    "skin": {
+      "label": "Apparence",
+      "default": "Aventurier",
+      "cat": "Chat",
+      "hat": "Chapeau"
+    },
     "mobile": {
       "joystick": "Joystick de déplacement",
       "use": "Frapper",

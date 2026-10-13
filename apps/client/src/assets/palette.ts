@@ -29,6 +29,17 @@ export const PALETTE = {
   petal: '#e7c64a',
   blossom: '#d58ca4',
   skin: '#e2b48c',
+  // Colors of the player skins drawn by the author.
+  black: '#000000',
+  white: '#ffffff',
+  pink: '#ffcece',
+  silver: '#bababa',
+  orange: '#df7126',
+  sky: '#5fcde4',
+  yellow: '#fbf236',
+  navy: '#222034',
+  brownDark: '#663931',
+  brown: '#8f563b',
 } as const;
 
 export type PaletteColor = (typeof PALETTE)[keyof typeof PALETTE];

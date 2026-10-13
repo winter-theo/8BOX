@@ -1,12 +1,14 @@
+import { DEFAULT_SKIN } from '@8box/shared';
 import type { GameModule, ServerContext } from '../../core/module';
 
-/** Queues the save of every player character, where it stands now. */
+/** Queues the save of every player character, where it stands now and how it looks. */
 function saveCharacters(ctx: ServerContext): void {
   for (const entity of ctx.entities.query('player', 'position')) {
     const player = ctx.entities.get(entity, 'player');
     const position = ctx.entities.get(entity, 'position');
     if (player && position) {
-      ctx.persistence.saveCharacter({ playerId: player.playerId, ...position });
+      const skin = ctx.entities.get(entity, 'skin') ?? DEFAULT_SKIN;
+      ctx.persistence.saveCharacter({ playerId: player.playerId, ...position, skin });
     }
   }
 }

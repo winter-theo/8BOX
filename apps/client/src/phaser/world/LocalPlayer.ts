@@ -3,12 +3,9 @@ import type { LocalView } from '../../game/player/LocalPlayerState';
 import { characterFrame, characterSprite, type Side, spriteSide } from '../character';
 import type { EntityLayer } from './EntityLayer';
 
-/** Skin of every player until custom skins (P11). */
-const DEFAULT_SKIN = 'default';
-
 /**
- * Draws the player of this client where the prediction puts it: it walks while it moves, and turns
- * left or right with its facing.
+ * Draws the player of this client where the prediction puts it, in its skin: it walks while it moves,
+ * and turns left or right with its facing.
  */
 export class LocalPlayer {
   private entity: number | undefined;
@@ -27,7 +24,7 @@ export class LocalPlayer {
     }
     this.entity = view.entity;
     this.side = spriteSide(view.facing, this.side);
-    const sprite = characterSprite(DEFAULT_SKIN, characterFrame(view.moving, timeMs));
+    const sprite = characterSprite(view.skin, characterFrame(view.moving, timeMs));
     return this.entities.set(view.entity, sprite, view, this.side === 'left');
   }
 }

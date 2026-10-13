@@ -209,6 +209,12 @@
       "fr": "Français",
       "en": "English"
     },
+    "skin": {
+      "label": "Look",
+      "default": "Adventurer",
+      "cat": "Cat",
+      "hat": "Hat"
+    },
     "mobile": {
       "joystick": "Movement joystick",
       "use": "Hit",

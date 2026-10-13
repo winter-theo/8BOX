@@ -26,7 +26,7 @@ describe('players module', () => {
     const entity = client.session.player?.entity ?? -1;
     expect(client.last()).toEqual({
       t: 'welcome',
-      you: { entity, name: 'Ana', position: spawnPosition(ctx.world) },
+      you: { entity, name: 'Ana', skin: 'default', position: spawnPosition(ctx.world) },
       tick: 0,
     });
     expect(ctx.entities.typeOf(entity)).toBe('player');
@@ -76,7 +76,13 @@ describe('players module', () => {
 
     ctx.net.handleClose(first.session);
     const playerId = first.session.account?.playerId ?? -1;
-    expect(ctx.persistence.character(playerId)).toEqual({ playerId, layer: 0, x: 20.5, y: 30.25 });
+    expect(ctx.persistence.character(playerId)).toEqual({
+      playerId,
+      layer: 0,
+      x: 20.5,
+      y: 30.25,
+      skin: 'default',
+    });
 
     const again = await join('ANA');
     expect(again.last()).toMatchObject({ t: 'welcome', you: { position: { x: 20.5, y: 30.25 } } });
@@ -87,12 +93,24 @@ describe('players module', () => {
     });
   });
 
+  it('brings a player back with the skin they picked', async () => {
+    const { ctx, join } = setup();
+    const first = await join('Ana');
+    ctx.entities.set(first.session.player?.entity ?? -1, 'skin', 'cat');
+    ctx.net.handleClose(first.session);
+
+    const again = await join('Ana');
+
+    expect(again.last()).toMatchObject({ t: 'welcome', you: { skin: 'cat' } });
+    expect(ctx.entities.get(again.session.player?.entity ?? -1, 'skin')).toBe('cat');
+  });
+
   it('starts at the spawn when the saved place is outside the world', async () => {
     const { ctx, join } = setup();
     const first = await join('Bob');
     const playerId = first.session.account?.playerId ?? -1;
     ctx.net.handleClose(first.session);
-    ctx.persistence.saveCharacter({ playerId, layer: 0, x: 99_999, y: 5 });
+    ctx.persistence.saveCharacter({ playerId, layer: 0, x: 99_999, y: 5, skin: 'default' });
 
     const bob = await join('Bob');
 

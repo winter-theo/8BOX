@@ -1,4 +1,4 @@
-import { VIEW } from '@8box/shared';
+import { PLAYER, VIEW } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { placeholderFor } from '../assets/placeholders';
 import { characterFrame, characterSprite, spriteSide } from './character';
@@ -26,13 +26,15 @@ describe('spriteSide', () => {
 });
 
 describe('characterSprite', () => {
-  it('names a frame of a skin, with a placeholder for each frame of the default skin', () => {
+  it('names a frame of a skin, with an 8 × 8 placeholder for each frame of every skin', () => {
     expect(characterSprite('default', 'walk2')).toBe('char.default.walk2');
-    for (const frame of ['idle', 'walk1', 'walk2'] as const) {
-      expect(placeholderFor(characterSprite('default', frame))).toMatchObject({
-        width: 8,
-        height: 8,
-      });
+    for (const skin of PLAYER.skins) {
+      for (const frame of ['idle', 'walk1', 'walk2'] as const) {
+        expect(placeholderFor(characterSprite(skin, frame)), `${skin} ${frame}`).toMatchObject({
+          width: 8,
+          height: 8,
+        });
+      }
     }
   });
 });

@@ -245,6 +245,27 @@ const HEAD = ['..hhhh..', '.hhhhhh.', '.hhssos.', '..ssss..'];
 const characterFrame = (body: readonly string[]) =>
   pixelSprite(CHARACTER, [{ weight: 1, rows: [...HEAD, ...body] }]);
 
+/** A frame of a skin drawn by the author: its body (the first 7 rows), then the feet of the frame. */
+const skinFrame = (legend: Legend, body: readonly string[]) => (feet: string) =>
+  pixelSprite(legend, [{ weight: 1, rows: [...body, feet] }]);
+
+/** A white cat with a rainbow collar. */
+const catFrame = skinFrame(
+  { o: P.black, w: P.white, p: P.pink, n: P.silver, r: P.orange, b: P.sky, y: P.yellow },
+  ['.oo.oo..', '.owoowo.', '.owwwwo.', '.owowoo.', '.opwnwo.', 'owoooowo', 'oorbyroo'],
+);
+
+/** A brown character in a dark hat. */
+const hatFrame = skinFrame({ o: P.black, n: P.navy, d: P.brownDark, b: P.brown }, [
+  '..oooo..',
+  'oonnnnoo',
+  'odoooodo',
+  '.ododoo.',
+  '.odbbbo.',
+  'odoooodo',
+  'oodbbdoo',
+]);
+
 /** Placeholders of the objects and characters, by sprite id. */
 export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.oak_tree': oakTree,
@@ -256,4 +277,11 @@ export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'char.default.idle': characterFrame(['.cccccc.', 's.cccc.s', '..pppp..', '..p..p..']),
   'char.default.walk1': characterFrame(['.cccccs.', 's.cccc..', '..pppp..', '.pp..pp.']),
   'char.default.walk2': characterFrame(['.cccccc.', '.scccs..', '..pppp..', '...pp...']),
+  // Only the feet move: apart at rest, then striding and together in turn.
+  'char.cat.idle': catFrame('.owoowo.'),
+  'char.cat.walk1': catFrame('owo..owo'),
+  'char.cat.walk2': catFrame('..owwo..'),
+  'char.hat.idle': hatFrame('.odoodo.'),
+  'char.hat.walk1': hatFrame('odo..odo'),
+  'char.hat.walk2': hatFrame('..oddo..'),
 };

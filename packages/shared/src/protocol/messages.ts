@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CHAT } from '../config/chat';
-import { PLAYER } from '../config/player';
+import { PLAYER, type Skin } from '../config/player';
 import { VIEW } from '../config/view';
 import type { TileSlot } from '../content/schemas';
 import type { NameError } from '../moderation/names';
@@ -25,6 +25,12 @@ export const helloSchema = z.strictObject({
 export const setNameSchema = z.strictObject({
   t: z.literal('setName'),
   name: z.string().max(PLAYER.nameMaxLength * 4),
+});
+
+/** The skin the player picks for their character; everyone sees it. */
+export const setSkinSchema = z.strictObject({
+  t: z.literal('setSkin'),
+  skin: z.enum(PLAYER.skins),
 });
 
 export const pingSchema = z.strictObject({
@@ -76,6 +82,7 @@ export const chatSchema = z.strictObject({
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
   setNameSchema,
+  setSkinSchema,
   pingSchema,
   inputSchema,
   viewportSchema,
@@ -85,6 +92,7 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
 
 export type HelloMessage = z.output<typeof helloSchema>;
 export type SetNameMessage = z.output<typeof setNameSchema>;
+export type SetSkinMessage = z.output<typeof setSkinSchema>;
 export type PingMessage = z.output<typeof pingSchema>;
 export type InputMessage = z.output<typeof inputSchema>;
 export type ViewportMessage = z.output<typeof viewportSchema>;
@@ -96,6 +104,7 @@ export type ClientMessageType = ClientMessage['t'];
 export const CLIENT_MESSAGE_TYPES = [
   'hello',
   'setName',
+  'setSkin',
   'ping',
   'input',
   'viewport',
@@ -132,7 +141,7 @@ export interface WorldPosition {
 export interface WelcomeMessage {
   t: 'welcome';
   /** The player of this session. `entity` is only valid for this session. */
-  you: { entity: number; name: string; position: WorldPosition };
+  you: { entity: number; name: string; skin: Skin; position: WorldPosition };
   /** Server tick when the player joined. */
   tick: number;
 }
@@ -221,6 +230,8 @@ export interface EntityState {
   anim: EntityAnim;
   /** Display name (players), only in the first snapshot where the entity appears for this client. */
   name?: string;
+  /** Skin (players): in the first snapshot where the entity appears for this client, and when it changes. */
+  skin?: Skin;
 }
 
 /** Sent every tick: the player of this session and the entities in its chunks. */
@@ -231,7 +242,13 @@ export interface SnapshotMessage {
   /** `seq` of the last input applied, or -1 before the first one. */
   ackSeq: number;
   /** The player of this session: feet position in tiles, and facing. */
-  you: { x: number; y: number; facing: Facing };
+  you: {
+    x: number;
+    y: number;
+    facing: Facing;
+    /** In the first snapshot of the session, and when it changes. */
+    skin?: Skin;
+  };
   /** The other entities in the chunks this client receives. */
   entities: EntityState[];
   /** Entities that left this client's view since the last snapshot: forget them. */

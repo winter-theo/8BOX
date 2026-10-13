@@ -29,6 +29,13 @@
       "when": 1791854415197,
       "tag": "0003_reports_and_mutes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791856182706,
+      "tag": "0004_character_skin",
+      "breakpoints": true
     }
   ]
 }

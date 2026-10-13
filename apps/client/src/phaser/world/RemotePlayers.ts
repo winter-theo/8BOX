@@ -1,14 +1,12 @@
+import { DEFAULT_SKIN } from '@8box/shared';
 import type { RemoteView } from '../../game/world/RemoteEntities';
 import { characterFrame, characterSprite, type Side, spriteSide } from '../character';
 import type { EntityLayer } from './EntityLayer';
 import type { NameLabels } from './NameLabels';
 
-/** Skin of every player until custom skins (P11). */
-const DEFAULT_SKIN = 'default';
-
 /**
- * Draws the other players where the interpolation puts them, walking or standing, turned to their side,
- * with their name above their head.
+ * Draws the other players where the interpolation puts them, in their skin, walking or standing, turned
+ * to their side, with their name above their head.
  * Other kinds of entities get drawn by the steps that bring them.
  */
 export class RemotePlayers {
@@ -30,7 +28,8 @@ export class RemotePlayers {
       seen.add(view.id);
       const side = spriteSide(view.facing, this.shown.get(view.id) ?? 'right');
       this.shown.set(view.id, side);
-      const sprite = characterSprite(DEFAULT_SKIN, characterFrame(view.moving, timeMs));
+      const skin = view.skin ?? DEFAULT_SKIN;
+      const sprite = characterSprite(skin, characterFrame(view.moving, timeMs));
       const image = this.entities.set(view.id, sprite, view, side === 'left');
       if (view.name !== undefined) {
         this.labels.set(view.id, view.name, { x: image.x, y: image.y - image.height });

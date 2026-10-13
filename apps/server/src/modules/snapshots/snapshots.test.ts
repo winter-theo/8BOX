@@ -91,6 +91,7 @@ describe('snapshots module', () => {
         facing: 'down',
         anim: 'idle',
         name: 'Bob',
+        skin: 'default',
       },
     ]);
 
@@ -101,6 +102,29 @@ describe('snapshots module', () => {
     expect(seen?.name).toBeUndefined();
     expect(seen?.x).toBeLessThan(world.spawn.x);
     expect(lastSnapshot(bob)?.ackSeq).toBe(0);
+  });
+
+  it('sends a skin the first time, then only when it changes, to the others and to its player', async () => {
+    const { ctx, join, tick, entityOf } = setup();
+    const ana = await join('Ana');
+    const bob = await join('Bob');
+    tick();
+    expect(lastSnapshot(ana)?.you.skin).toBe('default');
+    expect(lastSnapshot(ana)?.entities[0]?.skin).toBe('default');
+
+    tick();
+    expect(lastSnapshot(ana)?.you.skin).toBeUndefined();
+    expect(lastSnapshot(ana)?.entities[0]?.skin).toBeUndefined();
+
+    ctx.entities.set(entityOf(bob), 'skin', 'hat');
+    tick();
+    expect(lastSnapshot(ana)?.entities[0]?.skin).toBe('hat');
+    expect(lastSnapshot(bob)?.you.skin).toBe('hat');
+    expect(lastSnapshot(bob)?.entities[0]?.skin).toBeUndefined();
+
+    tick();
+    expect(lastSnapshot(ana)?.entities[0]?.skin).toBeUndefined();
+    expect(lastSnapshot(bob)?.you.skin).toBeUndefined();
   });
 
   it('never sends entities outside the chunks of the client, and tells when one leaves', async () => {

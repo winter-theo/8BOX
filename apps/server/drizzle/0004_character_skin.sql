@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "skin" text DEFAULT 'default' NOT NULL;

@@ -85,7 +85,12 @@ describe('chunks module', () => {
     const entity = ctx.entities.create('player', {
       position: { layer: 0, x: world.spawn.x, y: world.spawn.y },
     });
-    client.session.player = { entity, name: 'Ana', position: { layer: 0, x: 0, y: 0 } };
+    client.session.player = {
+      entity,
+      name: 'Ana',
+      skin: 'default',
+      position: { layer: 0, x: 0, y: 0 },
+    };
     client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });
     tick(10);
     client.received.length = 0;

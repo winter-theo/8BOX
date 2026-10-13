@@ -115,10 +115,37 @@ describe('GameClient', () => {
     expect(lastSocket().sent[0]).toEqual({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'default', position: SPAWN },
       tick: 10,
     });
     expect(state()).toMatchObject({ status: 'online', player: { entity: 3, name: 'Ana' } });
+  });
+
+  it('asks the server for a skin and shows it once a snapshot confirms it', () => {
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    lastSocket().open();
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', skin: 'hat', position: SPAWN },
+      tick: 1,
+    });
+    expect(state().player?.skin).toBe('hat');
+    expect(client.localView()?.skin).toBe('hat');
+
+    client.setSkin('cat');
+    expect(lastSocket().sent.at(-1)).toEqual({ t: 'setSkin', skin: 'cat' });
+    expect(state().player?.skin).toBe('hat');
+
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 2,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down', skin: 'cat' },
+      entities: [],
+    });
+    expect(state().player?.skin).toBe('cat');
+    expect(client.localView()?.skin).toBe('cat');
   });
 
   it('measures the ping from the pong', () => {
@@ -127,7 +154,7 @@ describe('GameClient', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'default', position: SPAWN },
       tick: 10,
     });
 
@@ -163,7 +190,7 @@ describe('GameClient', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 1, name: 'Ana', position: SPAWN },
+      you: { entity: 1, name: 'Ana', skin: 'default', position: SPAWN },
       tick: 1,
     });
     lastSocket().drop();
@@ -203,7 +230,7 @@ describe('GameClient world streaming', () => {
   const welcome = () =>
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 1, name: 'Ana', position: SPAWN },
+      you: { entity: 1, name: 'Ana', skin: 'default', position: SPAWN },
       tick: 1,
     });
 
@@ -280,6 +307,7 @@ describe('GameClient world streaming', () => {
       y: 512.5,
       facing: 'down',
       moving: false,
+      skin: 'default',
     });
     const step = (PLAYER.speedTilesPerSecond * NET.clientInputIntervalMs) / 1000;
 
@@ -440,7 +468,7 @@ describe('GameClient accounts', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'default', position: SPAWN },
       tick: 1,
     });
 

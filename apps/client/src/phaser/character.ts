@@ -1,4 +1,4 @@
-import { type Facing, VIEW } from '@8box/shared';
+import { type Facing, type Skin, VIEW } from '@8box/shared';
 
 /** Frames of a character sheet, all facing right: at rest, then two walking frames. */
 export type CharacterFrame = 'idle' | 'walk1' | 'walk2';
@@ -20,6 +20,6 @@ export function spriteSide(facing: Facing, previous: Side): Side {
 }
 
 /** Sprite id of a frame of a character skin (`char.default.idle`…). */
-export function characterSprite(skin: string, frame: CharacterFrame): string {
+export function characterSprite(skin: Skin, frame: CharacterFrame): string {
   return `char.${skin}.${frame}`;
 }

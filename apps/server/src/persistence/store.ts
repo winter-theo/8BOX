@@ -1,12 +1,14 @@
+import type { Skin } from '@8box/shared';
 import type { SavedChunk } from '../world/chunkSerializer';
 
-/** Where the character of a player (`players.id`) was when last saved. */
+/** Where the character of a player (`players.id`) was when last saved, and how it looked. */
 export interface SavedCharacter {
   playerId: number;
   layer: number;
   /** Feet position, in tiles. */
   x: number;
   y: number;
+  skin: Skin;
 }
 
 /**
