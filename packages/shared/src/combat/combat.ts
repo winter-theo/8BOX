@@ -7,6 +7,9 @@ import { heldStack, type Inventory } from '../inventory/inventory';
 import type { Facing } from '../sim/movement';
 import { inSafeZone, type SafeZone } from '../world/safeZone';
 
+/** The combat settings (`COMBAT`), widened so that tests can pass others. */
+export type CombatConfig = { readonly [K in keyof typeof COMBAT]: number };
+
 /** What a hit does with what the player holds. */
 export interface Weapon {
   /** In HP. */
@@ -40,7 +43,7 @@ const FACING_VECTOR: Readonly<Record<Facing, readonly [number, number]>> = {
 export function heldWeapon(
   inventory: Inventory,
   content: Content,
-  config: Pick<typeof COMBAT, 'unarmedDamage' | 'unarmedCooldownMs'> = COMBAT,
+  config: Pick<CombatConfig, 'unarmedDamage' | 'unarmedCooldownMs'> = COMBAT,
 ): Weapon | undefined {
   const held = heldStack(inventory);
   if (!held) {
@@ -58,7 +61,7 @@ export function hitZone(
   x: number,
   y: number,
   facing: Facing,
-  config: Pick<typeof COMBAT, 'hitRangeTiles' | 'hitWidthTiles'> = COMBAT,
+  config: Pick<CombatConfig, 'hitRangeTiles' | 'hitWidthTiles'> = COMBAT,
 ): Box {
   const [dx, dy] = FACING_VECTOR[facing];
   const half = config.hitWidthTiles / 2;
@@ -100,7 +103,7 @@ export function attackReady(
 /** The push of a hit toward the facing of the attacker, in tiles. */
 export function knockback(
   facing: Facing,
-  config: Pick<typeof COMBAT, 'knockbackTiles'> = COMBAT,
+  config: Pick<CombatConfig, 'knockbackTiles'> = COMBAT,
 ): { dx: number; dy: number } {
   const [dx, dy] = FACING_VECTOR[facing];
   return { dx: dx * config.knockbackTiles, dy: dy * config.knockbackTiles };

@@ -6,7 +6,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ### Étape 22 : Combat façon Zelda et PvP (branche `step/22-combat-pvp`)
 - [x] Shared : arme en main, zone de coup, cadence, PvP et zone sûre, recul, action `attack`, messages `swing` et
   `damaged` (protocole 17), cause de mort `hit`, i18n, tests
-- [ ] Serveur : événements `entity.damaged` et `player.killed`, module `combat` (coups, cadence, recul,
+- [x] Serveur : événements `entity.damaged` et `player.killed`, module `combat` (coups, cadence, recul,
   invulnérabilité, usure, PvP refusé en zone sûre, envois), tests
 - [ ] Client : balayage immédiat, clignotement, chiffres de dégâts, choix Frapper/Utiliser, tests
 - [ ] Clôture (historique, roadmap, PR)

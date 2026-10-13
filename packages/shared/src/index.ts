@@ -50,6 +50,7 @@ export {
   attackAction,
   attackReady,
   type Box,
+  type CombatConfig,
   combatActions,
   heldWeapon,
   hitZone,
