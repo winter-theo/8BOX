@@ -1,4 +1,4 @@
-import { ADMIN_ACTIONS, REPORT_STATUSES, type ReportContextLine } from '@8box/shared';
+import { ADMIN_ACTIONS, DEFAULT_SKIN, REPORT_STATUSES, type ReportContextLine } from '@8box/shared';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -141,5 +141,7 @@ export const characters = pgTable('characters', {
   equipment: jsonb('equipment').notNull().default({}),
   /** Where the character comes back after death (step 20); null = the world spawn. */
   spawnPoint: jsonb('spawn_point'),
+  /** Skin picked by the player (`PLAYER.skins`). */
+  skin: text('skin').notNull().default(DEFAULT_SKIN),
   updatedAt: updatedAt(),
 });

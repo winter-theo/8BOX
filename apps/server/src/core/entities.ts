@@ -1,4 +1,4 @@
-import { chunkCoord, type EntityAnim, type EntityKind, type Facing } from '@8box/shared';
+import { chunkCoord, type EntityAnim, type EntityKind, type Facing, type Skin } from '@8box/shared';
 import type { EventBus } from './events';
 import { type ChunkRef, type Position, SpatialIndex } from './spatial';
 
@@ -22,6 +22,8 @@ export interface Components {
   facing: Facing;
   /** How clients draw it: walking while it moves. */
   anim: EntityAnim;
+  /** Look of a player character, picked by its player. */
+  skin: Skin;
   /** `seq` of the last movement input applied (player entities). */
   inputAck: number;
 }

@@ -209,6 +209,12 @@
       "fr": "Français",
       "en": "English"
     },
+    "skin": {
+      "label": "Apparence",
+      "theo": "Theo",
+      "cat": "Chat",
+      "freddy": "Freddy"
+    },
     "mobile": {
       "joystick": "Joystick de déplacement",
       "use": "Frapper",

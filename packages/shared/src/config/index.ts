@@ -19,6 +19,7 @@ import { VIEW } from './view';
 import { WORLD } from './world';
 import { WORLDGEN } from './worldgen';
 
+export { DEFAULT_SKIN, isSkin, type Skin } from './player';
 export { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from './units';
 export {
   ADMIN,

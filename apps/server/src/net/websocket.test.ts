@@ -22,6 +22,7 @@ const joinModule: GameModule = {
       session.player = {
         entity: ctx.entities.create('player'),
         name: session.name ?? '?',
+        skin: 'theo',
         position: { layer: 0, x: 0.5, y: 0.5 },
       };
     });

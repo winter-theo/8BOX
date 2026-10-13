@@ -1,10 +1,19 @@
-import { type EntityAnim, type EntityKind, type EntityState, type Facing, NET } from '@8box/shared';
+import {
+  type EntityAnim,
+  type EntityKind,
+  type EntityState,
+  type Facing,
+  NET,
+  type Skin,
+} from '@8box/shared';
 
 /** What Phaser draws for an entity seen through snapshots. */
 export interface RemoteView {
   id: number;
   kind: EntityKind;
   name: string | undefined;
+  /** Players: how they look, once a snapshot told it. */
+  skin: Skin | undefined;
   /** Feet position, in tiles. */
   x: number;
   y: number;
@@ -25,6 +34,7 @@ interface Remote {
   id: number;
   kind: EntityKind;
   name: string | undefined;
+  skin: Skin | undefined;
   samples: Sample[];
 }
 
@@ -72,11 +82,20 @@ export class RemoteEntities {
     for (const state of states) {
       let remote = this.entities.get(state.id);
       if (!remote) {
-        remote = { id: state.id, kind: state.kind, name: state.name, samples: [] };
+        remote = {
+          id: state.id,
+          kind: state.kind,
+          name: state.name,
+          skin: state.skin,
+          samples: [],
+        };
         this.entities.set(state.id, remote);
       }
       if (state.name !== undefined) {
         remote.name = state.name;
+      }
+      if (state.skin !== undefined) {
+        remote.skin = state.skin;
       }
       const { x, y, facing, anim } = state;
       remote.samples.push({ time, x, y, facing, anim });
@@ -99,6 +118,7 @@ export class RemoteEntities {
           id: remote.id,
           kind: remote.kind,
           name: remote.name,
+          skin: remote.skin,
           x: sample.x,
           y: sample.y,
           facing: sample.facing,

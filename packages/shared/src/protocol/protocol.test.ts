@@ -17,6 +17,7 @@ const clientMessages: ClientMessage[] = [
   { t: 'hello', version: PROTOCOL_VERSION },
   { t: 'hello', version: PROTOCOL_VERSION, token: 'eyJhbGciOi.payload.signature' },
   { t: 'setName', name: 'Ana' },
+  { t: 'setSkin', skin: 'cat' },
   { t: 'ping', time: 123456.789 },
   { t: 'input', seq: 12, dir: 3 },
   { t: 'viewport', w: 1280, h: 720, zoom: 4 },
@@ -30,7 +31,7 @@ const clientMessages: ClientMessage[] = [
 const serverMessages: ServerMessage[] = [
   {
     t: 'welcome',
-    you: { entity: 7, name: 'Ana_42', position: { layer: 0, x: 512.5, y: 512.5 } },
+    you: { entity: 7, name: 'Ana_42', skin: 'freddy', position: { layer: 0, x: 512.5, y: 512.5 } },
     tick: 1200,
   },
   { t: 'chunkUnload', layer: 0, cx: 3, cy: 4 },
@@ -81,6 +82,7 @@ describe('parseClientMessage', () => {
     ['wrong field type', encode({ t: 'ping', time: 'now' })],
     ['extra field', encode({ t: 'input', seq: 1, dir: 0, speed: 99 })],
     ['no type', encode({ version: 1 })],
+    ['unknown skin', encode({ t: 'setSkin', skin: 'dragon' })],
   ];
 
   it.each(invalid)('rejects %s without throwing', (_label, data) => {

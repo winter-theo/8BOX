@@ -5,6 +5,7 @@ import { debugModule } from './debug';
 import { movementModule } from './movement';
 import { persistenceModule } from './persistence';
 import { playersModule } from './players';
+import { skinsModule } from './skins';
 import { snapshotsModule } from './snapshots';
 
 /** Every module of the game server. They are initialized in dependency order. */
@@ -15,5 +16,6 @@ export const MODULES: readonly GameModule[] = [
   snapshotsModule,
   persistenceModule,
   chatModule,
+  skinsModule,
   debugModule,
 ];

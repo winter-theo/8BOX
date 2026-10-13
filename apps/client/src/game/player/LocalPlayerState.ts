@@ -1,4 +1,4 @@
-import type { Facing, MovementWorld } from '@8box/shared';
+import type { Facing, MovementWorld, Skin } from '@8box/shared';
 import { Prediction } from './Prediction';
 import { type Point, SmoothMotion } from './SmoothMotion';
 
@@ -11,6 +11,7 @@ export interface LocalView {
   y: number;
   facing: Facing;
   moving: boolean;
+  skin: Skin;
 }
 
 /**
@@ -21,6 +22,8 @@ export class LocalPlayerState {
   private readonly prediction: Prediction;
   private readonly motion: SmoothMotion;
   private moving = false;
+  /** As the server last told it. */
+  skin: Skin;
 
   constructor(
     readonly entity: number,
@@ -29,7 +32,9 @@ export class LocalPlayerState {
     private readonly world: MovementWorld,
     /** Duration of one input, in ms (one server tick). */
     stepMs: number,
+    skin: Skin,
   ) {
+    this.skin = skin;
     this.prediction = new Prediction({ x: start.x, y: start.y, facing: 'down' }, stepMs / 1000);
     this.motion = new SmoothMotion(start, stepMs);
   }
@@ -49,6 +54,7 @@ export class LocalPlayerState {
 
   view(now: number): LocalView {
     const { x, y } = this.motion.position(now);
-    return { entity: this.entity, x, y, facing: this.prediction.state.facing, moving: this.moving };
+    const { entity, moving, skin } = this;
+    return { entity, x, y, facing: this.prediction.state.facing, moving, skin };
   }
 }

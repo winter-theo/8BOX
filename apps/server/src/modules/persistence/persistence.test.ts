@@ -56,7 +56,13 @@ describe('persistence module', () => {
     await persistence.flush();
 
     const playerId = client.session.account?.playerId ?? -1;
-    expect(store.characters.get(playerId)).toEqual({ playerId, layer: 0, x: 10.5, y: 20.25 });
+    expect(store.characters.get(playerId)).toEqual({
+      playerId,
+      layer: 0,
+      x: 10.5,
+      y: 20.25,
+      skin: 'theo',
+    });
   });
 
   it('saves everything left on shutdown', async () => {

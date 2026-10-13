@@ -13,6 +13,7 @@ import { MobileControls } from './mobile/MobileControls';
 import { RotatePhone } from './mobile/RotatePhone';
 import { PhaserGame } from './PhaserGame';
 import { RejectedScreen } from './RejectedScreen';
+import { SkinSelect } from './SkinSelect';
 import { useMediaQuery } from './useMediaQuery';
 import { useTouchMode } from './useTouchMode';
 
@@ -35,6 +36,7 @@ export function App() {
       <div className="top-right">
         {CLERK_PUBLISHABLE_KEY ? <ClerkAdminLink /> : import.meta.env.DEV && <DevAdminLink />}
         {CLERK_PUBLISHABLE_KEY && <SignOutButton />}
+        {status === 'online' && <SkinSelect />}
         <LanguageSelect />
       </div>
       {CLERK_PUBLISHABLE_KEY && <ClerkAutoConnect />}

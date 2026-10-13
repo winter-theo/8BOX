@@ -44,6 +44,16 @@ describe('RemoteEntities', () => {
     });
   });
 
+  it('keeps the skin of a player until a snapshot changes it', () => {
+    const remotes = new RemoteEntities(TICK_MS, DELAY_MS);
+    remotes.update(0, [bob(0, { name: 'Bob', skin: 'cat' })], [], 0);
+    remotes.update(1, [bob(1)], [], TICK_MS);
+    expect(remotes.views(TICK_MS)[0]?.skin).toBe('cat');
+
+    remotes.update(2, [bob(2, { skin: 'freddy' })], [], 2 * TICK_MS);
+    expect(remotes.views(2 * TICK_MS)[0]?.skin).toBe('freddy');
+  });
+
   it('moves evenly although snapshots arrive with jitter', () => {
     const remotes = new RemoteEntities(TICK_MS, DELAY_MS);
     const jitter = [0, 25, 5, 40, 10, 0, 30, 15, 20, 5, 35];

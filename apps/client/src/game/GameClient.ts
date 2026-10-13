@@ -9,6 +9,7 @@ import {
   NET,
   PROTOCOL_VERSION,
   type ServerMessage,
+  type Skin,
   VIEW,
 } from '@8box/shared';
 import { clearChat, receiveChatLine, receiveChatNotice } from '../store/chat';
@@ -132,6 +133,11 @@ export class GameClient {
     this.send({ t: 'setName', name });
   }
 
+  /** The skin the player picked: shown once the server confirms it (next snapshot). */
+  setSkin(skin: Skin): void {
+    this.send({ t: 'setSkin', skin });
+  }
+
   /** Sends a chat line: said nearby, a command (`/msg`…), or a private message to `to`. */
   say(text: string, to?: string): void {
     this.send({ t: 'chat', text, ...(to !== undefined && { to }) });
@@ -207,11 +213,15 @@ export class GameClient {
   private handle(message: ServerMessage): void {
     switch (message.t) {
       case 'welcome': {
-        const { entity, name, position } = message.you;
+        const { entity, name, skin, position } = message.you;
         this.attempt = 0;
         this.name = name;
         this.online = true;
-        useSessionStore.setState({ status: 'online', player: { entity, name }, account: null });
+        useSessionStore.setState({
+          status: 'online',
+          player: { entity, name, skin },
+          account: null,
+        });
         if (this.view) {
           this.send({ t: 'viewport', ...this.view });
         }
@@ -220,6 +230,7 @@ export class GameClient {
           position,
           this.movementWorld(position.layer),
           NET.clientInputIntervalMs,
+          skin,
         );
         this.startPing();
         this.startInputs();
@@ -227,6 +238,9 @@ export class GameClient {
       }
       case 'snapshot':
         this.local?.snapshot(message.ackSeq, message.you, this.now());
+        if (message.you.skin !== undefined) {
+          this.showOwnSkin(message.you.skin);
+        }
         this.remotes.update(message.tick, message.entities, message.gone, this.now());
         this.syncUiSoon();
         return;
@@ -289,6 +303,16 @@ export class GameClient {
       return;
     }
     this.retryLater();
+  }
+
+  private showOwnSkin(skin: Skin): void {
+    if (this.local) {
+      this.local.skin = skin;
+    }
+    const player = useSessionStore.getState().player;
+    if (player && player.skin !== skin) {
+      useSessionStore.setState({ player: { ...player, skin } });
+    }
   }
 
   /** Connects again after a growing delay. */

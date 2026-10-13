@@ -237,13 +237,40 @@ const woodenDoor = pixelSprite(WOOD, [
   },
 ]);
 
-const CHARACTER: Legend = { h: P.soilDark, s: P.skin, o: P.ink, c: P.water, p: P.ink };
+/**
+ * A frame of a character skin drawn by the author, facing right (flipped to face left): its body (the
+ * first 7 rows), then the feet of the frame.
+ */
+const skinFrame = (legend: Legend, body: readonly string[]) => (feet: string) =>
+  pixelSprite(legend, [{ weight: 1, rows: [...body, feet] }]);
 
-const HEAD = ['..hhhh..', '.hhhhhh.', '.hhssos.', '..ssss..'];
+/** Theo: navy hair and trousers, grey shoes. */
+const theoFrame = skinFrame({ o: P.black, n: P.navy, c: P.peach, g: P.slate }, [
+  '..oooo..',
+  '.onnnno.',
+  '.onccco.',
+  '.ococoo.',
+  '.occcco.',
+  'ocooooco',
+  'oonnnnoo',
+]);
 
-/** One frame of a character facing right (flipped to face left): head, then body and legs. */
-const characterFrame = (body: readonly string[]) =>
-  pixelSprite(CHARACTER, [{ weight: 1, rows: [...HEAD, ...body] }]);
+/** A white cat with a rainbow collar. */
+const catFrame = skinFrame(
+  { o: P.black, w: P.white, p: P.pink, n: P.silver, r: P.orange, b: P.sky, y: P.yellow },
+  ['.oo.oo..', '.owoowo.', '.owwwwo.', '.owowoo.', '.opwnwo.', 'owoooowo', 'oorbyroo'],
+);
+
+/** Freddy: brown, in a dark hat. */
+const freddyFrame = skinFrame({ o: P.black, n: P.navy, d: P.brownDark, b: P.brown }, [
+  '..oooo..',
+  'oonnnnoo',
+  'odoooodo',
+  '.ododoo.',
+  '.odbbbo.',
+  'odoooodo',
+  'oodbbdoo',
+]);
 
 /** Placeholders of the objects and characters, by sprite id. */
 export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
@@ -253,7 +280,14 @@ export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.flowers': flowers,
   'obj.wooden_wall': woodenWall,
   'obj.wooden_door': woodenDoor,
-  'char.default.idle': characterFrame(['.cccccc.', 's.cccc.s', '..pppp..', '..p..p..']),
-  'char.default.walk1': characterFrame(['.cccccs.', 's.cccc..', '..pppp..', '.pp..pp.']),
-  'char.default.walk2': characterFrame(['.cccccc.', '.scccs..', '..pppp..', '...pp...']),
+  // Only the feet move: apart at rest, then striding and together in turn.
+  'char.theo.idle': theoFrame('.ogoogo.'),
+  'char.theo.walk1': theoFrame('ogo..ogo'),
+  'char.theo.walk2': theoFrame('..oggo..'),
+  'char.cat.idle': catFrame('.owoowo.'),
+  'char.cat.walk1': catFrame('owo..owo'),
+  'char.cat.walk2': catFrame('..owwo..'),
+  'char.freddy.idle': freddyFrame('.odoodo.'),
+  'char.freddy.walk1': freddyFrame('odo..odo'),
+  'char.freddy.walk2': freddyFrame('..oddo..'),
 };

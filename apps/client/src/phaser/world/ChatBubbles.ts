@@ -2,8 +2,8 @@ import { CHAT } from '@8box/shared';
 import * as Phaser from 'phaser';
 import { bubbleText } from './bubbleText';
 
-/** Room kept above a head for the name label, in world pixels. */
-const NAME_LABEL_PX = 10;
+/** Room kept above a head for the name label, in CSS pixels. */
+const NAME_LABEL_CSS_PX = 18;
 
 /** Where a sprite is drawn: anchored at the middle of its feet, in world pixels. */
 interface SpriteBox {
@@ -75,7 +75,7 @@ export class ChatBubbles {
       bubble.element.hidden = !sprite;
       if (sprite) {
         const x = (sprite.x - view.x) * camera.zoom + camera.x;
-        const y = (sprite.y - sprite.height - NAME_LABEL_PX - view.y) * camera.zoom + camera.y;
+        const y = (sprite.y - sprite.height - view.y) * camera.zoom + camera.y - NAME_LABEL_CSS_PX;
         bubble.element.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
       }
     }
