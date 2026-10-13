@@ -3,7 +3,16 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 15 : Interactions : visée, action, menu (branche `step/15-interactions`)
+- [ ] Shared : registre d'actions (`actions/`), « Ramasser » et « Examiner », portée et case visée, protocole
+  (`action`, réponses du serveur), config, i18n, tests (visée, filtrage `canPerform`, priorités).
+- [ ] Serveur : registre des `perform` (`ctx.actions`), module `interaction` (portée, `canPerform`, délai, actions
+  qui durent annulées si le joueur bouge), « Ramasser » dans le module inventaire, « Examiner », tests (refus hors
+  de portée).
+- [ ] Client : visée (case devant, souris à portée) et surbrillance, E et bouton Action, menu d'actions (clic droit,
+  appui long) avec raisons, barre de progression, « Utiliser l'objet en main » (Espace, clic gauche, bouton
+  Frapper), tests.
+- [ ] Clôture : critères vérifiés, journal, feuille de route, PR.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
