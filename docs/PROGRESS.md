@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 ### Étape 15 : Interactions : visée, action, menu (branche `step/15-interactions`)
-- [ ] Shared : registre d'actions (`actions/`), « Ramasser » et « Examiner », portée et case visée, protocole
+- [x] Shared : registre d'actions (`actions/`), « Ramasser » et « Examiner », portée et case visée, protocole
   (`action`, réponses du serveur), config, i18n, tests (visée, filtrage `canPerform`, priorités).
 - [ ] Serveur : registre des `perform` (`ctx.actions`), module `interaction` (portée, `canPerform`, délai, actions
   qui durent annulées si le joueur bouge), « Ramasser » dans le module inventaire, « Examiner », tests (refus hors

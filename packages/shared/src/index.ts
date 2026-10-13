@@ -1,3 +1,31 @@
+export {
+  type ActionCheck,
+  type ActionContext,
+  type ActionDef,
+  type ActionOption,
+  type ActionReason,
+  ActionRegistry,
+  type ActionSubject,
+  type ActionTarget,
+  type ActionTargetKind,
+  type Actor,
+  actionApplies,
+  listActions,
+  mainAction,
+  targetOf,
+  tileThing,
+  useAction,
+} from './actions/actions';
+export {
+  aimedTile,
+  distanceToTile,
+  FACING_STEP,
+  facingTile,
+  subjectInReach,
+  type TilePoint,
+  tileInReach,
+} from './actions/aim';
+export { baseActions, examineAction, pickUpAction } from './actions/base';
 export * from './config/index';
 export { baseContent } from './content/base';
 export {

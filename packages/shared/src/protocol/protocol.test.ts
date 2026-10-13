@@ -32,6 +32,9 @@ const clientMessages: ClientMessage[] = [
   { t: 'invDrop', from: 2 },
   { t: 'invDrop', from: 'purse', count: 150 },
   { t: 'devGive', item: 'base:oak_log', count: 20 },
+  { t: 'action', id: 'examine', target: { kind: 'tile', x: 511, y: 513 } },
+  { t: 'action', id: 'pickUp', target: { kind: 'entity', id: 42 } },
+  { t: 'action', id: 'eat', target: { kind: 'self' } },
 ];
 
 const serverMessages: ServerMessage[] = [
@@ -63,6 +66,11 @@ const serverMessages: ServerMessage[] = [
     purse: 250,
     selected: 2,
   },
+  { t: 'action', id: 'pickUp', outcome: 'done' },
+  { t: 'action', id: 'chop', outcome: 'started', durationMs: 1500 },
+  { t: 'action', id: 'pickUp', outcome: 'refused', reason: 'outOfReach' },
+  { t: 'examined', thing: 'base:apple', count: 3 },
+  { t: 'examined', player: 'Bob' },
 ];
 
 describe('codec', () => {
@@ -101,6 +109,19 @@ describe('parseClientMessage', () => {
     ['negative count', encode({ t: 'invMove', from: 0, to: 1, count: -3 })],
     ['fractional count', encode({ t: 'invDrop', from: 0, count: 1.5 })],
     ['bad item id', encode({ t: 'devGive', item: 'oak log', count: 1 })],
+    ['action without target', encode({ t: 'action', id: 'examine' })],
+    ['empty action id', encode({ t: 'action', id: '', target: { kind: 'self' } })],
+    ['action id too long', encode({ t: 'action', id: 'a'.repeat(65), target: { kind: 'self' } })],
+    ['unknown target kind', encode({ t: 'action', id: 'examine', target: { kind: 'sky' } })],
+    [
+      'fractional tile',
+      encode({ t: 'action', id: 'examine', target: { kind: 'tile', x: 1.5, y: 2 } }),
+    ],
+    [
+      'tile outside the layer',
+      encode({ t: 'action', id: 'examine', target: { kind: 'tile', x: -1, y: 2 } }),
+    ],
+    ['entity id zero', encode({ t: 'action', id: 'pickUp', target: { kind: 'entity', id: 0 } })],
   ];
 
   it.each(invalid)('rejects %s without throwing', (_label, data) => {

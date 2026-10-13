@@ -206,7 +206,7 @@
       "give": "Give myself",
       "giveItem": "Item",
       "giveCount": "Count",
-      "longPress": "tile {{x}}, {{y}}"
+      "actionControls": "E: action · right click: action menu · Space or click: use the item in hand"
     },
     "inventory": {
       "title": "Inventory",
@@ -236,6 +236,26 @@
       "theo": "Theo",
       "cat": "Cat",
       "freddy": "Freddy"
+    },
+    "actions": {
+      "menu": "Actions",
+      "close": "Close the menu",
+      "pickUp": "Pick up ({{name}})",
+      "examine": "Examine ({{name}})",
+      "examined": "It is: {{name}}.",
+      "examinedPile": "It is: {{name}} × {{count}}.",
+      "examinedPlayer": "It is {{name}}.",
+      "nothing": "Nothing to do here.",
+      "progress": "Action in progress",
+      "cancelled": "Action cancelled.",
+      "reason": {
+        "outOfReach": "Too far",
+        "inventoryFull": "Inventory full",
+        "busy": "Another action is in progress",
+        "tooSoon": "Not so fast",
+        "gone": "It is no longer there",
+        "unavailable": "Not possible here"
+      }
     },
     "mobile": {
       "joystick": "Movement joystick",

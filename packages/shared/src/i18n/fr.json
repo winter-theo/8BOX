@@ -206,7 +206,7 @@
       "give": "Se donner",
       "giveItem": "Objet",
       "giveCount": "Nombre",
-      "longPress": "case {{x}}, {{y}}"
+      "actionControls": "E : action · clic droit : menu d'actions · Espace ou clic : utiliser l'objet en main"
     },
     "inventory": {
       "title": "Inventaire",
@@ -236,6 +236,26 @@
       "theo": "Theo",
       "cat": "Chat",
       "freddy": "Freddy"
+    },
+    "actions": {
+      "menu": "Actions",
+      "close": "Fermer le menu",
+      "pickUp": "Ramasser ({{name}})",
+      "examine": "Examiner ({{name}})",
+      "examined": "C'est : {{name}}.",
+      "examinedPile": "C'est : {{name}} × {{count}}.",
+      "examinedPlayer": "C'est {{name}}.",
+      "nothing": "Rien à faire ici.",
+      "progress": "Action en cours",
+      "cancelled": "Action annulée.",
+      "reason": {
+        "outOfReach": "Trop loin",
+        "inventoryFull": "Inventaire plein",
+        "busy": "Une autre action est en cours",
+        "tooSoon": "Pas si vite",
+        "gone": "Ce n'est plus là",
+        "unavailable": "Impossible ici"
+      }
     },
     "mobile": {
       "joystick": "Joystick de déplacement",
