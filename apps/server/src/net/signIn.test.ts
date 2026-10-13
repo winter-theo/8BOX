@@ -36,6 +36,7 @@ function setup() {
       status: 'pending',
       role: 'player',
       banReason: null,
+      mutedUntil: null,
       ...changes,
     });
   return { ctx, store, connect, existing };

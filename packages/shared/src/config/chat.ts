@@ -43,6 +43,7 @@ export const CHAT = {
       'salaud',
       'salopard*',
       'pute',
+      'fils-de-pute',
       'putain*',
       'encule*',
       'enfoire*',
