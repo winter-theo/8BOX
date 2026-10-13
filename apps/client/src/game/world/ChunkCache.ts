@@ -6,6 +6,7 @@ import {
   decodeChunk,
   EMPTY_TILE,
   localCoord,
+  metaAfterObjectChange,
   type TileDef,
   type TileMeta,
   type TileMetaMessage,
@@ -67,7 +68,7 @@ export class ChunkCache {
 
   /**
    * Applies a `tileUpdate`; ignored for a chunk that is not loaded. A new object (or none) clears the
-   * meta of its tile, as on the server.
+   * meta of its tile but its room, as on the server.
    */
   applyTileUpdate({ layer, x, y, slot, tile }: TileUpdateMessage): void {
     const chunk = this.get(layer, chunkCoord(x), chunkCoord(y));
@@ -77,7 +78,12 @@ export class ChunkCache {
     const index = tileIndex(localCoord(x), localCoord(y));
     chunk.slot(slot)[index] = tile === null ? EMPTY_TILE : tileCode(this.content, tile);
     if (slot === 'object') {
-      chunk.meta.delete(index);
+      const kept = metaAfterObjectChange(chunk.meta.get(index));
+      if (kept) {
+        chunk.meta.set(index, kept);
+      } else {
+        chunk.meta.delete(index);
+      }
     }
     this.bus.emit('tile.changed', { chunk, x, y, slot });
   }
