@@ -35,7 +35,7 @@ function ChatButton() {
 
 /**
  * Touch controls in landscape: the joystick on the left, the buttons (and the chat) on the right, room
- * kept at the bottom for the item bar (step 14), and a full screen button.
+ * kept at the bottom for the item bar (`Hotbar`), and a full screen button.
  */
 export function MobileControls() {
   const { t } = useTranslation();
@@ -56,7 +56,6 @@ export function MobileControls() {
         ))}
         {!chatOpen && <ChatButton />}
       </div>
-      <div className="hotbar-slot" aria-hidden="true" />
       <FullscreenButton />
     </div>
   );

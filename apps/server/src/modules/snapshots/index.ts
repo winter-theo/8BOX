@@ -32,6 +32,10 @@ function entityState(ctx: ServerContext, id: EntityId, known: Known): EntityStat
   if (skin !== undefined && (!known.has(id) || known.get(id) !== skin)) {
     state.skin = skin;
   }
+  const item = ctx.entities.get(id, 'groundItem')?.item;
+  if (item !== undefined) {
+    state.item = item;
+  }
   return state;
 }
 
@@ -39,7 +43,7 @@ function entityState(ctx: ServerContext, id: EntityId, known: Known): EntityStat
  * Every tick, each client gets a `snapshot`: its own player (position, facing, last input applied) and
  * the entities in the chunks it receives, never the others. An entity's name comes the first time the
  * client sees it, its skin then and whenever it changes (its own skin too), and `gone` lists the
- * entities that left its view.
+ * entities that left its view. Items on the ground come once, with their item id.
  */
 export const snapshotsModule: GameModule = {
   id: 'snapshots',
@@ -74,6 +78,11 @@ export const snapshotsModule: GameModule = {
             self,
           );
           for (const id of ids) {
+            // Items on the ground never move: sent once, then only their removal (`gone`).
+            if (previous.has(id) && ctx.entities.has(id, 'groundItem')) {
+              visible.set(id, undefined);
+              continue;
+            }
             const state = entityState(ctx, id, previous);
             if (state) {
               entities.push(state);

@@ -29,6 +29,12 @@ export const NET = {
     chat: { max: 10, windowMs: 10 * SECOND_MS },
     /** Dev mode only. */
     debugCamera: { max: 20, windowMs: SECOND_MS },
+    /** Hotbar picks: the mouse wheel can scroll fast. */
+    invSelect: { max: 30, windowMs: SECOND_MS },
+    invMove: { max: 20, windowMs: SECOND_MS },
+    invDrop: { max: 10, windowMs: SECOND_MS },
+    /** Dev mode only. */
+    devGive: { max: 5, windowMs: SECOND_MS },
   },
   /** Interval of the client movement inputs, in ms (one per server tick). */
   clientInputIntervalMs: 50,

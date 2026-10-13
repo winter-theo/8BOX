@@ -1,7 +1,7 @@
-import type { Skin } from '@8box/shared';
+import type { Skin, StoredInventory } from '@8box/shared';
 import type { SavedChunk } from '../world/chunkSerializer';
 
-/** Where the character of a player (`players.id`) was when last saved, and how it looked. */
+/** Where the character of a player (`players.id`) was when last saved, how it looked, what it carried. */
 export interface SavedCharacter {
   playerId: number;
   layer: number;
@@ -9,6 +9,7 @@ export interface SavedCharacter {
   x: number;
   y: number;
   skin: Skin;
+  inventory: StoredInventory;
 }
 
 /**

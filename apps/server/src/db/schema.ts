@@ -125,7 +125,7 @@ export const reports = pgTable(
   (table) => [index('reports_status_created_at_idx').on(table.status, table.createdAt)],
 );
 
-/** The character of each player: where it is (survival and inventory columns come with their steps). */
+/** The character of each player: where it is, its look and inventory (survival columns come with step 20). */
 export const characters = pgTable('characters', {
   playerId: integer('player_id')
     .primaryKey()
@@ -137,8 +137,12 @@ export const characters = pgTable('characters', {
   /** Hit points and hunger (step 20); null until then. */
   hp: integer('hp'),
   hunger: integer('hunger'),
+  /** Slots (hotbar, then bag): `{ item, count }` or null, as `StoredInventory.slots`. */
   inventory: jsonb('inventory').notNull().default([]),
+  /** Worn items by equipment slot: `{ bag: { item, count } }`. */
   equipment: jsonb('equipment').notNull().default({}),
+  /** Gold in the purse, in coins. */
+  purse: integer('purse').notNull().default(0),
   /** Where the character comes back after death (step 20); null = the world spawn. */
   spawnPoint: jsonb('spawn_point'),
   /** Skin picked by the player (`PLAYER.skins`). */

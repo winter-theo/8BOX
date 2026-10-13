@@ -5,14 +5,18 @@ import {
   createMovementWorld,
   decodeServerMessage,
   encodeMessage,
+  heldStack,
+  INVENTORY,
   type MovementWorld,
   NET,
   PROTOCOL_VERSION,
   type ServerMessage,
   type Skin,
+  type SlotRef,
   VIEW,
 } from '@8box/shared';
 import { clearChat, receiveChatLine, receiveChatNotice } from '../store/chat';
+import { toggleInventoryWindow, useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
 import type { ClientEventBus } from './events';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
@@ -77,6 +81,8 @@ export class GameClient {
   /** Name of the player of this connection, once welcomed. */
   private name: string | undefined;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Hotbar slot last asked for, until the server confirms it (the wheel may ask again before). */
+  private requestedSlot: number | undefined;
 
   constructor(private readonly options: GameClientOptions) {
     this.createSocket = options.createSocket ?? ((url) => new WebSocket(url));
@@ -103,6 +109,15 @@ export class GameClient {
       }
     });
     bus.on('debug.stats', (stats) => useSessionStore.setState({ debugStats: stats }));
+    bus.on('hotbar.select', ({ slot }) => this.selectSlot(slot));
+    bus.on('hotbar.scroll', ({ delta }) => this.scrollHotbar(delta));
+    bus.on('inventory.dropHeld', ({ one }) => this.dropHeld(one));
+    bus.on('inventory.toggle', () => toggleInventoryWindow());
+    bus.on('input.button', ({ button }) => {
+      if (button === 'inventory') {
+        toggleInventoryWindow();
+      }
+    });
     for (const event of ['chunk.loaded', 'chunk.unloaded'] as const) {
       bus.on(event, () => this.syncUiSoon());
     }
@@ -136,6 +151,44 @@ export class GameClient {
   /** The skin the player picked: shown once the server confirms it (next snapshot). */
   setSkin(skin: Skin): void {
     this.send({ t: 'setSkin', skin });
+  }
+
+  /** Puts the item of a hotbar slot in hand: shown once the server confirms it. */
+  selectSlot(slot: number): void {
+    if (this.online && Number.isInteger(slot) && slot >= 0 && slot < INVENTORY.mainSlots) {
+      this.requestedSlot = slot;
+      this.send({ t: 'invSelect', slot });
+    }
+  }
+
+  /** Next (`delta` > 0) or previous hotbar slot, going round. */
+  scrollHotbar(delta: number): void {
+    const current = this.requestedSlot ?? useInventoryStore.getState().inventory?.selected ?? 0;
+    const slots = INVENTORY.mainSlots;
+    this.selectSlot((((current + Math.sign(delta)) % slots) + slots) % slots);
+  }
+
+  /** Moves items in the inventory (the whole stack when `count` is absent). */
+  moveItems(from: SlotRef, to: SlotRef, count?: number): void {
+    this.send({ t: 'invMove', from, to, ...(count !== undefined && { count }) });
+  }
+
+  /** Drops items on the ground in front of the player (the whole stack when `count` is absent). */
+  dropItems(from: SlotRef | 'purse', count?: number): void {
+    this.send({ t: 'invDrop', from, ...(count !== undefined && { count }) });
+  }
+
+  /** Drops the stack in hand, or one of its items. */
+  dropHeld(one: boolean): void {
+    const inventory = useInventoryStore.getState().inventory;
+    if (inventory && heldStack(inventory)) {
+      this.dropItems(inventory.selected, one ? 1 : undefined);
+    }
+  }
+
+  /** Dev mode only: gives items to oneself. */
+  devGive(item: string, count: number): void {
+    this.send({ t: 'devGive', item, count });
   }
 
   /** Sends a chat line: said nearby, a command (`/msg`…), or a private message to `to`. */
@@ -289,6 +342,14 @@ export class GameClient {
       case 'chatNotice':
         receiveChatNotice(message);
         return;
+      case 'inventory': {
+        const { t: _type, ...inventory } = message;
+        if (inventory.selected === this.requestedSlot) {
+          this.requestedSlot = undefined;
+        }
+        useInventoryStore.setState({ inventory });
+        return;
+      }
     }
   }
 
@@ -327,6 +388,8 @@ export class GameClient {
   private goOffline(): void {
     this.online = false;
     this.local = undefined;
+    this.requestedSlot = undefined;
+    useInventoryStore.setState({ inventory: null, open: false });
     this.remotes.clear();
     this.stopPing();
     clearInterval(this.inputTimer);

@@ -8,7 +8,7 @@ describe('base content', () => {
 
     expect(contentSizes(content)).toEqual({
       tiles: 9,
-      items: 7,
+      items: 8,
       recipes: 0,
       loot: 0,
       creatures: 0,

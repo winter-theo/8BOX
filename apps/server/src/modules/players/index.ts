@@ -1,6 +1,7 @@
 import { DEFAULT_SKIN, LAYER } from '@8box/shared';
 import type { Position } from '../../core/entities';
 import type { GameModule, ServerContext } from '../../core/module';
+import { characterToSave } from '../../persistence/characterToSave';
 import type { World } from '../../world/World';
 
 /** Where new players appear: the spawn clearing of the surface. */
@@ -20,7 +21,8 @@ function savedPosition(ctx: ServerContext, playerId: number): Position | undefin
 /**
  * Turns authenticated sessions into player entities, and removes them when the session ends. A player
  * comes back where their character was saved (on leaving, and every 60 s by the persistence module),
- * with its skin; a new player starts at the spawn with the default skin.
+ * with its skin (and its inventory, given by the inventory module); a new player starts at the spawn
+ * with the default skin.
  */
 export const playersModule: GameModule = {
   id: 'players',
@@ -49,11 +51,9 @@ export const playersModule: GameModule = {
       if (!player) {
         return;
       }
-      const position = ctx.entities.get(player.entity, 'position');
-      const playerId = session.account?.playerId;
-      if (position && playerId !== undefined) {
-        const skin = ctx.entities.get(player.entity, 'skin') ?? DEFAULT_SKIN;
-        ctx.persistence.saveCharacter({ playerId, ...position, skin });
+      const character = characterToSave(ctx, player.entity);
+      if (character) {
+        ctx.persistence.saveCharacter(character);
       }
       ctx.entities.remove(player.entity);
       ctx.log.info(

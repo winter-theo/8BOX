@@ -43,6 +43,13 @@
       "when": 1791857477354,
       "tag": "0005_rename_skins",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791858437449,
+      "tag": "0006_character_purse",
+      "breakpoints": true
     }
   ]
 }

@@ -26,6 +26,12 @@ const clientMessages: ClientMessage[] = [
   { t: 'chat', text: 'Salut !' },
   { t: 'chat', text: '/msg Ana_42 on se retrouve au lac ?' },
   { t: 'chat', text: 'oui', to: 'Ana_42' },
+  { t: 'invSelect', slot: 9 },
+  { t: 'invMove', from: 0, to: 'bag' },
+  { t: 'invMove', from: 12, to: 3, count: 5 },
+  { t: 'invDrop', from: 2 },
+  { t: 'invDrop', from: 'purse', count: 150 },
+  { t: 'devGive', item: 'base:oak_log', count: 20 },
 ];
 
 const serverMessages: ServerMessage[] = [
@@ -50,6 +56,13 @@ const serverMessages: ServerMessage[] = [
   { t: 'chat', channel: 'private', from: 'Ana_42', to: 'Bob', text: 'oui', ts: 1_760_000_000_000 },
   { t: 'chatNotice', notice: 'muted', until: 1_760_000_600_000 },
   { t: 'chatNotice', notice: 'unknownPlayer', name: 'Bob' },
+  {
+    t: 'inventory',
+    slots: [{ item: 'base:oak_log', count: 12 }, null, { item: 'base:berries', count: 3 }],
+    equipment: { bag: { item: 'base:fiber_bag', count: 1 } },
+    purse: 250,
+    selected: 2,
+  },
 ];
 
 describe('codec', () => {
@@ -83,6 +96,11 @@ describe('parseClientMessage', () => {
     ['extra field', encode({ t: 'input', seq: 1, dir: 0, speed: 99 })],
     ['no type', encode({ version: 1 })],
     ['unknown skin', encode({ t: 'setSkin', skin: 'dragon' })],
+    ['hotbar slot out of range', encode({ t: 'invSelect', slot: 10 })],
+    ['unknown equipment slot', encode({ t: 'invMove', from: 0, to: 'feet' })],
+    ['negative count', encode({ t: 'invMove', from: 0, to: 1, count: -3 })],
+    ['fractional count', encode({ t: 'invDrop', from: 0, count: 1.5 })],
+    ['bad item id', encode({ t: 'devGive', item: 'oak log', count: 1 })],
   ];
 
   it.each(invalid)('rejects %s without throwing', (_label, data) => {

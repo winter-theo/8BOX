@@ -860,3 +860,238 @@ html.page-admin #root {
   top: -6px;
   right: -6px;
 }
+
+/* Inventory: the item bar at the bottom, the window, and the stack being dragged. */
+.hotbar {
+  --slot-size: 44px;
+  --hotbar-width: calc(10 * var(--slot-size) + 9 * 4px + 8px);
+  position: fixed;
+  z-index: 1;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  /* Centered, but to the right of the chat (420 px wide, bottom left) on narrower screens. */
+  left: max(50%, calc(436px + var(--hotbar-width) / 2));
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 45%);
+  transform: translateX(-50%);
+}
+
+.app--touch .hotbar {
+  --slot-size: min(48px, calc((100vw - 32px - 44px) / 10));
+  bottom: max(4px, env(safe-area-inset-bottom));
+  left: 50%;
+}
+
+.item-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--slot-size, 44px);
+  height: var(--slot-size, 44px);
+  box-sizing: border-box;
+  border: 2px solid rgb(255 255 255 / 18%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 35%);
+  color: rgb(255 255 255 / 45%);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.item-slot--selected {
+  border-color: #f4d35e;
+  background: rgb(244 211 94 / 20%);
+}
+
+.item-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.item-count {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000;
+  pointer-events: none;
+}
+
+.item-slot-key {
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  font-size: 10px;
+}
+
+.item-slot-hint {
+  font-size: 9px;
+  text-align: center;
+}
+
+.inventory {
+  --slot-size: 44px;
+  position: fixed;
+  z-index: 5;
+  top: calc(50% - 36px);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 88px);
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgb(20 20 28 / 92%);
+  color: #f4f4f4;
+  transform: translate(-50%, -50%);
+}
+
+.app--touch .inventory {
+  --slot-size: min(48px, calc((100vw - 120px) / 10));
+}
+
+.inventory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inventory-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.inventory-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 12%);
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.app--touch .inventory-close {
+  width: 48px;
+  height: 48px;
+}
+
+.inventory-body {
+  display: flex;
+  gap: 12px;
+}
+
+.inventory-equipment,
+.inventory-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inventory-slots {
+  gap: 8px;
+}
+
+.inventory-row {
+  display: flex;
+  gap: 4px;
+}
+
+.inventory-hint {
+  margin: 0;
+  color: rgb(255 255 255 / 60%);
+  font-size: 12px;
+}
+
+.purse {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.purse-amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+}
+
+.purse-amount .item-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.purse-drop,
+.dev-give {
+  display: flex;
+  gap: 4px;
+}
+
+.purse-drop input,
+.purse-drop button,
+.dev-give input,
+.dev-give select,
+.dev-give button {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 45%);
+  color: inherit;
+  font: inherit;
+}
+
+.purse-drop input {
+  width: 13em;
+}
+
+.app--touch .purse-drop input,
+.app--touch .purse-drop button {
+  min-height: 48px;
+}
+
+.dev-give {
+  margin-top: 4px;
+  pointer-events: auto;
+}
+
+.dev-give input[type="number"] {
+  width: 5em;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  pointer-events: none;
+}
+
+.inventory fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}

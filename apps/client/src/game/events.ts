@@ -23,6 +23,14 @@ export type ClientEvents = {
   'debugCamera.moved': { at: { x: number; y: number } | null };
   /** Game → Phaser: a player nearby said something: a bubble above the head of `entity`. */
   'chat.said': { entity: number; text: string };
+  /** Keyboard → game: put the item of hotbar slot `slot` (0 to 9) in hand. */
+  'hotbar.select': { slot: number };
+  /** Mouse wheel → game: next (`delta` > 0) or previous hotbar slot. */
+  'hotbar.scroll': { delta: number };
+  /** Keyboard → game: drop the stack in hand, or `one` of its items. */
+  'inventory.dropHeld': { one: boolean };
+  /** Keyboard → UI: open or close the inventory window. */
+  'inventory.toggle': Record<string, never>;
   /** Phaser → game (dev mode): frames per second, camera zoom and object sprites shown. */
   'debug.stats': DebugStats;
 };

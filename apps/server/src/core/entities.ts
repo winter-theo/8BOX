@@ -1,4 +1,12 @@
-import { chunkCoord, type EntityAnim, type EntityKind, type Facing, type Skin } from '@8box/shared';
+import {
+  chunkCoord,
+  type EntityAnim,
+  type EntityKind,
+  type Facing,
+  type Inventory,
+  type ItemStack,
+  type Skin,
+} from '@8box/shared';
 import type { EventBus } from './events';
 import { type ChunkRef, type Position, SpatialIndex } from './spatial';
 
@@ -26,6 +34,19 @@ export interface Components {
   skin: Skin;
   /** `seq` of the last movement input applied (player entities). */
   inputAck: number;
+  /** What a player character carries. Never mutate it in place: `set` a new one (shared operations). */
+  inventory: Inventory;
+  /** Items lying on the ground. */
+  groundItem: GroundItem;
+}
+
+/** A pile of items on the ground (`groundItem` entities). */
+export interface GroundItem extends ItemStack {
+  /** Player (`players.id`) who dropped it, who cannot pick it up before `dropperWaitUntilTick`. */
+  droppedBy?: number;
+  dropperWaitUntilTick: number;
+  /** Tick when it disappears. */
+  expiresAtTick: number;
 }
 
 /**

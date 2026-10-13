@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { CHAT } from '../config/chat';
+import { INVENTORY } from '../config/inventory';
 import { PLAYER, type Skin } from '../config/player';
 import { VIEW } from '../config/view';
-import type { TileSlot } from '../content/schemas';
+import { contentIdSchema, equipSlotSchema, type TileSlot } from '../content/schemas';
+import type { Inventory } from '../inventory/inventory';
 import type { NameError } from '../moderation/names';
 import { type Facing, MAX_DIRECTION } from '../sim/movement';
 import type { TileMeta } from '../world/chunk';
@@ -79,6 +81,53 @@ export const chatSchema = z.strictObject({
   to: z.string().min(1).max(PLAYER.nameMaxLength).optional(),
 });
 
+/** A place of the inventory: a slot index (hotbar first, then the bag), or an equipment slot. */
+const slotRefSchema = z.union([
+  z
+    .number()
+    .int()
+    .min(0)
+    .max(INVENTORY.maxSlots - 1),
+  equipSlotSchema,
+]);
+
+/** A number of items; the server checks it against what the place holds. */
+const itemCountSchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
+
+/** The hotbar slot whose item is in hand. */
+export const invSelectSchema = z.strictObject({
+  t: z.literal('invSelect'),
+  slot: z
+    .number()
+    .int()
+    .min(0)
+    .max(INVENTORY.mainSlots - 1),
+});
+
+/** Moves items in the inventory: to an empty place, onto the same item, or swaps two stacks. */
+export const invMoveSchema = z.strictObject({
+  t: z.literal('invMove'),
+  from: slotRefSchema,
+  to: slotRefSchema,
+  /** Items to move; the whole stack when absent. */
+  count: itemCountSchema.optional(),
+});
+
+/** Drops items on the ground, in front of the player. */
+export const invDropSchema = z.strictObject({
+  t: z.literal('invDrop'),
+  from: z.union([slotRefSchema, z.literal('purse')]),
+  /** Items to drop; the whole stack (or purse) when absent. */
+  count: itemCountSchema.optional(),
+});
+
+/** Dev mode only, until the `/give` command (step 24): gives items to oneself. */
+export const devGiveSchema = z.strictObject({
+  t: z.literal('devGive'),
+  item: contentIdSchema,
+  count: itemCountSchema,
+});
+
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
   setNameSchema,
@@ -88,6 +137,10 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   viewportSchema,
   debugCameraSchema,
   chatSchema,
+  invSelectSchema,
+  invMoveSchema,
+  invDropSchema,
+  devGiveSchema,
 ]);
 
 export type HelloMessage = z.output<typeof helloSchema>;
@@ -98,6 +151,10 @@ export type InputMessage = z.output<typeof inputSchema>;
 export type ViewportMessage = z.output<typeof viewportSchema>;
 export type DebugCameraMessage = z.output<typeof debugCameraSchema>;
 export type ChatMessage = z.output<typeof chatSchema>;
+export type InvSelectMessage = z.output<typeof invSelectSchema>;
+export type InvMoveMessage = z.output<typeof invMoveSchema>;
+export type InvDropMessage = z.output<typeof invDropSchema>;
+export type DevGiveMessage = z.output<typeof devGiveSchema>;
 export type ClientMessage = z.output<typeof clientMessageSchema>;
 export type ClientMessageType = ClientMessage['t'];
 
@@ -110,6 +167,10 @@ export const CLIENT_MESSAGE_TYPES = [
   'viewport',
   'debugCamera',
   'chat',
+  'invSelect',
+  'invMove',
+  'invDrop',
+  'devGive',
 ] as const satisfies readonly ClientMessageType[];
 
 // ─── Server → client: typed, not validated by the client ─────────────────────
@@ -232,6 +293,11 @@ export interface EntityState {
   name?: string;
   /** Skin (players): in the first snapshot where the entity appears for this client, and when it changes. */
   skin?: Skin;
+  /**
+   * Item id (items on the ground), only in the first snapshot where the entity appears for this client:
+   * they never move, so they are not sent again until `gone`.
+   */
+  item?: string;
 }
 
 /** Sent every tick: the player of this session and the entities in its chunks. */
@@ -308,6 +374,11 @@ export interface ChatNoticeMessage {
   until?: number;
 }
 
+/** The whole inventory of this session's player, sent when it joins and after each change. */
+export interface InventoryMessage extends Inventory {
+  t: 'inventory';
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -318,7 +389,8 @@ export type ServerMessage =
   | ChunkUnloadMessage
   | TileUpdateMessage
   | ChatLineMessage
-  | ChatNoticeMessage;
+  | ChatNoticeMessage
+  | InventoryMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

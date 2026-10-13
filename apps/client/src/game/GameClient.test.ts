@@ -4,6 +4,7 @@ import {
   type ClientMessage,
   encodeChunk,
   encodeMessage,
+  type Inventory,
   loadContent,
   NET,
   PLAYER,
@@ -14,6 +15,7 @@ import {
 } from '@8box/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useChatStore } from '../store/chat';
+import { useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
 import type { ClientEvents } from './events';
 import { GameClient, toWebSocketUrl } from './GameClient';
@@ -519,5 +521,95 @@ describe('GameClient accounts', () => {
 
     client.disconnect();
     expect(useChatStore.getState().entries).toEqual([]);
+  });
+});
+
+describe('GameClient inventory', () => {
+  const LOG = { item: 'base:oak_log', count: 12 };
+
+  function online() {
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    lastSocket().open();
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
+      tick: 1,
+    });
+    return client;
+  }
+
+  function receiveInventory(selected: number, slots: Inventory['slots'] = [LOG]) {
+    lastSocket().receive({ t: 'inventory', slots, equipment: {}, purse: 40, selected });
+  }
+
+  const sentOf = (type: ClientMessage['t']) =>
+    lastSocket().sent.filter((message) => message.t === type);
+
+  beforeEach(() => {
+    useInventoryStore.setState({ inventory: null, open: false });
+  });
+
+  it('shows the inventory the server sends, and forgets it when the connection drops', () => {
+    online();
+    receiveInventory(0);
+    expect(useInventoryStore.getState().inventory).toEqual({
+      slots: [LOG],
+      equipment: {},
+      purse: 40,
+      selected: 0,
+    });
+
+    lastSocket().drop();
+    expect(useInventoryStore.getState().inventory).toBeNull();
+  });
+
+  it('asks for hotbar slots by key and wheel; the wheel goes on from the last slot asked', () => {
+    online();
+    receiveInventory(0);
+
+    bus.emit('hotbar.select', { slot: 9 });
+    bus.emit('hotbar.scroll', { delta: 100 });
+    bus.emit('hotbar.scroll', { delta: 100 });
+    expect(sentOf('invSelect')).toEqual([
+      { t: 'invSelect', slot: 9 },
+      { t: 'invSelect', slot: 0 },
+      { t: 'invSelect', slot: 1 },
+    ]);
+    // Nothing changes before the server confirms.
+    expect(useInventoryStore.getState().inventory?.selected).toBe(0);
+
+    receiveInventory(1);
+    bus.emit('hotbar.scroll', { delta: -3 });
+    expect(sentOf('invSelect').at(-1)).toEqual({ t: 'invSelect', slot: 0 });
+  });
+
+  it('drops the stack in hand (or one item), moves and gives items, and opens the window', () => {
+    const client = online();
+    receiveInventory(1, [LOG, null]);
+
+    bus.emit('inventory.dropHeld', { one: false });
+    expect(sentOf('invDrop')).toEqual([]);
+    receiveInventory(0, [LOG, null]);
+    bus.emit('inventory.dropHeld', { one: false });
+    bus.emit('inventory.dropHeld', { one: true });
+    client.moveItems(0, 'bag');
+    client.moveItems(0, 1, 6);
+    client.dropItems('purse', 5);
+    client.devGive('base:apple', 3);
+
+    expect(lastSocket().sent.slice(-6)).toEqual([
+      { t: 'invDrop', from: 0 },
+      { t: 'invDrop', from: 0, count: 1 },
+      { t: 'invMove', from: 0, to: 'bag' },
+      { t: 'invMove', from: 0, to: 1, count: 6 },
+      { t: 'invDrop', from: 'purse', count: 5 },
+      { t: 'devGive', item: 'base:apple', count: 3 },
+    ]);
+
+    bus.emit('inventory.toggle', {});
+    expect(useInventoryStore.getState().open).toBe(true);
+    bus.emit('input.button', { button: 'inventory' });
+    expect(useInventoryStore.getState().open).toBe(false);
   });
 });

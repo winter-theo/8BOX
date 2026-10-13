@@ -1,3 +1,4 @@
+import { emptyInventory } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import type { SavedChunk } from '../world/chunkSerializer';
 import type { SavedCharacter } from './store';
@@ -134,9 +135,30 @@ describe('WriteQueue', () => {
   it('writes each character once, with its latest position', async () => {
     const { queue, characters } = setup();
 
-    queue.saveCharacter({ playerId: 1, layer: 0, x: 1, y: 1, skin: 'theo' });
-    queue.saveCharacter({ playerId: 1, layer: 0, x: 2, y: 1, skin: 'theo' });
-    queue.saveCharacter({ playerId: 2, layer: 0, x: 5, y: 5, skin: 'theo' });
+    queue.saveCharacter({
+      playerId: 1,
+      layer: 0,
+      x: 1,
+      y: 1,
+      skin: 'theo',
+      inventory: emptyInventory(),
+    });
+    queue.saveCharacter({
+      playerId: 1,
+      layer: 0,
+      x: 2,
+      y: 1,
+      skin: 'theo',
+      inventory: emptyInventory(),
+    });
+    queue.saveCharacter({
+      playerId: 2,
+      layer: 0,
+      x: 5,
+      y: 5,
+      skin: 'theo',
+      inventory: emptyInventory(),
+    });
     await queue.flush();
 
     expect(characters).toEqual([['1@2', '2@5']]);
