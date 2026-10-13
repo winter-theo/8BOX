@@ -1,4 +1,4 @@
-import * as Phaser from 'phaser';
+import type * as Phaser from 'phaser';
 import type { ClientEventBus } from '../game/events';
 
 /** Hotbar keys by physical position (`KeyboardEvent.code`): 1 to 9, then 0 for the tenth slot. */
@@ -27,6 +27,8 @@ const TOGGLE_CODE = 'KeyI';
 const DROP_CODE = 'KeyQ';
 /** Shortest time between two hotbar steps of the wheel: a touchpad sends many small scrolls, in ms. */
 const WHEEL_STEP_MS = 60;
+/** `Phaser.Input.Events.POINTER_WHEEL` (only types are imported from Phaser here: testable without it). */
+const WHEEL_EVENT = 'wheel';
 
 /**
  * Keys and wheel of the inventory: pick a hotbar slot (1 to 0, wheel), open the inventory (I), drop
@@ -40,12 +42,12 @@ export class InventoryKeys {
     private readonly bus: ClientEventBus,
   ) {
     window.addEventListener('keydown', this.onKeyDown);
-    scene.input.on(Phaser.Input.Events.POINTER_WHEEL, this.onWheel);
+    scene.input.on(WHEEL_EVENT, this.onWheel);
   }
 
   destroy(): void {
     window.removeEventListener('keydown', this.onKeyDown);
-    this.scene.input.off(Phaser.Input.Events.POINTER_WHEEL, this.onWheel);
+    this.scene.input.off(WHEEL_EVENT, this.onWheel);
   }
 
   private readonly onKeyDown = (event: KeyboardEvent) => {

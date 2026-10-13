@@ -54,6 +54,17 @@ describe('RemoteEntities', () => {
     expect(remotes.views(2 * TICK_MS)[0]?.skin).toBe('freddy');
   });
 
+  it('keeps the item of an item on the ground, sent once, until it is gone', () => {
+    const remotes = new RemoteEntities(TICK_MS, DELAY_MS);
+    const pile = { id: 9, kind: 'groundItem', x: 3.5, y: 4, facing: 'down', anim: 'idle' } as const;
+    remotes.update(0, [{ ...pile, item: 'base:apple' }], [], 0);
+    remotes.update(5, [], [], 5 * TICK_MS);
+    expect(remotes.views(5 * TICK_MS)).toMatchObject([{ id: 9, item: 'base:apple', x: 3.5, y: 4 }]);
+
+    remotes.update(6, [], [9], 6 * TICK_MS);
+    expect(remotes.views(6 * TICK_MS)).toEqual([]);
+  });
+
   it('moves evenly although snapshots arrive with jitter', () => {
     const remotes = new RemoteEntities(TICK_MS, DELAY_MS);
     const jitter = [0, 25, 5, 40, 10, 0, 30, 15, 20, 5, 35];
