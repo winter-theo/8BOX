@@ -3,17 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 13 : Chat, filtre et signalements (branche `step/13-chat`)
-- [x] Protocole 7 et `shared` : messages `chat` et `chatNotice`, listes de mots FR et EN (config), tests.
-- [x] Serveur `modules/chat/` : proximité (16 cases, même couche), privé (`/msg`, `/r`, `to`), 200 caractères,
-  limite de débit, filtre, joueurs mutés ; tests.
-- [x] Base : table `reports`, `muted_until` dans le compte, durée dans le journal (migration) ; commande
-  `/signaler` (et `/report`) avec les 20 derniers messages vus ; tests.
-- [x] API admin : signalements (liste, traiter, classer), muter X minutes, rendre la parole ; tests.
-- [x] Client : panneau de chat (Entrée, historique, onglets Proximité et Privé, bouton sur téléphone), bulles
-  au-dessus des têtes (5 s, texte tronqué), textes FR et EN ; tests.
-- [x] Onglet admin : signalements avec leur contexte, muter et rendre la parole.
-- [ ] Vérification dans le navigateur, clôture.
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -313,8 +303,61 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (12) Corrigé au passage (étape 11) : le bandeau de connexion affichait la clé brute `ui.connection.account` sur les
   écrans de compte ; il est caché sur ces écrans. Les écrans « refusé » et « banni » n'ont toujours pas de bouton :
   il faut recharger la page.
+- (13) Filtre de mots : listes FR et EN dans `CHAT.filteredWords`. Comparaison sans casse ni accents, chiffres lus
+  comme des lettres (« c0n »), lettres répétées (« fuuuck ») ; mot entier avec pluriel, ou préfixe (`fuck*`). Un mot
+  avec traits d'union compte pour un seul (« pique-nique » passe, d'où `fils-de-pute` dans la liste). Limite connue :
+  « con » masque aussi l'anglais « cons » (pros and cons).
+- (13) Limites de débit du chat :
+  - module de chat : 5 lignes par 10 s, avec un message « Doucement ! » ;
+  - réseau : 10 par 10 s, au-delà les messages sont ignorés (garde-fou contre le flood).
+- (13) Commandes lues par le serveur : `/msg`, `/r`, `/signaler` (et `/report` en anglais). Dans l'onglet Privé, une
+  ligne sans commande répond au dernier interlocuteur privé (champ `to`). `/r` répond au dernier joueur qui t'a
+  écrit en privé (retenu par le serveur pendant son exécution).
+- (13) Nouveau message serveur `chatNotice` (muet, trop rapide, trop long, joueur introuvable, commande inconnue,
+  signalement envoyé…), traduit par le client. Protocole 7.
+- (13) Contexte d'un signalement : les 20 dernières lignes reçues par le signaleur (proximité, y compris les siennes,
+  et privé), telles qu'il les a vues (filtrées). Gardées en mémoire : perdues au redémarrage du serveur. On peut
+  signaler un joueur hors ligne, et un joueur muet peut signaler.
+- (13) Mute :
+  - joueurs approuvés seulement ; durées proposées 5 min, 15 min, 1 h, 1 jour (`ADMIN.mutePresetsMinutes`) ;
+  - l'API accepte de 1 min à 30 jours ; la durée est écrite dans le journal (colonne `minutes`) ;
+  - effet immédiat, mais le joueur ne l'apprend qu'en essayant de parler (pas de message au moment du mute).
+- (13) Traiter ou classer un signalement n'est pas écrit dans le journal : le signalement garde qui l'a traité et
+  quand. Le badge du lien « Admin » compte aussi les signalements ouverts.
+- (13) Bulles en HTML par-dessus le jeu, pas en police pixel (il faut les accents et la ponctuation) : 60 caractères
+  au plus, 5 s, pas de bulle pour les messages privés.
+- (13) Historique du chat : 100 lignes dans le client, perdues au rechargement de la page.
+- (13) Les infos de dev passent en haut à gauche sur ordinateur : le chat prend le coin en bas à gauche.
+- (13) Téléphone : le bouton « Chat » ouvre le panneau sur l'onglet qui a des messages non lus. Il faut toucher le
+  champ pour faire venir le clavier.
 
 ## Historique
+
+### 2026-10-12 — Étape 13 : Chat, filtre et signalements ✅
+- Protocole 7 : `chat { text, to? }` ; le serveur répond `chat { channel, from, to?, entity?, text, ts }` et
+  `chatNotice`.
+- Serveur, module `chat` :
+  - proximité (16 cases, même couche) et privé à toute distance (`/msg`, `/r`, onglet Privé) ;
+  - 200 caractères, limite de débit, filtre FR et EN, joueurs muets bloqués avec un message ;
+  - `/signaler <pseudo> <raison>` : table `reports` avec les 20 dernières lignes vues.
+- API admin : signalements (liste, traiter, classer) ; muter X minutes, rendre la parole (`muted_until`, journal).
+  Migration `0003_reports_and_mutes`.
+- Client : panneau de chat (Entrée pour écrire, onglets Proximité et Privé avec non-lus, bouton « Chat » sur
+  téléphone), bulles au-dessus des têtes ; onglet admin avec les signalements et leur contexte, muter, rendre la
+  parole. Textes FR et EN.
+- Tests :
+  - rayon de proximité, couche, privé, `/r`, filtre, longueur, limite de débit, mute, signalements et contexte ;
+  - API admin des mutes et des signalements, mute en direct ;
+  - client : store du chat, `GameClient`, texte des bulles.
+- Vérifié dans le navigateur avec Ana, Bob et DevAdmin :
+  - mot filtré ; message trop loin non reçu ; privé à distance et réponse depuis l'onglet Privé ;
+  - signalement visible dans l'onglet admin avec son contexte, puis traité ;
+  - mute (Bob bloqué avec le message), puis parole rendue ;
+  - panneau sur téléphone (812 × 375).
+- Écarts par rapport à la fiche :
+  - message `chatNotice` en plus ; commande `/report` en plus de `/signaler` ;
+  - colonne `minutes` dans le journal ; badge admin avec les signalements ouverts ;
+  - réglages du mute dans `ADMIN` (onglet admin) plutôt que dans `CHAT`.
 
 ### 2026-10-12 — Étape 12 : Onglet admin v1 ✅
 - Serveur : table `admin_audit` (migration), service `Admin` et API `/admin/*` protégée (jeton Clerk + rôle
