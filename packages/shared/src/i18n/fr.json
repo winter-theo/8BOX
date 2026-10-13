@@ -243,6 +243,7 @@
       "close": "Fermer le menu",
       "pickUp": "Ramasser ({{name}})",
       "examine": "Examiner ({{name}})",
+      "attack": "Frapper",
       "cut": "Couper ({{name}})",
       "uproot": "Arracher ({{name}})",
       "pick": "Cueillir ({{name}})",
@@ -284,6 +285,7 @@
     "death": {
       "title": "Vous êtes mort",
       "starvation": "Mort de faim.",
+      "hit": "Tué au combat.",
       "respawn": "Réapparaître"
     },
     "crafting": {

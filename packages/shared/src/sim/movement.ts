@@ -169,3 +169,20 @@ export function stepMovement(
   const y = sweep(state.y, x, dy * distance, half, (a, b) => world.isSolid(b, a));
   return { x, y, facing };
 }
+
+/**
+ * Pushes the square box of a character (centered on its feet) by (`dx`, `dy`) tiles, one axis after the
+ * other, stopping flush against solid tiles: the knockback of a hit. Its facing does not change.
+ */
+export function pushMover(
+  state: MoverState,
+  dx: number,
+  dy: number,
+  world: MovementWorld,
+  hitboxSizeTiles: number = PLAYER.hitboxSizeTiles,
+): MoverState {
+  const half = hitboxSizeTiles / 2;
+  const x = sweep(state.x, state.y, dx, half, (a, b) => world.isSolid(a, b));
+  const y = sweep(state.y, x, dy, half, (a, b) => world.isSolid(b, a));
+  return { ...state, x, y };
+}

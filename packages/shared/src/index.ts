@@ -46,6 +46,18 @@ export {
   uprootAction,
 } from './actions/harvest';
 export { eatAction, heldFood, survivalActions } from './actions/survival';
+export {
+  attackAction,
+  attackReady,
+  type Box,
+  combatActions,
+  heldWeapon,
+  hitZone,
+  inHitZone,
+  knockback,
+  pvpAllowed,
+  type Weapon,
+} from './combat/combat';
 export * from './config/index';
 export { baseContent } from './content/base';
 export {
@@ -133,6 +145,7 @@ export {
   type MovementInput,
   type MovementWorld,
   type MoverState,
+  pushMover,
   stepMovement,
 } from './sim/movement';
 export {

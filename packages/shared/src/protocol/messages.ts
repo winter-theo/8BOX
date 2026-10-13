@@ -537,8 +537,8 @@ export interface ItemBrokenMessage {
   item: string;
 }
 
-/** What can kill a character (`vitals.dead`); combat (step 22) adds hits. */
-export type DamageCause = 'starvation';
+/** What can kill a character (`vitals.dead`): hunger, or the hits of another character. */
+export type DamageCause = 'starvation' | 'hit';
 
 /** Health and hunger of this player, sent when they change; `dead` until they respawn. */
 export interface VitalsMessage {
@@ -563,6 +563,26 @@ export interface TimeMessage {
   scale: number;
 }
 
+/**
+ * A character nearby swung what it holds toward its facing (sent to the players who follow its chunk,
+ * except the one who attacked: their client drew it at once).
+ */
+export interface SwingMessage {
+  t: 'swing';
+  entity: number;
+  facing: Facing;
+  /** The weapon item; none bare-handed. */
+  item?: string;
+}
+
+/** A character nearby lost health (a hit, hunger): it blinks and shows the amount. */
+export interface DamagedMessage {
+  t: 'damaged';
+  entity: number;
+  /** In HP. */
+  amount: number;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -582,7 +602,9 @@ export type ServerMessage =
   | CraftStateMessage
   | ItemBrokenMessage
   | VitalsMessage
-  | TimeMessage;
+  | TimeMessage
+  | SwingMessage
+  | DamagedMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

@@ -1,3 +1,4 @@
+import { combatActions } from '../combat/combat';
 import { INTERACTION } from '../config/interaction';
 import { addItems } from '../inventory/inventory';
 import { type ActionDef, tileThing } from './actions';
@@ -40,4 +41,5 @@ export const baseActions: readonly ActionDef[] = [
   ...harvestActions,
   ...buildingActions,
   ...survivalActions,
+  ...combatActions,
 ];

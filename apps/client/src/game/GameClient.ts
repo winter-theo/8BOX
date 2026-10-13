@@ -1,5 +1,6 @@
 import {
   type ActionTarget,
+  attackAction,
   type ClientMessage,
   type Content,
   CRAFTING,
@@ -318,7 +319,7 @@ export class GameClient {
     const options = [
       ...this.interaction.selfOptions(),
       ...(aim ? this.interaction.optionsAt(aim.x, aim.y) : []),
-    ];
+    ].filter((option) => option.action.id !== attackAction.id);
     const option = heldItemAction(options);
     if (option) {
       this.performAction(option.action.id, option.target);

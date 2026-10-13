@@ -243,6 +243,7 @@
       "close": "Close the menu",
       "pickUp": "Pick up ({{name}})",
       "examine": "Examine ({{name}})",
+      "attack": "Attack",
       "cut": "Cut ({{name}})",
       "uproot": "Uproot ({{name}})",
       "pick": "Pick ({{name}})",
@@ -284,6 +285,7 @@
     "death": {
       "title": "You died",
       "starvation": "Starved to death.",
+      "hit": "Killed in a fight.",
       "respawn": "Respawn"
     },
     "crafting": {
