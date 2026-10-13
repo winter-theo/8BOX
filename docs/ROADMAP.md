@@ -26,7 +26,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 | 16 | [Récolte et zone sûre](steps/16-recolte.md) | 15 | ✅ |
 | 17 | [Craft, établi et outils](steps/17-craft-outils.md) | 16 | ✅ |
 | 18 | [Construction : sols, murs, portes, meubles](steps/18-construction.md) | 17 | ✅ |
-| 19 | [Pièces et toits automatiques](steps/19-toits.md) | 18 | 🟡 |
+| 19 | [Pièces et toits automatiques](steps/19-toits.md) | 18 | ✅ |
 | 20 | [Vie, faim, mort et réapparition](steps/20-survie-mort.md) | 18 | ⬜ |
 | 21 | [Jour, nuit et lumière](steps/21-jour-nuit-lumiere.md) | 18 | ⬜ |
 | 22 | [Combat façon Zelda et PvP](steps/22-combat-pvp.md) | 20 | ⬜ |
