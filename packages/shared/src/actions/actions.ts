@@ -50,6 +50,8 @@ export interface Actor {
   inventory: Inventory;
   /** Admins may break things in the safe zone. */
   admin?: boolean;
+  /** Hunger, in hunger points (eating needs room); unknown when absent. */
+  hunger?: number;
 }
 
 /** Why an action cannot be done; shown in the menu and when the server refuses (`ui.actions.reason.*`). */
@@ -69,7 +71,9 @@ export type ActionReason =
   /** Nothing is broken nor built in the safe zone around the spawn (except by an admin). */
   | 'safeZone'
   /** Something is in the way of what is placed (an object, deep water, a character). */
-  | 'occupied';
+  | 'occupied'
+  /** Eating with a full stomach. */
+  | 'full';
 
 /** Whether an action can be done now; when not, why. */
 export type ActionCheck = { ok: true } | { ok: false; reason: ActionReason };
@@ -99,6 +103,8 @@ export interface ActionDef {
   labelKey: string;
   /** Also chosen by "use the item in hand" (Space, left click, Use button). */
   use?: boolean;
+  /** Takes effort: the player gets hungry faster (`SURVIVAL.actionFatigueMs`). */
+  effort?: boolean;
   /**
    * Whether the action makes sense on this subject, with what the actor holds: when not, it is not
    * listed.

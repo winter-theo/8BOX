@@ -49,6 +49,7 @@ function hitAction(id: HarvestAction): ActionDef {
     priority: INTERACTION.priorities[id],
     labelKey: `ui.actions.${id}`,
     use: true,
+    effort: true,
     appliesTo: (subject, content) => tileTarget(subject, content)?.tile.harvest?.action === id,
     canPerform: notInSafeZone,
   };
@@ -72,6 +73,7 @@ export const pickAction: ActionDef = {
   durationMs: HARVEST.pickDurationMs,
   labelKey: 'ui.actions.pick',
   use: true,
+  effort: true,
   appliesTo: (subject, content) => tileTarget(subject, content)?.tile.pick !== undefined,
   canPerform: () => ({ ok: true }),
 };

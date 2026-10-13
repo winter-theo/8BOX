@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 ### Étape 20 : Vie, faim, mort et réapparition (branche `step/20-survie-mort`)
-- [ ] Shared : logique pure de survie (faim, famine, régénération, fatigue des actions, perte d'or, point de
+- [x] Shared : logique pure de survie (faim, famine, régénération, fatigue des actions, perte d'or, point de
   réapparition), action « Manger », config.
 - [ ] Serveur : module `survival` (composants `health` et `hunger`, `damage`, mort, réapparition, invulnérabilité),
   sauvegarde des PV et de la faim.

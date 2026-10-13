@@ -36,6 +36,7 @@ const clientMessages: ClientMessage[] = [
   { t: 'action', id: 'pickUp', target: { kind: 'entity', id: 42 } },
   { t: 'action', id: 'eat', target: { kind: 'self' } },
   { t: 'craft', recipe: 'base:plank', count: 3 },
+  { t: 'respawn' },
 ];
 
 const serverMessages: ServerMessage[] = [

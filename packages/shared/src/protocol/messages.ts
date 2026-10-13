@@ -172,6 +172,11 @@ export const craftSchema = z.strictObject({
   count: z.number().int().min(1).max(CRAFTING.maxCount),
 });
 
+/** Asks to come back to life (after death): at one's bed, otherwise at the spawn of the world. */
+export const respawnSchema = z.strictObject({
+  t: z.literal('respawn'),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
   setNameSchema,
@@ -187,6 +192,7 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   devGiveSchema,
   actionSchema,
   craftSchema,
+  respawnSchema,
 ]);
 
 export type HelloMessage = z.output<typeof helloSchema>;
@@ -203,6 +209,7 @@ export type InvDropMessage = z.output<typeof invDropSchema>;
 export type DevGiveMessage = z.output<typeof devGiveSchema>;
 export type ActionRequestMessage = z.output<typeof actionSchema>;
 export type CraftRequestMessage = z.output<typeof craftSchema>;
+export type RespawnMessage = z.output<typeof respawnSchema>;
 export type ClientMessage = z.output<typeof clientMessageSchema>;
 export type ClientMessageType = ClientMessage['t'];
 
@@ -221,6 +228,7 @@ export const CLIENT_MESSAGE_TYPES = [
   'devGive',
   'action',
   'craft',
+  'respawn',
 ] as const satisfies readonly ClientMessageType[];
 
 // ─── Server → client: typed, not validated by the client ─────────────────────
@@ -529,6 +537,20 @@ export interface ItemBrokenMessage {
   item: string;
 }
 
+/** What can kill a character (`vitals.dead`); combat (step 22) adds hits. */
+export type DamageCause = 'starvation';
+
+/** Health and hunger of this player, sent when they change; `dead` until they respawn. */
+export interface VitalsMessage {
+  t: 'vitals';
+  /** In HP. */
+  health: number;
+  /** In hunger points. */
+  hunger: number;
+  /** Dead (0 HP), waiting to respawn: what killed them. */
+  dead?: DamageCause;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -546,7 +568,8 @@ export type ServerMessage =
   | ActionStateMessage
   | ExaminedMessage
   | CraftStateMessage
-  | ItemBrokenMessage;
+  | ItemBrokenMessage
+  | VitalsMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

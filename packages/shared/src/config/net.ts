@@ -39,6 +39,8 @@ export const NET = {
     action: { max: 10, windowMs: SECOND_MS },
     /** Crafting requests (each one may ask for many crafts). */
     craft: { max: 5, windowMs: SECOND_MS },
+    /** Coming back to life after death. */
+    respawn: { max: 2, windowMs: SECOND_MS },
   },
   /** Interval of the client movement inputs, in ms (one per server tick). */
   clientInputIntervalMs: 50,
