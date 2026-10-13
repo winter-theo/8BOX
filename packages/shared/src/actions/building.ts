@@ -56,6 +56,7 @@ export const placeAction: ActionDef = {
   priority: INTERACTION.priorities.place,
   labelKey: 'ui.actions.place',
   use: true,
+  effort: true,
   appliesTo: (subject, content, actor) =>
     subject.kind === 'tile' && heldPlaceable(actor, content) !== undefined,
   canPerform: ({ actor, subject, content, safeZone }) => {

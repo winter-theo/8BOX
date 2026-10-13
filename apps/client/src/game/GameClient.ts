@@ -41,6 +41,7 @@ import {
 } from '../store/crafting';
 import { closeInventoryWindow, toggleInventoryWindow, useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
+import { clearSurvival, receiveVitals, useSurvivalStore } from '../store/survival';
 import type { ClientEventBus } from './events';
 import { Interaction } from './Interaction';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
@@ -146,6 +147,7 @@ export class GameClient {
         meta: (layer, x, y) => this.chunks.getMeta(layer, x, y),
         remotes: () => this.remoteViews(),
         admin: () => this.admin,
+        hunger: () => useSurvivalStore.getState().hunger ?? undefined,
       },
       options.content,
     );
@@ -296,12 +298,16 @@ export class GameClient {
   }
 
   /**
-   * Uses the item in hand (Space, left click, Use button) on the aimed tile: the single entry point that
-   * picks the action from what is held. Nothing happens while no action is marked `use` (steps 16 on).
+   * Uses the item in hand (Space, left click, Use button): the single entry point that picks the action
+   * from what is held. Food is eaten (an action on oneself) when the stomach has room; otherwise the
+   * item is used on the aimed tile.
    */
   actWithHeldItem(): void {
     const aim = this.interaction.aimedTile();
-    const options = aim ? this.interaction.optionsAt(aim.x, aim.y) : [];
+    const options = [
+      ...this.interaction.selfOptions(),
+      ...(aim ? this.interaction.optionsAt(aim.x, aim.y) : []),
+    ];
     const option = heldItemAction(options);
     if (option) {
       this.performAction(option.action.id, option.target);
@@ -337,6 +343,13 @@ export class GameClient {
       return;
     }
     useActionsStore.setState({ menu: { x, y, left: screen.x, top: screen.y, entries } });
+  }
+
+  /** Comes back to life after death (the server picks where). */
+  respawn(): void {
+    if (this.online) {
+      this.send({ t: 'respawn' });
+    }
   }
 
   /** Dev mode only: gives items to oneself. */
@@ -505,6 +518,9 @@ export class GameClient {
       case 'chatNotice':
         receiveChatNotice(message);
         return;
+      case 'vitals':
+        receiveVitals(message);
+        return;
       case 'inventory': {
         const { t: _type, ...inventory } = message;
         if (inventory.selected === this.requestedSlot) {
@@ -606,6 +622,7 @@ export class GameClient {
     useInventoryStore.setState({ inventory: null, open: false });
     clearActions();
     clearCrafting();
+    clearSurvival();
     this.remotes.clear();
     this.stopPing();
     clearInterval(this.inputTimer);
@@ -634,15 +651,19 @@ export class GameClient {
     this.inputTimer = setInterval(() => this.sendInput(), NET.clientInputIntervalMs);
   }
 
-  /** Sends the held direction and predicts it; nothing while still and the server knows it. */
+  /**
+   * Sends the held direction and predicts it; nothing while still and the server knows it. A dead
+   * player stands still (the server would not move them).
+   */
   private sendInput(): void {
-    if (this.direction === 0 && this.sentDirection === 0) {
+    const direction = useSurvivalStore.getState().dead === null ? this.direction : 0;
+    if (direction === 0 && this.sentDirection === 0) {
       return;
     }
     const seq = this.inputSeq++;
-    this.send({ t: 'input', seq, dir: this.direction });
-    this.sentDirection = this.direction;
-    this.local?.input(seq, this.direction, this.now());
+    this.send({ t: 'input', seq, dir: direction });
+    this.sentDirection = direction;
+    this.local?.input(seq, direction, this.now());
   }
 
   /** Movement view of the chunks received: a tile not loaded is solid. */

@@ -45,6 +45,7 @@ export {
   tileTarget,
   uprootAction,
 } from './actions/harvest';
+export { eatAction, heldFood, survivalActions } from './actions/survival';
 export * from './config/index';
 export { baseContent } from './content/base';
 export {
@@ -125,6 +126,15 @@ export {
   type MoverState,
   stepMovement,
 } from './sim/movement';
+export {
+  addFatigue,
+  deathGoldLoss,
+  eatFood,
+  freshVitals,
+  type SurvivalConfig,
+  stepVitals,
+  type Vitals,
+} from './survival/survival';
 export { type Listener, TypedEmitter } from './util/events';
 export { createRng, hashCoords, hashSeed, parseSeed, type Rng } from './util/rng';
 export { Chunk, type TileMeta } from './world/chunk';

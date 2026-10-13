@@ -13,6 +13,10 @@ export interface SavedCharacter {
   inventory: StoredInventory;
   /** The bed it last slept in (step 18); absent: the spawn of the world. */
   spawnPoint?: SpawnPoint;
+  /** Hit points (step 20): 0 if it left while dead; absent: full. */
+  health?: number;
+  /** Hunger points (step 20); absent: full. */
+  hunger?: number;
 }
 
 /**

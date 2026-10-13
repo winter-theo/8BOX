@@ -262,14 +262,25 @@
         "gone": "It is no longer there",
         "unavailable": "Not possible here",
         "safeZone": "Not allowed in the safe zone",
-        "occupied": "Something is in the way"
+        "occupied": "Something is in the way",
+        "full": "Not hungry"
       },
       "place": "Place here",
       "openDoor": "Open ({{name}})",
       "closeDoor": "Close ({{name}})",
       "sleep": "Sleep here",
       "respawnSet": "Respawn point saved.",
-      "broken": "Item broken: {{name}}."
+      "broken": "Item broken: {{name}}.",
+      "eat": "Eat"
+    },
+    "vitals": {
+      "health": "Health: {{value}} / {{max}}",
+      "hunger": "Hunger: {{value}} / {{max}}"
+    },
+    "death": {
+      "title": "You died",
+      "starvation": "Starved to death.",
+      "respawn": "Respawn"
     },
     "crafting": {
       "title": "Crafting",

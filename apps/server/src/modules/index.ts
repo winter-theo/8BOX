@@ -12,6 +12,7 @@ import { persistenceModule } from './persistence';
 import { playersModule } from './players';
 import { skinsModule } from './skins';
 import { snapshotsModule } from './snapshots';
+import { survivalModule } from './survival';
 
 /** Every module of the game server. They are initialized in dependency order. */
 export const MODULES: readonly GameModule[] = [
@@ -27,5 +28,6 @@ export const MODULES: readonly GameModule[] = [
   harvestModule,
   craftingModule,
   buildingModule,
+  survivalModule,
   debugModule,
 ];

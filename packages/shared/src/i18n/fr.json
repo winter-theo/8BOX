@@ -262,14 +262,25 @@
         "gone": "Ce n'est plus là",
         "unavailable": "Impossible ici",
         "safeZone": "Interdit dans la zone sûre",
-        "occupied": "La place est prise"
+        "occupied": "La place est prise",
+        "full": "Pas faim"
       },
       "place": "Poser ici",
       "openDoor": "Ouvrir ({{name}})",
       "closeDoor": "Fermer ({{name}})",
       "sleep": "Dormir ici",
       "respawnSet": "Point de réapparition enregistré.",
-      "broken": "Objet brisé : {{name}}."
+      "broken": "Objet brisé : {{name}}.",
+      "eat": "Manger"
+    },
+    "vitals": {
+      "health": "Vie : {{value}} / {{max}}",
+      "hunger": "Faim : {{value}} / {{max}}"
+    },
+    "death": {
+      "title": "Vous êtes mort",
+      "starvation": "Mort de faim.",
+      "respawn": "Réapparaître"
     },
     "crafting": {
       "title": "Fabrication",

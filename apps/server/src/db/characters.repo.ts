@@ -31,10 +31,12 @@ export async function readCharacters(db: Database): Promise<SavedCharacter[]> {
       equipment: characters.equipment,
       purse: characters.purse,
       spawnPoint: characters.spawnPoint,
+      hp: characters.hp,
+      hunger: characters.hunger,
     })
     .from(characters);
   const empty = emptyInventory();
-  return rows.map(({ slots, equipment, purse, spawnPoint, ...row }) => {
+  return rows.map(({ slots, equipment, purse, spawnPoint, hp, hunger, ...row }) => {
     const bed = spawnPointSchema.safeParse(spawnPoint).data;
     return {
       ...row,
@@ -45,12 +47,14 @@ export async function readCharacters(db: Database): Promise<SavedCharacter[]> {
         purse,
       },
       ...(bed && { spawnPoint: bed }),
+      ...(hp !== null && { health: hp }),
+      ...(hunger !== null && { hunger }),
     };
   });
 }
 
 /**
- * Saves the position, skin, inventory and spawn point of characters, and when their players were last
+ * Saves the position, skin, inventory, spawn point, health and hunger of characters, and when their players were last
  * seen.
  */
 export async function writeCharacters(
@@ -58,7 +62,7 @@ export async function writeCharacters(
   saved: readonly SavedCharacter[],
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    for (const { playerId, layer, x, y, skin, inventory, spawnPoint } of saved) {
+    for (const { playerId, layer, x, y, skin, inventory, spawnPoint, health, hunger } of saved) {
       const now = new Date();
       const { slots, equipment, purse } = inventory;
       const values = {
@@ -70,6 +74,8 @@ export async function writeCharacters(
         equipment,
         purse,
         spawnPoint: spawnPoint ?? null,
+        hp: health ?? null,
+        hunger: hunger ?? null,
       };
       await tx.update(players).set({ lastSeenAt: now }).where(eq(players.id, playerId));
       await tx

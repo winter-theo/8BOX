@@ -1,5 +1,6 @@
 import {
   chunkCoord,
+  type DamageCause,
   type EntityAnim,
   type EntityKind,
   type Facing,
@@ -40,6 +41,14 @@ export interface Components {
   spawnPoint: SpawnPoint;
   /** Items lying on the ground. */
   groundItem: GroundItem;
+  /** Hit points (step 20), from 0 to `SURVIVAL.maxHealth`. Never set it to 0 directly: see `damage`. */
+  health: number;
+  /** Hunger points of a player character (step 20), from 0 (starving) to `SURVIVAL.maxHunger`. */
+  hunger: number;
+  /** Dead (0 HP), with what killed it: a player cannot move nor act until they respawn. */
+  dead: DamageCause;
+  /** Tick until which damage is ignored (after respawning). */
+  invulnerableUntilTick: number;
 }
 
 /** A tile of the world: the bed where a player character comes back (`spawnPoint`). */

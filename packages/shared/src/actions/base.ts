@@ -3,6 +3,7 @@ import { addItems } from '../inventory/inventory';
 import { type ActionDef, tileThing } from './actions';
 import { buildingActions } from './building';
 import { harvestActions } from './harvest';
+import { survivalActions } from './survival';
 
 /** Takes a pile of items lying on the ground (as much of it as fits). Performed by the inventory module. */
 export const pickUpAction: ActionDef = {
@@ -38,4 +39,5 @@ export const baseActions: readonly ActionDef[] = [
   examineAction,
   ...harvestActions,
   ...buildingActions,
+  ...survivalActions,
 ];

@@ -1,3 +1,4 @@
+import { HUD_PLACEHOLDERS } from './hudPlaceholders';
 import { ITEM_PLACEHOLDERS } from './itemPlaceholders';
 import { OBJECT_PLACEHOLDERS } from './objectPlaceholders';
 import { PALETTE, type PaletteColor } from './palette';
@@ -597,6 +598,7 @@ const PLACEHOLDERS: Record<string, Placeholder> = {
   'ground.deep_water': deepWater,
   ...OBJECT_PLACEHOLDERS,
   ...ITEM_PLACEHOLDERS,
+  ...HUD_PLACEHOLDERS,
 };
 for (const [id, style] of Object.entries(EDGE_STYLES)) {
   for (const side of SIDES) {

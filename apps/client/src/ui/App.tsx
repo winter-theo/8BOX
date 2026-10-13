@@ -19,6 +19,8 @@ import { RotatePhone } from './mobile/RotatePhone';
 import { PhaserGame } from './PhaserGame';
 import { RejectedScreen } from './RejectedScreen';
 import { SkinSelect } from './SkinSelect';
+import { DeathScreen } from './survival/DeathScreen';
+import { Vitals } from './survival/Vitals';
 import { useMediaQuery } from './useMediaQuery';
 import { useTouchMode } from './useTouchMode';
 
@@ -31,6 +33,7 @@ export function App() {
     <div className={touch ? 'app app--touch' : 'app'}>
       <PhaserGame />
       {touch && status === 'online' && <MobileControls />}
+      {status === 'online' && <Vitals />}
       {status === 'online' && <Hotbar touch={touch} />}
       {status === 'online' && <InventoryWindow touch={touch} />}
       {status === 'online' && <CraftingWindow touch={touch} />}
@@ -38,6 +41,7 @@ export function App() {
       {status === 'online' && <ActionProgress />}
       {status === 'online' && <ActionFeedbackLine />}
       {status === 'online' && <ActionMenu touch={touch} />}
+      {status === 'online' && <DeathScreen />}
       <ConnectionBanner />
       <DevInfo />
       {status === 'idle' && <LoginScreen />}
