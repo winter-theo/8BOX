@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CHAT } from '../config/chat';
 import { PLAYER } from '../config/player';
 import { VIEW } from '../config/view';
 import type { TileSlot } from '../content/schemas';
@@ -61,6 +62,17 @@ export const debugCameraSchema = z.strictObject({
   at: z.strictObject({ x: z.number(), y: z.number() }).nullable(),
 });
 
+/**
+ * A line typed in the chat: said aloud to the players nearby, or a command (`/msg`, `/r`,
+ * `/signaler`…), read by the server.
+ */
+export const chatSchema = z.strictObject({
+  t: z.literal('chat'),
+  text: z.string().max(CHAT.maxLineLength),
+  /** Private message to this player (the Private tab): `text` is then never read as a command. */
+  to: z.string().min(1).max(PLAYER.nameMaxLength).optional(),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
   setNameSchema,
@@ -68,6 +80,7 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   inputSchema,
   viewportSchema,
   debugCameraSchema,
+  chatSchema,
 ]);
 
 export type HelloMessage = z.output<typeof helloSchema>;
@@ -76,6 +89,7 @@ export type PingMessage = z.output<typeof pingSchema>;
 export type InputMessage = z.output<typeof inputSchema>;
 export type ViewportMessage = z.output<typeof viewportSchema>;
 export type DebugCameraMessage = z.output<typeof debugCameraSchema>;
+export type ChatMessage = z.output<typeof chatSchema>;
 export type ClientMessage = z.output<typeof clientMessageSchema>;
 export type ClientMessageType = ClientMessage['t'];
 
@@ -86,6 +100,7 @@ export const CLIENT_MESSAGE_TYPES = [
   'input',
   'viewport',
   'debugCamera',
+  'chat',
 ] as const satisfies readonly ClientMessageType[];
 
 // ─── Server → client: typed, not validated by the client ─────────────────────
@@ -223,6 +238,59 @@ export interface SnapshotMessage {
   gone?: number[];
 }
 
+/** Who hears a chat line: the players nearby, or one player. */
+export type ChatChannel = 'proximity' | 'private';
+
+/** A chat line this player can read (their own lines come back too). */
+export interface ChatLineMessage {
+  t: 'chat';
+  channel: ChatChannel;
+  /** Name of the speaker. */
+  from: string;
+  /** Private line: who it is for (its sender gets a copy). */
+  to?: string;
+  /** Proximity line: the speaker's entity, for the bubble above their head. */
+  entity?: number;
+  /** As filtered by the server. */
+  text: string;
+  /** Server clock when said, in ms since 1970. */
+  ts: number;
+}
+
+/** What the chat tells the player about their own line. */
+export type ChatNotice =
+  /** The admin muted this player: nothing they say is sent (until `until`). */
+  | 'muted'
+  /** Too many lines in a short time: this one is not sent. */
+  | 'tooFast'
+  /** The message is longer than `CHAT.maxMessageLength`. */
+  | 'tooLong'
+  /** No player named `name` is in the game (private line) or exists (report). */
+  | 'unknownPlayer'
+  /** `/r`, but nobody sent a private line to this player yet. */
+  | 'noReplyTarget'
+  /** A private line or a report aimed at oneself. */
+  | 'self'
+  /** A line starting with "/" that is no command. */
+  | 'unknownCommand'
+  /** `/msg` without a name or a message. */
+  | 'msgUsage'
+  /** `/signaler` without a name or a reason. */
+  | 'reportUsage'
+  /** The report against `name` is recorded. */
+  | 'reported'
+  /** The report could not be recorded: try again later. */
+  | 'reportFailed';
+
+export interface ChatNoticeMessage {
+  t: 'chatNotice';
+  notice: ChatNotice;
+  /** The player the notice is about. */
+  name?: string;
+  /** `muted`: end of the mute, in ms since 1970. */
+  until?: number;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -231,7 +299,9 @@ export type ServerMessage =
   | PongMessage
   | ChunkMessage
   | ChunkUnloadMessage
-  | TileUpdateMessage;
+  | TileUpdateMessage
+  | ChatLineMessage
+  | ChatNoticeMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

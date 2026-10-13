@@ -1,5 +1,7 @@
 import { encode } from '@msgpack/msgpack';
 import { describe, expect, it } from 'vitest';
+import { CHAT } from '../config/chat';
+import { PLAYER } from '../config/player';
 import { decodeServerMessage, encodeMessage, parseClientMessage } from './codec';
 import {
   CLIENT_MESSAGE_TYPES,
@@ -20,6 +22,9 @@ const clientMessages: ClientMessage[] = [
   { t: 'viewport', w: 1280, h: 720, zoom: 4 },
   { t: 'debugCamera', at: { x: 512.5, y: 498.25 } },
   { t: 'debugCamera', at: null },
+  { t: 'chat', text: 'Salut !' },
+  { t: 'chat', text: '/msg Ana_42 on se retrouve au lac ?' },
+  { t: 'chat', text: 'oui', to: 'Ana_42' },
 ];
 
 const serverMessages: ServerMessage[] = [
@@ -33,6 +38,17 @@ const serverMessages: ServerMessage[] = [
   { t: 'tileUpdate', layer: 0, x: 10, y: 20, slot: 'object', tile: null },
   { t: 'rejected', reason: 'outdated' },
   { t: 'pong', time: 123456.789 },
+  {
+    t: 'chat',
+    channel: 'proximity',
+    from: 'Ana_42',
+    entity: 7,
+    text: 'Salut !',
+    ts: 1_760_000_000_000,
+  },
+  { t: 'chat', channel: 'private', from: 'Ana_42', to: 'Bob', text: 'oui', ts: 1_760_000_000_000 },
+  { t: 'chatNotice', notice: 'muted', until: 1_760_000_600_000 },
+  { t: 'chatNotice', notice: 'unknownPlayer', name: 'Bob' },
 ];
 
 describe('codec', () => {
@@ -107,6 +123,19 @@ describe('input, viewport and debugCamera messages', () => {
       { t: 'debugCamera', at: { x: 'left', y: 0 } },
       { t: 'input', seq: 1, dir: 9 },
       { t: 'input', seq: -1, dir: 0 },
+    ]) {
+      expect(parseClientMessage(encode(bad)).ok, JSON.stringify(bad)).toBe(false);
+    }
+  });
+});
+
+describe('chat messages', () => {
+  it('reject lines too long and invalid names', () => {
+    for (const bad of [
+      { t: 'chat', text: 'a'.repeat(CHAT.maxLineLength + 1) },
+      { t: 'chat', text: 'hi', to: '' },
+      { t: 'chat', text: 'hi', to: 'a'.repeat(PLAYER.nameMaxLength + 1) },
+      { t: 'chat' },
     ]) {
       expect(parseClientMessage(encode(bad)).ok, JSON.stringify(bad)).toBe(false);
     }
