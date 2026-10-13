@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { isTouchMode } from '../device';
 import { createGame } from '../phaser/createGame';
 
-/** On a touch screen, a held finger must not open the browser's context menu over the game. */
-function preventTouchContextMenu(event: Event): void {
-  if (isTouchMode()) {
-    event.preventDefault();
-  }
+/**
+ * No browser context menu over the game: a right click opens the action menu, and on a touch screen a
+ * held finger does.
+ */
+function preventContextMenu(event: Event): void {
+  event.preventDefault();
 }
 
 /** Mounts the Phaser game; React and Phaser then only talk through the store and the event bus. */
@@ -19,9 +19,9 @@ export function PhaserGame() {
       return;
     }
     const game = createGame(container);
-    container.addEventListener('contextmenu', preventTouchContextMenu);
+    container.addEventListener('contextmenu', preventContextMenu);
     return () => {
-      container.removeEventListener('contextmenu', preventTouchContextMenu);
+      container.removeEventListener('contextmenu', preventContextMenu);
       game.destroy(true);
     };
   }, []);

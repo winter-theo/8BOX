@@ -1,21 +1,15 @@
 import {
   addItems,
   createMovementWorld,
+  FACING_STEP,
   type Facing,
+  type Inventory,
   type ItemStack,
   type LayerId,
   stackLimit,
 } from '@8box/shared';
 import type { EntityId, Position } from '../../core/entities';
 import type { ServerContext } from '../../core/module';
-
-/** One step in the direction a player faces, in tiles. */
-const FACING_STEP: Readonly<Record<Facing, readonly [number, number]>> = {
-  up: [0, -1],
-  down: [0, 1],
-  left: [-1, 0],
-  right: [1, 0],
-};
 
 /** Where the items a player drops land: in front of them, or at their feet when that tile is solid. */
 export function dropPosition(ctx: ServerContext, feet: Position, facing: Facing): Position {
@@ -88,16 +82,10 @@ export function pickUpGroundItems(ctx: ServerContext, picked: (entity: EntityId)
       if (!pile || (pile.droppedBy === playerId && tick < pile.dropperWaitUntilTick)) {
         continue;
       }
-      const added = addItems(inventory, ctx.content.items, pile);
-      if (added.left === pile.count) {
-        continue;
-      }
-      inventory = added.inventory;
-      changed = true;
-      if (added.left === 0) {
-        ctx.entities.remove(id);
-      } else {
-        ctx.entities.set(id, 'groundItem', { ...pile, count: added.left });
+      const next = takePile(ctx, inventory, id);
+      if (next) {
+        inventory = next;
+        changed = true;
       }
     }
     if (changed) {
@@ -105,6 +93,31 @@ export function pickUpGroundItems(ctx: ServerContext, picked: (entity: EntityId)
       picked(entity);
     }
   }
+}
+
+/**
+ * Puts as much of a pile on the ground as fits into an inventory; the rest stays on the ground. Returns
+ * the new inventory, or undefined when nothing was taken (no room, or no such pile).
+ */
+export function takePile(
+  ctx: ServerContext,
+  inventory: Inventory,
+  pileId: EntityId,
+): Inventory | undefined {
+  const pile = ctx.entities.get(pileId, 'groundItem');
+  if (!pile) {
+    return undefined;
+  }
+  const added = addItems(inventory, ctx.content.items, pile);
+  if (added.left === pile.count) {
+    return undefined;
+  }
+  if (added.left === 0) {
+    ctx.entities.remove(pileId);
+  } else {
+    ctx.entities.set(pileId, 'groundItem', { ...pile, count: added.left });
+  }
+  return added.inventory;
 }
 
 /** Removes the piles that lay on the ground for too long. */

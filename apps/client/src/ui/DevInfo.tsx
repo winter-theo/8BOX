@@ -70,6 +70,7 @@ export function DevInfo() {
       )}
       {!touch && <span>{t('ui.dev.controls')}</span>}
       {!touch && <span>{t('ui.dev.inventoryControls')}</span>}
+      {!touch && <span>{t('ui.dev.actionControls')}</span>}
       <DevGive />
     </aside>
   );

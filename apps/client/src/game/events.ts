@@ -15,8 +15,17 @@ export type ClientEvents = {
   'input.direction': { dir: number };
   /** Touch buttons → game: a button was pressed (handled by the steps that bring each action). */
   'input.button': { button: TouchButton };
-  /** Phaser → UI: a long press on the world, on tile (x, y); `screen` is where, in CSS pixels. */
-  'world.longPress': { x: number; y: number; screen: { x: number; y: number } };
+  /**
+   * Phaser → game: open the action menu of tile (x, y) (right click, or long press on a touch screen);
+   * `screen` is where, in CSS pixels.
+   */
+  'world.menu': { x: number; y: number; screen: { x: number; y: number } };
+  /** Phaser → game: the tile under the mouse, or null when the mouse is off the world (aim). */
+  'pointer.tile': { tile: { x: number; y: number } | null };
+  /** Keyboard → game: the main action on the aimed tile (E). */
+  'action.main': Record<string, never>;
+  /** Keyboard or mouse → game: use the item in hand (Space, left click). */
+  'action.use': Record<string, never>;
   /** Phaser → game: size of the game view, in CSS pixels, and camera zoom. */
   'view.changed': { w: number; h: number; zoom: number };
   /** Phaser → game (dev mode): center of the free camera in tiles, or null when it follows the player. */

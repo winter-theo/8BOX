@@ -4,13 +4,14 @@ import type { NetServer } from '../net/net';
 import type { Persistence } from '../persistence/Persistence';
 import type { ReportStore } from '../reports/store';
 import type { World } from '../world/World';
+import type { ServerActions } from './actions';
 import type { EntityStore } from './entities';
 import type { EventBus } from './events';
 import type { Scheduler } from './scheduler';
 
 export type Logger = FastifyBaseLogger;
 
-/** Everything a module can use. Later steps add `actions`, `commands`. */
+/** Everything a module can use. Later steps add `commands`. */
 export interface ServerContext {
   readonly config: GameConfig;
   readonly content: Content;
@@ -27,6 +28,8 @@ export interface ServerContext {
   readonly persistence: Persistence;
   /** Reports of players, read by the admin tab (the database; promises, never awaited in a tick). */
   readonly reports: ReportStore;
+  /** Actions on the world: shared definitions, and the `perform` each owning module registers. */
+  readonly actions: ServerActions;
 }
 
 export interface GameModule {

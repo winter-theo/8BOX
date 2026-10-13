@@ -1,5 +1,7 @@
 import { CLERK_PUBLISHABLE_KEY } from '../env';
 import { useSessionStore } from '../store/session';
+import { ActionMenu } from './actions/ActionMenu';
+import { ActionFeedbackLine, ActionProgress } from './actions/ActionStatus';
 import { ClerkAdminLink, DevAdminLink } from './admin/AdminLink';
 import { AccountScreen } from './auth/AccountScreen';
 import { ClerkAutoConnect, SignOutButton } from './auth/ClerkLogin';
@@ -11,7 +13,6 @@ import { DragGhost } from './inventory/DragGhost';
 import { Hotbar } from './inventory/Hotbar';
 import { InventoryWindow } from './inventory/InventoryWindow';
 import { LanguageSelect } from './LanguageSelect';
-import { LongPressBubble } from './mobile/LongPressBubble';
 import { MobileControls } from './mobile/MobileControls';
 import { RotatePhone } from './mobile/RotatePhone';
 import { PhaserGame } from './PhaserGame';
@@ -32,7 +33,9 @@ export function App() {
       {status === 'online' && <Hotbar touch={touch} />}
       {status === 'online' && <InventoryWindow touch={touch} />}
       {status === 'online' && <ChatPanel touch={touch} />}
-      <LongPressBubble />
+      {status === 'online' && <ActionProgress />}
+      {status === 'online' && <ActionFeedbackLine />}
+      {status === 'online' && <ActionMenu touch={touch} />}
       <ConnectionBanner />
       <DevInfo />
       {status === 'idle' && <LoginScreen />}

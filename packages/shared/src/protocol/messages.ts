@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import type { ActionReason } from '../actions/actions';
 import { CHAT } from '../config/chat';
 import { INVENTORY } from '../config/inventory';
 import { PLAYER, type Skin } from '../config/player';
 import { VIEW } from '../config/view';
+import { WORLD } from '../config/world';
 import { contentIdSchema, equipSlotSchema, type TileSlot } from '../content/schemas';
 import type { Inventory } from '../inventory/inventory';
 import type { NameError } from '../moderation/names';
@@ -128,6 +130,36 @@ export const devGiveSchema = z.strictObject({
   count: itemCountSchema,
 });
 
+/** Longest action id accepted, in characters. */
+const ACTION_ID_MAX_LENGTH = 64;
+
+/** A tile coordinate on a layer, in tiles. */
+const tileCoordSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(WORLD.layerSizeTiles - 1);
+
+/** What an action is aimed at: a tile of the player's layer, an entity in view, or the player. */
+export const actionTargetSchema = z.discriminatedUnion('kind', [
+  z.strictObject({ kind: z.literal('tile'), x: tileCoordSchema, y: tileCoordSchema }),
+  z.strictObject({
+    kind: z.literal('entity'),
+    id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  }),
+  z.strictObject({ kind: z.literal('self') }),
+]);
+
+/**
+ * Does an action (`ActionDef.id`) on a target. The server checks the reach, `canPerform` and the delays
+ * again, then answers with `action` (started, done, cancelled or refused).
+ */
+export const actionSchema = z.strictObject({
+  t: z.literal('action'),
+  id: z.string().min(1).max(ACTION_ID_MAX_LENGTH),
+  target: actionTargetSchema,
+});
+
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
   setNameSchema,
@@ -141,6 +173,7 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   invMoveSchema,
   invDropSchema,
   devGiveSchema,
+  actionSchema,
 ]);
 
 export type HelloMessage = z.output<typeof helloSchema>;
@@ -155,6 +188,7 @@ export type InvSelectMessage = z.output<typeof invSelectSchema>;
 export type InvMoveMessage = z.output<typeof invMoveSchema>;
 export type InvDropMessage = z.output<typeof invDropSchema>;
 export type DevGiveMessage = z.output<typeof devGiveSchema>;
+export type ActionRequestMessage = z.output<typeof actionSchema>;
 export type ClientMessage = z.output<typeof clientMessageSchema>;
 export type ClientMessageType = ClientMessage['t'];
 
@@ -171,6 +205,7 @@ export const CLIENT_MESSAGE_TYPES = [
   'invMove',
   'invDrop',
   'devGive',
+  'action',
 ] as const satisfies readonly ClientMessageType[];
 
 // ─── Server → client: typed, not validated by the client ─────────────────────
@@ -379,6 +414,39 @@ export interface InventoryMessage extends Inventory {
   t: 'inventory';
 }
 
+/** Where an action of this player stands. */
+export type ActionOutcome =
+  /** It takes time: show a progress bar for `durationMs` (cancelled if the player moves). */
+  | 'started'
+  | 'done'
+  /** The player moved, or the target went away, before the end. */
+  | 'cancelled'
+  /** The server said no (`reason`). */
+  | 'refused';
+
+/** The server's answer to an `action` of this player, and the end of an action that takes time. */
+export interface ActionStateMessage {
+  t: 'action';
+  /** The action (`ActionDef.id`). */
+  id: string;
+  outcome: ActionOutcome;
+  /** `started`: how long it takes, in ms. */
+  durationMs?: number;
+  /** `refused`: why. */
+  reason?: ActionReason;
+}
+
+/** What the player examined: a tile or a pile of items (content id, and the pile size), or a player. */
+export interface ExaminedMessage {
+  t: 'examined';
+  /** Tile or item id. */
+  thing?: string;
+  /** Items in the pile examined. */
+  count?: number;
+  /** Name of the player examined. */
+  player?: string;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -390,7 +458,9 @@ export type ServerMessage =
   | TileUpdateMessage
   | ChatLineMessage
   | ChatNoticeMessage
-  | InventoryMessage;
+  | InventoryMessage
+  | ActionStateMessage
+  | ExaminedMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

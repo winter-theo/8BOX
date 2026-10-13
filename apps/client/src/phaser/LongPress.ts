@@ -6,8 +6,8 @@ import { eventBus } from '../game/events';
 const TILE_PX = WORLD.tileSizePx;
 
 /**
- * Touch mode: a finger held still on the world opens the action menu of the tile under it (the real
- * menu comes with step 15). Moving the finger or adding a second one (pinch) cancels it.
+ * Touch mode: a finger held still on the world opens the action menu of the tile under it. Moving the
+ * finger or adding a second one (pinch) cancels it.
  */
 export class LongPress {
   private press:
@@ -62,7 +62,7 @@ export class LongPress {
       return;
     }
     const world = this.scene.cameras.main.getWorldPoint(press.x, press.y);
-    eventBus.emit('world.longPress', {
+    eventBus.emit('world.menu', {
       x: Math.floor(world.x / TILE_PX),
       y: Math.floor(world.y / TILE_PX),
       screen: { x: press.x, y: press.y },

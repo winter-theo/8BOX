@@ -35,6 +35,8 @@ export const NET = {
     invDrop: { max: 10, windowMs: SECOND_MS },
     /** Dev mode only. */
     devGive: { max: 5, windowMs: SECOND_MS },
+    /** Actions on the world (the server also keeps `INTERACTION.actionCooldownMs` between two). */
+    action: { max: 10, windowMs: SECOND_MS },
   },
   /** Interval of the client movement inputs, in ms (one per server tick). */
   clientInputIntervalMs: 50,

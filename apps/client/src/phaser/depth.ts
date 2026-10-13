@@ -8,6 +8,8 @@ const TILE_PX = WORLD.tileSizePx;
  */
 export const DEPTH = {
   ground: -1,
+  /** The outline of the aimed tile: over every Y-sorted sprite (feet Y stays far below). */
+  aim: 1_000_000,
 } as const;
 
 /** What a Y-sorted sprite is: at the same Y, an entity is drawn over an object. */

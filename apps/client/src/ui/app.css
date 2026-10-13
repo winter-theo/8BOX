@@ -314,18 +314,6 @@ body {
   transform: translateX(-50%);
 }
 
-.long-press-bubble {
-  position: fixed;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: rgb(0 0 0 / 70%);
-  color: #f4f4f4;
-  font-family: monospace;
-  font-size: 12px;
-  transform: translate(-50%, calc(-100% - 16px));
-  pointer-events: none;
-}
-
 .fullscreen-button {
   position: absolute;
   top: max(8px, env(safe-area-inset-top));
@@ -1094,4 +1082,117 @@ html.page-admin #root {
   margin: 0;
   padding: 0;
   border: none;
+}
+
+/* Actions: the menu of a tile, the progress bar, and what an action tells the player. */
+.action-menu-backdrop {
+  position: fixed;
+  z-index: 14;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.action-menu {
+  position: fixed;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 4px;
+  border-radius: 8px;
+  background: rgb(20 20 28 / 94%);
+  color: #f4f4f4;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 50%);
+}
+
+.action-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.action-menu-item:hover:not(:disabled),
+.action-menu-item:focus-visible {
+  background: rgb(255 255 255 / 14%);
+}
+
+.action-menu-item:disabled {
+  color: rgb(244 244 244 / 45%);
+  cursor: default;
+}
+
+.action-menu--touch .action-menu-item {
+  min-height: 48px;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.action-menu-reason {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.action-progress {
+  position: fixed;
+  z-index: 2;
+  bottom: calc(max(8px, env(safe-area-inset-bottom)) + 96px);
+  left: 50%;
+  width: 160px;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgb(0 0 0 / 60%);
+  border-radius: 4px;
+  background: rgb(0 0 0 / 45%);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.action-progress-fill {
+  height: 100%;
+  background: #8cbf62;
+  animation-name: action-progress-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes action-progress-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.action-feedback {
+  position: fixed;
+  z-index: 2;
+  bottom: calc(max(8px, env(safe-area-inset-bottom)) + 64px);
+  left: 50%;
+  max-width: calc(100vw - 32px);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 65%);
+  color: #f4f4f4;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateX(-50%);
+  pointer-events: none;
 }

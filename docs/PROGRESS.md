@@ -363,8 +363,51 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   n'ont encore aucun objet. L'usure des outils n'est pas encore dans les piles.
 - (14) Sur PC, la barre d'objets est centrée, mais décalée à droite du chat quand l'écran est étroit (moins de
   1 400 px environ).
+- (15) Portée (1,5 case) mesurée des pieds au point le plus proche de la case : les 8 cases autour du joueur sont
+  toujours à portée, et une case à 2 de distance en ligne droite l'est aussi quand on se tient au bord de la sienne.
+  Une entité est à portée quand la case sous ses pieds l'est. La case « devant » est la voisine de la case des pieds,
+  dans la direction du regard.
+- (15) Une action (`shared/actions/`) a une liste de cibles (`targets`) au lieu d'une seule (« Examiner » vise une
+  case ou une entité), et un `appliesTo` : une action qui n'a pas de sens sur la chose visée n'est pas listée, alors
+  qu'une action impossible (`canPerform`) est grisée avec sa raison.
+- (15) Priorités en config (`INTERACTION.priorities`) : Ramasser 20, Examiner 0. E sur une case où il n'y a rien
+  d'autre examine le sol (« C'est : Herbe. »).
+- (15) Délais : 250 ms au moins entre deux actions (`actionCooldownMs`), limite de débit `action` 10 par seconde.
+  Une action demandée pendant une action qui dure est refusée (« Une autre action est en cours ») : pas de file
+  d'attente. Une action qui dure s'annule dès que la position du joueur change sur le serveur.
+- (15) « Ramasser » ignore l'attente de 2 s de celui qui a lâché la pile (c'est un geste voulu) et prend ce qui rentre.
+- (15) Le résultat d'« Examiner » et les refus (« Trop loin », « Inventaire plein »…) s'affichent en bas de l'écran,
+  au-dessus de la barre d'objets, pendant 2,5 s (`INTERACTION.feedbackMs`), pas dans le chat.
+- (15) Menu : un clic droit ou un appui long sur une case hors de portée affiche « Trop loin » au lieu du menu. Le
+  menu se ferme quand on clique ailleurs (un fond transparent attrape ce clic, qui n'agit donc pas dans le monde),
+  avec Échap, ou dès qu'on se met à marcher. Sur sa propre case, le menu proposera aussi les actions sur soi.
+- (15) Espace, le clic gauche et le bouton Frapper passent par un point d'entrée unique (`heldItemAction` : la
+  meilleure action possible marquée `use`) ; ils ne font rien tant qu'aucune action n'est marquée `use` (étapes 16,
+  17, 18, 20, 22).
+- (15) Surbrillance de la case visée : contour de 1 pixel (couleur `bone`), au-dessus des objets et des personnages,
+  aussi sur téléphone (où c'est la case devant le joueur).
+- (15) Le clic droit n'ouvre plus le menu du navigateur au-dessus du jeu, sur PC aussi.
+- (15) Aucune action du contenu ne dure encore : la barre de progression ne se verra qu'à partir de l'étape 16 (elle
+  est testée avec une action de test).
 
 ## Historique
+
+### 2026-10-13 — Étape 15 : Interactions : visée, action, menu ✅
+- Shared : registre d'actions (`actions/`) : cibles, priorité, durée, clé i18n, `appliesTo` et `canPerform` avec
+  raison ; « Ramasser » (objet au sol) et « Examiner » ; portée, case devant, case visée (`aim.ts`) ; liste des
+  actions par priorité, action principale (E) et action de l'objet en main. Protocole 10 : `action { id, target }`
+  (zod), réponses `action` (commencée, faite, annulée, refusée avec raison) et `examined`.
+- Serveur : `ctx.actions` (les modules y enregistrent le `perform` de leurs actions) ; module `interaction` :
+  re-vérifie portée, `canPerform` et délais, gère les actions qui durent (annulées si le joueur bouge) et fait
+  « Examiner » ; « Ramasser » dans le module inventaire.
+- Client : case visée (devant, ou sous la souris à portée) surlignée ; E et bouton Action ; menu d'actions React au
+  clic droit et à l'appui long, actions impossibles grisées avec la raison ; barre de progression ; messages
+  (examen, refus) ; Espace, clic gauche et bouton Frapper branchés sur « utiliser l'objet en main ».
+- Tests : visée (regard, souris, portée), filtrage `canPerform` et priorités, refus serveur hors de portée (et
+  autres refus, délai, action qui dure et annulation), menu et messages côté client.
+- Non vérifié dans un navigateur pendant la session (tests automatisés et build seulement).
+- Écarts : une action a une liste de cibles (`targets`) et un `appliesTo` en plus de `canPerform` ; « Examiner »
+  appartient au module `interaction`.
 
 ### 2026-10-13 — Étape 14 : Inventaire, barre, bourse, objets au sol ✅
 - Shared : modèle d'inventaire pur (`inventory/inventory.ts`) : piles, fusion, découpe, échange, ajout avec
