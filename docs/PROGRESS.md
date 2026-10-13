@@ -3,7 +3,11 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 19 : Pièces et toits automatiques (branche `step/19-toits`)
+- [ ] Shared et serveur : id de pièce dans la `meta` (gardé quand l'objet change), détection `world/rooms.ts`, tests
+- [ ] Serveur : recalcul à la pose ou casse d'un mur ou d'une porte (module `building`), diffusion par `tileMeta`
+- [ ] Client : pièce gardée dans le cache, calque des toits, fondu sur la pièce du joueur local
+- [ ] Clôture : critères, journal, PR
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
