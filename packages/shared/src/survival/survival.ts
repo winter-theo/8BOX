@@ -63,13 +63,13 @@ export function stepVitals(
 }
 
 /** An action that takes effort brings the next hunger loss closer by `fatigueMs`. */
-export function addFatigue(vitals: Vitals, fatigueMs: number): Vitals {
+export function addFatigue<T extends Pick<Vitals, 'hungerMs'>>(vitals: T, fatigueMs: number): T {
   return { ...vitals, hungerMs: vitals.hungerMs + fatigueMs };
 }
 
-/** Eating food that restores `food` hunger points (the stomach holds `maxHunger` at most). */
-export function eatFood(vitals: Vitals, food: number, config: SurvivalConfig = SURVIVAL): Vitals {
-  return { ...vitals, hunger: Math.min(config.maxHunger, vitals.hunger + food) };
+/** Hunger after eating food that restores `food` hunger points (the stomach holds `maxHunger` at most). */
+export function eatFood(hunger: number, food: number, config: SurvivalConfig = SURVIVAL): number {
+  return Math.min(config.maxHunger, hunger + food);
 }
 
 /** Gold dropped on death out of a purse of `purse` coins: a share of it, rounded down. */

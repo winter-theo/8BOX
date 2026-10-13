@@ -15,8 +15,14 @@ function actor(item: string | null, hunger?: number): Actor {
 
 describe('eat action', () => {
   it('applies to oneself with food in hand', () => {
-    expect(heldFood(actor('base:berries'), content)).toEqual({ item: 'base:berries', hunger: 2 });
-    expect(heldFood(actor('base:apple'), content)).toEqual({ item: 'base:apple', hunger: 4 });
+    expect(heldFood(actor('base:berries').inventory, content)).toEqual({
+      item: 'base:berries',
+      hunger: 2,
+    });
+    expect(heldFood(actor('base:apple').inventory, content)).toEqual({
+      item: 'base:apple',
+      hunger: 4,
+    });
     expect(actionApplies(eatAction, { kind: 'self' }, content, actor('base:berries'))).toBe(true);
     expect(actionApplies(eatAction, { kind: 'self' }, content, actor('base:oak_log'))).toBe(false);
     expect(actionApplies(eatAction, { kind: 'self' }, content, actor(null))).toBe(false);

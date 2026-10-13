@@ -84,7 +84,8 @@ export function pickUpGroundItems(ctx: ServerContext, picked: (entity: EntityId)
     const position = ctx.entities.get(entity, 'position');
     const playerId = ctx.entities.get(entity, 'player')?.playerId;
     let inventory = ctx.entities.get(entity, 'inventory');
-    if (!position || !inventory) {
+    // A dead player picks nothing up (not even the gold they dropped on dying).
+    if (!position || !inventory || ctx.entities.has(entity, 'dead')) {
       continue;
     }
     let changed = false;

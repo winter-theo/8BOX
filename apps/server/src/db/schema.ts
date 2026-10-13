@@ -125,7 +125,7 @@ export const reports = pgTable(
   (table) => [index('reports_status_created_at_idx').on(table.status, table.createdAt)],
 );
 
-/** The character of each player: where it is, its look and inventory (survival columns come with step 20). */
+/** The character of each player: where it is, its look, inventory, health and hunger. */
 export const characters = pgTable('characters', {
   playerId: integer('player_id')
     .primaryKey()
@@ -134,7 +134,7 @@ export const characters = pgTable('characters', {
   /** Feet position, in tiles. */
   x: doublePrecision('x').notNull(),
   y: doublePrecision('y').notNull(),
-  /** Hit points and hunger (step 20); null until then. */
+  /** Hit points (0: left while dead) and hunger; null: full (saved before step 20). */
   hp: integer('hp'),
   hunger: integer('hunger'),
   /** Slots (hotbar, then bag): `{ item, count }` or null, as `StoredInventory.slots`. */

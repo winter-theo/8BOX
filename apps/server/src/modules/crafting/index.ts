@@ -93,7 +93,11 @@ export const craftingModule: GameModule = {
 
     ctx.net.onMessage('craft', (session, { recipe: id, count }) => {
       const entity = session.player?.entity;
-      if (entity === undefined || !ctx.entities.exists(entity)) {
+      if (
+        entity === undefined ||
+        !ctx.entities.exists(entity) ||
+        ctx.entities.has(entity, 'dead')
+      ) {
         return;
       }
       const recipe = ctx.content.recipes.get(id);

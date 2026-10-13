@@ -1,15 +1,15 @@
 import { INTERACTION } from '../config/interaction';
 import { SURVIVAL } from '../config/survival';
 import type { Content } from '../content/load';
-import { heldStack } from '../inventory/inventory';
-import type { ActionDef, Actor } from './actions';
+import { heldStack, type Inventory } from '../inventory/inventory';
+import type { ActionDef } from './actions';
 
 /** The item in hand when it is food, with the hunger points it restores. */
 export function heldFood(
-  actor: Actor,
+  inventory: Inventory,
   content: Content,
 ): { item: string; hunger: number } | undefined {
-  const held = heldStack(actor.inventory);
+  const held = heldStack(inventory);
   const food = held ? content.items.get(held.item)?.food : undefined;
   return held && food ? { item: held.item, hunger: food.hunger } : undefined;
 }
@@ -24,7 +24,7 @@ export const eatAction: ActionDef = {
   priority: INTERACTION.priorities.eat,
   labelKey: 'ui.actions.eat',
   use: true,
-  appliesTo: (_subject, content, actor) => heldFood(actor, content) !== undefined,
+  appliesTo: (_subject, content, actor) => heldFood(actor.inventory, content) !== undefined,
   canPerform: ({ actor }) =>
     actor.hunger !== undefined && actor.hunger >= SURVIVAL.maxHunger
       ? { ok: false, reason: 'full' }

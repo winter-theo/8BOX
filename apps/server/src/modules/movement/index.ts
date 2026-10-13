@@ -95,7 +95,8 @@ export const movementModule: GameModule = {
           if (!position) {
             continue;
           }
-          if (!input) {
+          // A dead player does not move until they respawn (their inputs are dropped).
+          if (!input || ctx.entities.has(entity, 'dead')) {
             setIfChanged(ctx, entity, 'anim', 'idle');
             continue;
           }

@@ -88,7 +88,8 @@ function check(
 ): { ok: true; subject: ActionSubject } | { ok: false; reason: ActionReason } {
   const position = ctx.entities.get(entity, 'position');
   const inventory = ctx.entities.get(entity, 'inventory');
-  if (!position || !inventory) {
+  const hunger = ctx.entities.get(entity, 'hunger');
+  if (!position || !inventory || ctx.entities.has(entity, 'dead')) {
     return { ok: false, reason: 'unavailable' };
   }
   const actor: Actor = {
@@ -97,6 +98,7 @@ function check(
     y: position.y,
     inventory,
     admin: session.account?.role === 'admin',
+    ...(hunger !== undefined && { hunger }),
   };
   const subject = subjectOf(ctx, entity, position.layer, target);
   if (!subject) {
@@ -151,7 +153,7 @@ function examine(ctx: ServerContext, session: Session, subject: ActionSubject): 
  * admin) and the delays again (one action at a time, and `actionCooldownMs` between two), then calls
  * the `perform` the owning module registered (`ctx.actions`). An action that takes time ends `durationMs` later, checked again, unless the player
  * moves first (cancelled). Every request is answered with `action` (started, done, cancelled or
- * refused). Also performs "examine".
+ * refused); each action done emits `action.performed`. A dead player cannot act. Also performs "examine".
  */
 export const interactionModule: GameModule = {
   id: 'interaction',
@@ -181,6 +183,7 @@ export const interactionModule: GameModule = {
         refuse(session, action.id, reason);
       } else {
         ctx.net.send(session, { t: 'action', id: action.id, outcome: 'done' });
+        ctx.events.emit('action.performed', { entity, action: action.id });
       }
     };
 

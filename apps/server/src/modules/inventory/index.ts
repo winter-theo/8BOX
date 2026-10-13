@@ -1,6 +1,7 @@
 import {
   addItems,
   cleanInventory,
+  deathGoldLoss,
   emptyInventory,
   type Inventory,
   type ItemStack,
@@ -150,6 +151,18 @@ export const inventoryModule: GameModule = {
         }
       }
       update(entity, inventory);
+    });
+
+    // Death: a share of the gold carried falls where the player died, for anyone to take.
+    ctx.events.on('entity.died', ({ entity, position }) => {
+      const inventory = ctx.entities.get(entity, 'inventory');
+      const lost = inventory ? deathGoldLoss(inventory.purse, ctx.config.survival) : 0;
+      const left = inventory && lost > 0 ? takeGold(inventory, lost) : undefined;
+      if (!left) {
+        return;
+      }
+      update(entity, left);
+      spawnGroundItem(ctx, position, { item: ctx.config.inventory.currencyItem, count: lost });
     });
 
     // Crafting, placing: an inventory another module computed from the current one.

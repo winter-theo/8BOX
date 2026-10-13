@@ -1,4 +1,5 @@
 import {
+  type DamageCause,
   type Inventory,
   type ItemStack,
   type LayerId,
@@ -7,7 +8,7 @@ import {
 } from '@8box/shared';
 import type { Session } from '../net/session';
 import type { TileChange, TileMetaChange } from '../world/World';
-import type { EntityId, EntityType } from './entities';
+import type { EntityId, EntityType, Position } from './entities';
 
 /**
  * Catalogue of the server events (name → payload). Modules react to events instead of calling each
@@ -71,7 +72,28 @@ export type ServerEvents = {
     /** The player who placed it. */
     by: EntityId;
   };
+  /** A player's action was done (after its `perform`), e.g. to tire them (`ActionDef.effort`). */
+  'action.performed': { entity: EntityId; action: string };
+  /**
+   * An entity's health reached 0 (`damage`): it is now `dead`, where it stood. The inventory module
+   * drops a share of a player's gold there.
+   */
+  'entity.died': {
+    entity: EntityId;
+    type: EntityType;
+    position: Position;
+    source: DamageSource;
+  };
+  /** A dead player came back to life, at their bed or at the spawn. */
+  'player.respawned': { entity: EntityId; position: Position };
 };
+
+/** What hurts an entity (`damage`). */
+export interface DamageSource {
+  cause: DamageCause;
+  /** The entity that dealt it, if any (combat, step 22). */
+  by?: EntityId;
+}
 
 /** Synchronous typed bus: `emit` returns once every listener has run. */
 export type EventBus = TypedEmitter<ServerEvents>;

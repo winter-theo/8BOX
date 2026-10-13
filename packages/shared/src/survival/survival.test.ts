@@ -49,7 +49,8 @@ describe('survival', () => {
     expect(minute.starvation).toBe(6);
     expect(minute.vitals.hunger).toBe(0);
     // Starvation starts counting again after eating.
-    const fed = run(eatFood(run(starving, 9 * SECOND).vitals, 2), 2 * SECOND);
+    const before = run(starving, 9 * SECOND).vitals;
+    const fed = run({ ...before, hunger: eatFood(before.hunger, 2) }, 2 * SECOND);
     expect(fed.starvation).toBe(0);
     expect(fed.vitals.starvationMs).toBe(0);
   });
@@ -66,9 +67,9 @@ describe('survival', () => {
   });
 
   it('eating adds the hunger of the food, up to a full stomach', () => {
-    expect(eatFood(freshVitals(20, 10), 2).hunger).toBe(12);
-    expect(eatFood(freshVitals(20, 10), 4).hunger).toBe(14);
-    expect(eatFood(freshVitals(20, 18), 4).hunger).toBe(20);
+    expect(eatFood(10, 2)).toBe(12);
+    expect(eatFood(10, 4)).toBe(14);
+    expect(eatFood(18, 4)).toBe(20);
   });
 
   it('drops 10 % of the gold on death, rounded down', () => {
