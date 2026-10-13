@@ -41,7 +41,11 @@ export const tileDefSchema = z.strictObject({
   light: z
     .strictObject({
       /** Light radius, in tiles. */
-      radiusTiles: z.number().positive().default(LIGHT.defaultRadiusTiles),
+      radiusTiles: z
+        .number()
+        .positive()
+        .max(LIGHT.maxRadiusTiles)
+        .default(LIGHT.defaultRadiusTiles),
     })
     .optional(),
   /**

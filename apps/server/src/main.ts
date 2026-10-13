@@ -11,6 +11,7 @@ import { Accounts } from './accounts/Accounts';
 import { clerkIdentity } from './accounts/clerkIdentity';
 import { Admin } from './admin/Admin';
 import { buildApp } from './app';
+import { WorldClock } from './core/clock';
 import { createGame } from './core/game';
 import { pgAccountStore } from './db/accounts.repo';
 import { pgAdminStore } from './db/admin.repo';
@@ -105,6 +106,13 @@ if (env.DEV_AUTH && !devAuth) {
   log.warn('DEV_AUTH is ignored in production');
 }
 
+// World time goes on from where it was saved; TIME_SCALE (dev only) makes it run faster.
+const timeScale = env.NODE_ENV === 'production' ? 1 : env.TIME_SCALE;
+if (env.TIME_SCALE !== 1 && env.NODE_ENV === 'production') {
+  log.warn('TIME_SCALE is ignored in production');
+}
+const clock = new WorldClock((await store.loadWorldTime()) ?? 0, timeScale);
+
 const game = createGame({
   content,
   log: log.child({ scope: 'game' }),
@@ -114,6 +122,7 @@ const game = createGame({
   persistence,
   accounts,
   reports,
+  clock,
 });
 
 const app = buildApp({

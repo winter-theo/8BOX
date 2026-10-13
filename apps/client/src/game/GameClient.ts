@@ -32,6 +32,7 @@ import {
   useActionsStore,
 } from '../store/actions';
 import { clearChat, receiveChatLine, receiveChatNotice } from '../store/chat';
+import { clearClock, showClock } from '../store/clock';
 import {
   clearCrafting,
   closeCraftingWindow,
@@ -46,6 +47,7 @@ import type { ClientEventBus } from './events';
 import { Interaction } from './Interaction';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
 import { ChunkCache } from './world/ChunkCache';
+import { ClientClock } from './world/ClientClock';
 import { RemoteEntities, type RemoteView } from './world/RemoteEntities';
 
 /** Id of the progress bar of a craft (the action progress bar shows it). */
@@ -129,6 +131,10 @@ export class GameClient {
   /** Layer of the player of this connection. */
   private layer = 0;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The world clock (day and night), as the server sends it. */
+  private readonly clock = new ClientClock();
+  /** Refreshes the HUD clock while the world clock is known. */
+  private clockTimer: ReturnType<typeof setInterval> | undefined;
   /** Hotbar slot last asked for, until the server confirms it (the wheel may ask again before). */
   private requestedSlot: number | undefined;
 
@@ -203,6 +209,11 @@ export class GameClient {
   /** Where to draw the player of this client now (predicted); undefined when not in the world. */
   localView(): LocalView | undefined {
     return this.local?.view(this.now());
+  }
+
+  /** World time now (day and night), in ms; undefined until the server sent its clock. */
+  worldTime(): number | undefined {
+    return this.clock.timeAt(this.now());
   }
 
   /** Room (roofed area) where the feet of the player of this client are; undefined outside rooms. */
@@ -521,6 +532,11 @@ export class GameClient {
       case 'vitals':
         receiveVitals(message);
         return;
+      case 'time':
+        this.clock.sync(message.worldTimeMs, message.scale, this.now());
+        showClock(this.worldTime());
+        this.clockTimer ??= setInterval(() => showClock(this.worldTime()), VIEW.uiSyncIntervalMs);
+        return;
       case 'inventory': {
         const { t: _type, ...inventory } = message;
         if (inventory.selected === this.requestedSlot) {
@@ -623,6 +639,10 @@ export class GameClient {
     clearActions();
     clearCrafting();
     clearSurvival();
+    this.clock.clear();
+    clearInterval(this.clockTimer);
+    this.clockTimer = undefined;
+    clearClock();
     this.remotes.clear();
     this.stopPing();
     clearInterval(this.inputTimer);

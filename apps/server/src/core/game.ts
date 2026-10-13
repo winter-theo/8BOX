@@ -8,6 +8,7 @@ import { WriteQueue } from '../persistence/writeQueue';
 import { MemoryReportStore, type ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import { ServerActions } from './actions';
+import { WorldClock } from './clock';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
 import { GameLoop, type TickStats } from './loop';
@@ -37,6 +38,8 @@ export interface ContextOptions {
   reports?: ReportStore;
   /** Definitions of the actions (default: those of the base game; tests add their own). */
   actions?: readonly ActionDef[];
+  /** World clock (default: a new world, at real speed). */
+  clock?: WorldClock;
 }
 
 /** Saves kept in memory: nothing outlives the process (tests). */
@@ -62,6 +65,7 @@ export function createContext({
   now,
   persistence = memoryPersistence(content, log),
   actions = baseActions,
+  clock = new WorldClock(),
   ...stores
 }: ContextOptions): ServerContext {
   // Kept in memory by default (tests): reports find the players of the default accounts.
@@ -84,6 +88,7 @@ export function createContext({
     entities: new EntityStore(events),
     systems: new SystemRegistry(),
     world,
+    clock,
     net: new NetServer({
       config,
       log,
@@ -115,6 +120,7 @@ export interface GameOptions {
   persistence?: Persistence;
   accounts?: Accounts;
   reports?: ReportStore;
+  clock?: WorldClock;
 }
 
 export interface Game {
@@ -135,6 +141,7 @@ export function createGame({
   persistence,
   accounts,
   reports,
+  clock,
 }: GameOptions): Game {
   const ctx = createContext({
     config,
@@ -145,6 +152,7 @@ export function createGame({
     ...(persistence && { persistence }),
     ...(accounts && { accounts }),
     ...(reports && { reports }),
+    ...(clock && { clock }),
   });
   const order = initModules(ctx, modules);
   log.info({ modules: order, devAuth }, 'modules initialized');

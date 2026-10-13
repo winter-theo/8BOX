@@ -8,6 +8,7 @@ import { ClerkAutoConnect, SignOutButton } from './auth/ClerkLogin';
 import { LoginScreen } from './auth/LoginScreen';
 import { ConnectionBanner } from './ConnectionBanner';
 import { ChatPanel } from './chat/ChatPanel';
+import { Clock } from './clock/Clock';
 import { CraftingWindow } from './crafting/CraftingWindow';
 import { DevInfo } from './DevInfo';
 import { DragGhost } from './inventory/DragGhost';
@@ -48,6 +49,7 @@ export function App() {
       {status === 'account' && <AccountScreen />}
       {status === 'rejected' && <RejectedScreen />}
       <div className="top-right">
+        {status === 'online' && <Clock />}
         {CLERK_PUBLISHABLE_KEY ? <ClerkAdminLink /> : import.meta.env.DEV && <DevAdminLink />}
         {CLERK_PUBLISHABLE_KEY && <SignOutButton />}
         {status === 'online' && <SkinSelect />}

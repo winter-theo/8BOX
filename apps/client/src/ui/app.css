@@ -145,6 +145,27 @@ body {
   gap: 8px;
 }
 
+/* The world clock: sun or moon, and the hour. Not a button: no touch size needed. */
+.clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 60%);
+  color: #f4f4f4;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.clock-icon {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
 .top-button {
   display: inline-flex;
   align-items: center;

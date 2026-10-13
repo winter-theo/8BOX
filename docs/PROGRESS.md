@@ -499,8 +499,40 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (20) HUD : 10 cœurs et 10 cuisses (2 points par icône) au-dessus de la barre d'objets, cœurs à gauche, faim à
   droite ; icônes provisoires générées (`hud.heart.*`, `hud.hunger.*`).
 - (20) L'écran de mort vouvoie (« Vous êtes mort », comme la fiche) alors que le reste de l'interface tutoie.
+- (21) Cycle : le jour commence par l'aube (ses 3 premières minutes, la lumière monte), la nuit par le crépuscule (ses
+  3 premières minutes, la lumière baisse), de façon linéaire. Un nouveau monde démarre à l'aube (heure 0).
+- (21) Horloge du HUD sur 24 h : 06:00 à l'aube, 18:00 au crépuscule (`TIME.dawnClockHour`) ; soleil le jour (aube
+  comprise), lune la nuit (crépuscule compris) ; en haut à droite, avant les boutons ; icônes provisoires générées
+  (`hud.sun`, `hud.moon`).
+- (21) Lumière : ambiante 1 le jour, 0,15 la nuit (`LIGHT.nightAmbient`) ; une source donne 1 − (d / rayon)² ; une
+  case est « éclairée » à partir de 0,2 (`LIGHT.litThreshold`) : une torche protège jusqu'à environ 5,4 cases. Rayon
+  plafonné à 12 cases dans le contenu (`LIGHT.maxRadiusTiles`, aussi la distance de recherche des sources).
+- (21) Horloge du monde avancée par les ticks (un retard du serveur au-delà du rattrapage la retarde un peu) ; elle ne
+  tourne pas quand le serveur est arrêté. Sauvegardée avec les chunks (toutes les 30 s) et à l'arrêt (clé `time` de
+  `world_state`).
+- (21) `TIME_SCALE` : variable du serveur (défaut 1, 60 = un jour par minute), ignorée en production, envoyée aux clients
+  avec l'heure (`scale`). Le client fait tourner l'horloge entre deux envois ; un écart se résorbe en 1 s
+  (`TIME.syncSmoothingMs`).
+- (21) Rendu : calque d'obscurité à la résolution du monde (halos en dégradé pixelisé), au-dessus des toits, sous les
+  barres de PV et le contour de visée. Teintes : bleu nuit `0x0a1030`, orange `0x6a3010` (`LIGHT.nightTint`,
+  `LIGHT.twilightTint`). Lueur du joueur : 3 cases, force 0,45, purement visuelle (n'empêche pas les monstres).
 
 ## Historique
+
+### 2026-10-13 — Étape 21 : Jour, nuit et lumière ✅
+- Shared : cycle jour/nuit pur (`sim/time.ts` : `timeOfDay`, `dayPhase`, `daylight`, `clockTime`), lumière
+  (`sim/light.ts` : `ambientLight`, `sourceLight`, `lightLevel`, `isLit(world, x, y, time)` pour l'étape 23), message
+  `time` (protocole 16), rayon de lumière plafonné dans le schéma, clés i18n de l'horloge.
+- Serveur : horloge du monde `ctx.clock` (`WorldClock`), module `time` (avance à chaque tick, envoi à l'arrivée puis
+  toutes les 10 s), sauvegarde dans `world_state` (clé `time`, via la file d'écriture), `TIME_SCALE` en dev.
+- Client : horloge locale lissée entre deux envois (`ClientClock`), calque d'obscurité (`LightLayer` : halos doux des
+  torches, lueur du joueur, teinte bleutée la nuit, orangée à l'aube et au crépuscule, caché le jour), horloge du HUD.
+- Tests : atténuation et maximum des sources, `isLit`, passage jour/nuit, aube et crépuscule, horloge du HUD, module
+  `time` (avance, échelle, envois), sauvegarde, file d'écriture, `TIME_SCALE`, horloge client, teintes.
+- Non vérifié dans un navigateur pendant la session (tests automatisés seulement) : 60 FPS avec 30 torches non mesuré.
+- Écarts : horloge du monde dans le `ServerContext` (`ctx.clock`, service du cœur) pour que d'autres modules (monstres)
+  la lisent ; l'« interpolation » est une extrapolation locale avec lissage des écarts ; `world_state` n'a pas eu
+  besoin de migration (table clé/valeur existante).
 
 ### 2026-10-13 — Étape 20 : Vie, faim, mort et réapparition ✅
 - Shared : règles pures de survie (`stepVitals` : faim, famine, régénération ; `addFatigue`, `eatFood`,

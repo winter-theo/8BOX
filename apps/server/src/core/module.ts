@@ -5,6 +5,7 @@ import type { Persistence } from '../persistence/Persistence';
 import type { ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import type { ServerActions } from './actions';
+import type { WorldClock } from './clock';
 import type { EntityStore } from './entities';
 import type { EventBus } from './events';
 import type { Scheduler } from './scheduler';
@@ -24,6 +25,8 @@ export interface ServerContext {
   readonly net: NetServer;
   /** Tiles of every layer, in memory. */
   readonly world: World;
+  /** World time (day and night), advanced by the time module. */
+  readonly clock: WorldClock;
   /** Saves to the database, queued without waiting (never `await` in a tick). */
   readonly persistence: Persistence;
   /** Reports of players, read by the admin tab (the database; promises, never awaited in a tick). */

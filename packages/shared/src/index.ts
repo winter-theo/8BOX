@@ -114,6 +114,15 @@ export {
 export * from './protocol/messages';
 export { PROTOCOL_VERSION } from './protocol/version';
 export {
+  ambientLight,
+  isLit,
+  type LightConfig,
+  type LightWorld,
+  lightLevel,
+  sourceLight,
+  sourcesLight,
+} from './sim/light';
+export {
   createMovementWorld,
   DIRECTIONS,
   directionOf,
@@ -126,6 +135,15 @@ export {
   type MoverState,
   stepMovement,
 } from './sim/movement';
+export {
+  clockTime,
+  type DayCycle,
+  type DayPhase,
+  daylight,
+  dayPhase,
+  isDaytime,
+  timeOfDay,
+} from './sim/time';
 export {
   addFatigue,
   deathGoldLoss,

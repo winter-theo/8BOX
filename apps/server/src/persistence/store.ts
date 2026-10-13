@@ -27,6 +27,9 @@ export interface GameStore {
   /** Seed of the existing world; undefined for a new one. */
   loadSeed(): Promise<number | undefined>;
   saveSeed(seed: number): Promise<void>;
+  /** World clock (ms of world time since the world was created); undefined for a new world. */
+  loadWorldTime(): Promise<number | undefined>;
+  saveWorldTime(worldTimeMs: number): Promise<void>;
   loadChunks(): Promise<SavedChunk[]>;
   saveChunks(chunks: readonly SavedChunk[]): Promise<void>;
   loadCharacters(): Promise<SavedCharacter[]>;
@@ -37,6 +40,7 @@ export interface GameStore {
 /** A store kept in memory: for tests, and to run without a database. */
 export class MemoryStore implements GameStore {
   seed: number | undefined;
+  worldTimeMs: number | undefined;
   readonly chunks = new Map<string, SavedChunk>();
   readonly characters = new Map<number, SavedCharacter>();
 
@@ -46,6 +50,14 @@ export class MemoryStore implements GameStore {
 
   async saveSeed(seed: number) {
     this.seed = seed;
+  }
+
+  async loadWorldTime() {
+    return this.worldTimeMs;
+  }
+
+  async saveWorldTime(worldTimeMs: number) {
+    this.worldTimeMs = worldTimeMs;
   }
 
   async loadChunks() {

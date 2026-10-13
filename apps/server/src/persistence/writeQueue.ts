@@ -3,7 +3,7 @@ import type { SavedChunk } from '../world/chunkSerializer';
 import type { GameStore, SavedCharacter } from './store';
 
 interface WriteQueueOptions {
-  store: Pick<GameStore, 'saveChunks' | 'saveCharacters'>;
+  store: Pick<GameStore, 'saveChunks' | 'saveCharacters' | 'saveWorldTime'>;
   /** Called when a write fails; the data is kept and written again later. */
   onError: (error: unknown) => void;
   batchSize?: number;
@@ -22,6 +22,8 @@ const characterKey = (character: SavedCharacter) => String(character.playerId);
 export class WriteQueue {
   private readonly chunks = new Map<string, SavedChunk>();
   private readonly characters = new Map<string, SavedCharacter>();
+  /** World clock to write (only the latest counts); undefined when none is queued. */
+  private worldTimeMs: number | undefined;
   private draining: Promise<void> | undefined;
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly batchSize: number;
@@ -32,9 +34,9 @@ export class WriteQueue {
     this.retryDelayMs = options.retryDelayMs ?? PERSISTENCE.writeRetryDelayMs;
   }
 
-  /** Chunks and characters waiting to be written. */
+  /** Chunks, characters and world clock waiting to be written. */
   get pending(): number {
-    return this.chunks.size + this.characters.size;
+    return this.chunks.size + this.characters.size + (this.worldTimeMs === undefined ? 0 : 1);
   }
 
   saveChunks(chunks: readonly SavedChunk[]): void {
@@ -46,6 +48,12 @@ export class WriteQueue {
 
   saveCharacter(character: SavedCharacter): void {
     this.characters.set(characterKey(character), character);
+    this.start();
+  }
+
+  /** The world clock (`world_state`): a newer one queued before the write replaces it. */
+  saveWorldTime(worldTimeMs: number): void {
+    this.worldTimeMs = worldTimeMs;
     this.start();
   }
 
@@ -83,8 +91,10 @@ export class WriteQueue {
   private async drain(): Promise<boolean> {
     const chunks = [...this.chunks.values()];
     const characters = [...this.characters.values()];
+    const worldTimeMs = this.worldTimeMs;
     this.chunks.clear();
     this.characters.clear();
+    this.worldTimeMs = undefined;
     let failed = false;
     for (let i = 0; i < chunks.length; i += this.batchSize) {
       const batch = chunks.slice(i, i + this.batchSize);
@@ -103,6 +113,15 @@ export class WriteQueue {
         failed = true;
         this.options.onError(error);
         this.requeue(this.characters, characters, characterKey);
+      }
+    }
+    if (worldTimeMs !== undefined) {
+      try {
+        await this.options.store.saveWorldTime(worldTimeMs);
+      } catch (error) {
+        failed = true;
+        this.options.onError(error);
+        this.worldTimeMs ??= worldTimeMs;
       }
     }
     return failed;

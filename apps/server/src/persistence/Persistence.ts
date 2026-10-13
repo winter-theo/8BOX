@@ -36,6 +36,11 @@ export class Persistence {
     }
   }
 
+  /** The world clock, in ms of world time. */
+  saveWorldTime(worldTimeMs: number): void {
+    this.writes.saveWorldTime(worldTimeMs);
+  }
+
   /** Resolves once everything saved so far is written: for the shutdown. */
   flush(): Promise<void> {
     return this.writes.flush();

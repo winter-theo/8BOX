@@ -10,6 +10,8 @@ export const DEPTH = {
   ground: -1,
   /** The roofs of the rooms: over every Y-sorted sprite (they hide what is inside), under the bars. */
   roof: 999_998,
+  /** The darkness of the night: over the roofs, under the bars and the aim outline. */
+  darkness: 999_998.5,
   /** The HP bars of the tiles being broken: over every Y-sorted sprite, under the aim outline. */
   damage: 999_999,
   /** The outline of the aimed tile: over every Y-sorted sprite (feet Y stays far below). */

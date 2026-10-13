@@ -30,6 +30,8 @@ const envSchema = z
       .enum(['0', '1'])
       .default('0')
       .transform((value) => value === '1'),
+    /** Dev: world time runs this many times faster than real time (60: a day lasts 1 min). */
+    TIME_SCALE: z.coerce.number().positive().max(10_000).default(1),
     /** PostgreSQL connection URL. Required in production. */
     DATABASE_URL: z.string().min(1).optional(),
     /** Clerk secret key (sk_…): checks the players' session tokens. Required in production. */

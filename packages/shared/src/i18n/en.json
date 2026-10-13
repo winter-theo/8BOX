@@ -273,6 +273,10 @@
       "broken": "Item broken: {{name}}.",
       "eat": "Eat"
     },
+    "clock": {
+      "day": "Day, {{time}}",
+      "night": "Night, {{time}}"
+    },
     "vitals": {
       "health": "Health: {{value}} / {{max}}",
       "hunger": "Hunger: {{value}} / {{max}}"
