@@ -8,7 +8,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
   (Couper, Arracher, Cueillir, Casser), protocole (`tileDamage`, admin dans `welcome`), i18n, tests
 - [x] Serveur : module `harvest` (PV des cases, dégâts, récupération, butin, `tile.broken`, cueillette et
   repousse, préparation de l'usure), butin dans l'inventaire ou au sol, zone sûre et admin, tests
-- [ ] Client : zone sûre et admin dans les actions, affichage des dégâts, buisson cueilli, tests
+- [x] Client : zone sûre et admin dans les actions, affichage des dégâts, buisson cueilli, tests
 - [ ] Clôture : critères d'acceptation, PROGRESS, ROADMAP, PR
 
 ## À valider par l'humain

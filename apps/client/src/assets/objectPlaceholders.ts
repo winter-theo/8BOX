@@ -272,10 +272,28 @@ const freddyFrame = skinFrame({ o: P.black, n: P.navy, d: P.brownDark, b: P.brow
   'oodbbdoo',
 ]);
 
+/** The berry bush once picked: the same leaves, without berries. */
+const berryBushPicked = pixelSprite(TREE, [
+  {
+    weight: 1,
+    rows: [
+      '........',
+      '..kkkk..',
+      '.keglek.',
+      'keegeeek',
+      'keeeeeek',
+      'keeeegek',
+      'kkeekekk',
+      '.kkkkkk.',
+    ],
+  },
+]);
+
 /** Placeholders of the objects and characters, by sprite id. */
 export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.oak_tree': oakTree,
   'obj.berry_bush': berryBush,
+  'obj.berry_bush_picked': berryBushPicked,
   'obj.tall_grass': tallGrass,
   'obj.flowers': flowers,
   'obj.wooden_wall': woodenWall,

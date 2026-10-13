@@ -48,6 +48,7 @@ function setup(
         return id === undefined ? undefined : content.tiles.get(id);
       },
       remotes: () => options.remotes ?? [],
+      admin: () => false,
     },
     content,
   );

@@ -11,6 +11,11 @@ export type ClientEvents = {
   'chunk.unloaded': { layer: number; cx: number; cy: number };
   /** A slot of tile (x, y) of a loaded chunk changed: redraw that tile. */
   'tile.changed': { chunk: Chunk; x: number; y: number; slot: TileSlot };
+  /**
+   * Game → Phaser: HP left of tile (x, y), being broken (`hp` = `maxHp`: it got them all back). Forget
+   * it when the tile changes or its chunk is unloaded.
+   */
+  'tile.damaged': { layer: number; x: number; y: number; hp: number; maxHp: number };
   /** Keyboard or joystick → game: movement direction held (an index of `DIRECTIONS`, 0 = still). */
   'input.direction': { dir: number };
   /** Touch buttons → game: a button was pressed (handled by the steps that bring each action). */

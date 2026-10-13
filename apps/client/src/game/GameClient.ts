@@ -95,6 +95,8 @@ export class GameClient {
   private local: LocalPlayerState | undefined;
   /** Name of the player of this connection, once welcomed. */
   private name: string | undefined;
+  /** Whether the player of this connection is an admin, as `welcome` said. */
+  private admin = false;
   /** Layer of the player of this connection. */
   private layer = 0;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
@@ -114,6 +116,7 @@ export class GameClient {
         inventory: () => useInventoryStore.getState().inventory,
         tile: (layer, x, y, slot) => this.chunks.getTile(layer, x, y, slot),
         remotes: () => this.remoteViews(),
+        admin: () => this.admin,
       },
       options.content,
     );
@@ -368,6 +371,7 @@ export class GameClient {
         const { entity, name, skin, position } = message.you;
         this.attempt = 0;
         this.name = name;
+        this.admin = message.you.admin === true;
         this.layer = position.layer;
         this.online = true;
         useSessionStore.setState({
@@ -433,6 +437,11 @@ export class GameClient {
       case 'tileUpdate':
         this.chunks.applyTileUpdate(message);
         return;
+      case 'tileDamage': {
+        const { t: _type, ...damage } = message;
+        this.options.bus.emit('tile.damaged', damage);
+        return;
+      }
       case 'chat':
         receiveChatLine(message, this.name);
         if (message.entity !== undefined) {
