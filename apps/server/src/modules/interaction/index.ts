@@ -6,7 +6,9 @@ import {
   type ActionTarget,
   type Actor,
   actionApplies,
+  LAYER,
   type LayerId,
+  type SafeZone,
   subjectInReach,
   type TileSlot,
   tileSlotSchema,
@@ -78,6 +80,7 @@ function subjectOf(
  */
 function check(
   ctx: ServerContext,
+  session: Session,
   entity: EntityId,
   action: ActionDef,
   target: ActionTarget,
@@ -87,7 +90,13 @@ function check(
   if (!position || !inventory) {
     return { ok: false, reason: 'unavailable' };
   }
-  const actor: Actor = { layer: position.layer, x: position.x, y: position.y, inventory };
+  const actor: Actor = {
+    layer: position.layer,
+    x: position.x,
+    y: position.y,
+    inventory,
+    admin: session.account?.role === 'admin',
+  };
   const subject = subjectOf(ctx, entity, position.layer, target);
   if (!subject) {
     return { ok: false, reason: 'gone' };
@@ -98,8 +107,24 @@ function check(
   if (!subjectInReach(actor, subject, ctx.config.interaction.reachTiles)) {
     return { ok: false, reason: 'outOfReach' };
   }
-  const result: ActionCheck = action.canPerform({ actor, subject, content: ctx.content });
+  const result: ActionCheck = action.canPerform({
+    actor,
+    subject,
+    content: ctx.content,
+    safeZone: safeZoneOf(ctx),
+  });
   return result.ok ? { ok: true, subject } : result;
+}
+
+/** The safe zone around the spawn of the world. */
+function safeZoneOf(ctx: ServerContext): SafeZone {
+  const { spawn } = ctx.world;
+  return {
+    layer: LAYER.surface,
+    x: spawn.x,
+    y: spawn.y,
+    radiusTiles: ctx.config.world.safeZoneRadiusTiles,
+  };
 }
 
 /** What "examine" tells: the name of a tile or of the items of a pile (and how many), or a player. */
@@ -121,9 +146,9 @@ function examine(ctx: ServerContext, session: Session, subject: ActionSubject): 
 
 /**
  * Actions on the world, the Project Zomboid way. Clients send `action { id, target }`; the server checks
- * the reach (`interaction.reachTiles`), `canPerform` and the delays again (one action at a time, and
- * `actionCooldownMs` between two), then calls the `perform` the owning module registered
- * (`ctx.actions`). An action that takes time ends `durationMs` later, checked again, unless the player
+ * the reach (`interaction.reachTiles`), `canPerform` (with the safe zone, and whether the player is an
+ * admin) and the delays again (one action at a time, and `actionCooldownMs` between two), then calls
+ * the `perform` the owning module registered (`ctx.actions`). An action that takes time ends `durationMs` later, checked again, unless the player
  * moves first (cancelled). Every request is answered with `action` (started, done, cancelled or
  * refused). Also performs "examine".
  */
@@ -147,7 +172,7 @@ export const interactionModule: GameModule = {
       action: ActionDef,
       target: ActionTarget,
     ) => {
-      const checked = check(ctx, entity, action, target);
+      const checked = check(ctx, session, entity, action, target);
       const reason = checked.ok
         ? ctx.actions.performer(action.id)?.({ session, entity, subject: checked.subject })
         : checked.reason;
@@ -183,7 +208,7 @@ export const interactionModule: GameModule = {
         refuse(session, id, 'tooSoon');
         return;
       }
-      const checked = check(ctx, entity, action, target);
+      const checked = check(ctx, session, entity, action, target);
       if (!checked.ok) {
         refuse(session, id, checked.reason);
         return;

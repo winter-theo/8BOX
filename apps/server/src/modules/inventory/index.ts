@@ -133,6 +133,23 @@ export const inventoryModule: GameModule = {
       });
     });
 
+    // Loot: what does not fit falls at the player's feet (anyone may take it at once).
+    ctx.events.on('items.give', ({ entity, items: stacks }) => {
+      let inventory = ctx.entities.get(entity, 'inventory');
+      const position = ctx.entities.get(entity, 'position');
+      if (!inventory || !position) {
+        return;
+      }
+      for (const stack of stacks) {
+        const added = addItems(inventory, items, stack);
+        inventory = added.inventory;
+        if (added.left > 0) {
+          spawnGroundItem(ctx, position, { item: stack.item, count: added.left });
+        }
+      }
+      update(entity, inventory);
+    });
+
     // The "pick up" action: on purpose, so the wait of the player who dropped the pile does not apply.
     ctx.actions.register('pickUp', ({ entity, subject }) => {
       const inventory = ctx.entities.get(entity, 'inventory');

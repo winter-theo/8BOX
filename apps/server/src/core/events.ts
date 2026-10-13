@@ -1,4 +1,4 @@
-import { TypedEmitter } from '@8box/shared';
+import { type ItemStack, type LayerId, type TileSlot, TypedEmitter } from '@8box/shared';
 import type { Session } from '../net/session';
 import type { TileChange } from '../world/World';
 import type { EntityId, EntityType } from './entities';
@@ -25,6 +25,24 @@ export type ServerEvents = {
   'player.left': { entity: EntityId; name: string; reason: string };
   /** A tile slot of the world changed (`World.setTile`). */
   'tile.changed': TileChange;
+  /** A player broke a tile (its slot is already empty): cut, uprooted or broken. */
+  'tile.broken': {
+    layer: LayerId;
+    x: number;
+    y: number;
+    slot: TileSlot;
+    /** The tile id that was there. */
+    tile: string;
+    /** The player who broke it. */
+    by: EntityId;
+  };
+  /**
+   * Request: give items to a player (loot), in their inventory, and on the ground at their feet what
+   * does not fit. Handled by the inventory module.
+   */
+  'items.give': { entity: EntityId; items: readonly ItemStack[] };
+  /** A player hit something with the tool in hand (hotbar slot `slot`): its wear comes with step 17. */
+  'tool.used': { entity: EntityId; item: string; slot: number };
 };
 
 /** Synchronous typed bus: `emit` returns once every listener has run. */

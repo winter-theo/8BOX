@@ -90,6 +90,7 @@ describe('sign-in and whitelist', () => {
     const bob = await connect('token-bob');
 
     expect(ana.last()).toMatchObject({ t: 'welcome', you: { name: 'Ana' } });
+    expect(ana.last()).not.toHaveProperty('you.admin');
     expect(ctx.entities.get(ana.session.player?.entity ?? -1, 'player')).toEqual({
       name: 'Ana',
       playerId: 1,
@@ -119,7 +120,8 @@ describe('sign-in and whitelist', () => {
     boss.send({ t: 'setName', name: 'Boss' });
     await settle();
 
-    expect(boss.last()).toMatchObject({ t: 'welcome', you: { name: 'Boss' } });
+    // An admin may break things in the safe zone: the client is told.
+    expect(boss.last()).toMatchObject({ t: 'welcome', you: { name: 'Boss', admin: true } });
   });
 
   it('ignores setName outside of the name choice', async () => {
