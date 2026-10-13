@@ -330,8 +330,28 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (13) Les infos de dev passent en haut à gauche sur ordinateur : le chat prend le coin en bas à gauche.
 - (13) Téléphone : le bouton « Chat » ouvre le panneau sur l'onglet qui a des messages non lus. Il faut toucher le
   champ pour faire venir le clavier.
+- (skins) Les deux sprites de l'auteur s'appellent « Chat » (`cat`) et « Chapeau » (`hat`) ; le skin de départ
+  reste « Aventurier » (`default`). Noms et ids à changer dans `PLAYER.skins` et l'i18n si besoin.
+- (skins) Marche en 2 frames où seuls les pieds bougent : écartés au repos, grand pas, puis pieds joints (comme le
+  skin par défaut). Les couleurs des sprites sont gardées telles quelles (noir pur, blanc pur…) et ajoutées à la
+  palette, hors du style « sourd » du reste.
+- (skins) Le choix se fait dans une liste en haut à droite, à côté de la langue, en attendant un menu des options.
+  Il ne s'affiche qu'une fois confirmé par le serveur (pas d'affichage anticipé).
 
 ## Historique
+
+### 2026-10-12 — Hors étape : choix du skin ✅
+- À la demande de l'auteur : ses deux sprites 8 × 8 deviennent des skins jouables, avec deux frames de marche.
+- Protocole 8 : `setSkin { skin }` (zod, 5 par 10 s) ; `skin` dans `welcome.you`, dans `snapshot.you` et dans les
+  entités (première fois vues, puis à chaque changement).
+- Serveur : module `skins`, composant `skin`, colonne `characters.skin` (migration `0004_character_skin`),
+  sauvegardé avec la position et rendu au retour du joueur ; un skin inconnu en base redevient `default`.
+- Client : sprites `char.cat.*` et `char.hat.*` (frame de repos identique aux PNG de l'auteur), liste « Apparence »
+  en haut à droite, joueur local et autres joueurs dessinés avec leur skin. Textes FR et EN.
+- Tests : protocole, modules `skins`, `players` et `snapshots`, `RemoteEntities`, `GameClient`, sprites de chaque
+  skin.
+- Vérifié dans le navigateur : changement de skin confirmé par le serveur, chat visible en jeu, un autre joueur vu
+  avec le skin Chapeau.
 
 ### 2026-10-12 — Étape 13 : Chat, filtre et signalements ✅
 - Protocole 7 : `chat { text, to? }` ; le serveur répond `chat { channel, from, to?, entity?, text, ts }` et
