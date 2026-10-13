@@ -24,7 +24,7 @@ function setup() {
 }
 
 describe('persistence module', () => {
-  it('saves the modified chunks every 30 s, outside the tick', async () => {
+  it('saves the modified chunks and the world clock every 30 s, outside the tick', async () => {
     const { ctx, tick, store, persistence, ticksFor } = setup();
     ctx.world.setTile(LAYER.surface, 3, 4, 'object', 'base:oak_tree');
 
@@ -37,6 +37,7 @@ describe('persistence module', () => {
     await persistence.flush();
     expect([...store.chunks.keys()]).toEqual(['0:0:0']);
     expect(store.chunks.get('0:0:0')?.palette).toContain('base:oak_tree');
+    expect(store.worldTimeMs).toBe(0); // The time module is not running here.
   });
 
   it('saves the connected characters every 60 s', async () => {
@@ -69,10 +70,12 @@ describe('persistence module', () => {
   it('saves everything left on shutdown', async () => {
     const { ctx, store, persistence } = setup();
     ctx.world.setTile(LAYER.surface, 40, 40, 'object', null);
+    ctx.clock.timeMs = 1234.4;
 
     saveEverything(ctx);
     await persistence.flush();
 
     expect([...store.chunks.keys()]).toEqual(['0:1:1']);
+    expect(store.worldTimeMs).toBe(1234);
   });
 });

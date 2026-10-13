@@ -10,6 +10,7 @@ describe('parseEnv', () => {
       LOG_LEVEL: 'info',
       ALLOWED_ORIGINS: ['http://localhost:5173'],
       DEV_AUTH: false,
+      TIME_SCALE: 1,
       WORLD_SEED: undefined,
       DATABASE_URL: 'postgres://8box:8box@localhost:5432/8box',
       ADMIN_EMAILS: [],
@@ -42,6 +43,11 @@ describe('parseEnv', () => {
 
   it('rejects an invalid port', () => {
     expect(() => parseEnv({ PORT: 'abc' })).toThrow(/PORT/);
+  });
+
+  it('reads TIME_SCALE as a positive number', () => {
+    expect(parseEnv({ TIME_SCALE: '60' }).TIME_SCALE).toBe(60);
+    expect(() => parseEnv({ TIME_SCALE: '0' })).toThrow(/TIME_SCALE/);
   });
 
   it('reads DEV_AUTH as a 0/1 flag', () => {

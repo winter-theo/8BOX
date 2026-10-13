@@ -16,6 +16,7 @@ import type { Session, Transport } from '../net/session';
 import type { Persistence } from '../persistence/Persistence';
 import type { ReportStore } from '../reports/store';
 import { World } from '../world/World';
+import type { WorldClock } from './clock';
 import { createContext, runTick } from './game';
 import { type GameModule, initModules, type ServerContext } from './module';
 
@@ -44,6 +45,8 @@ export interface TestContextOptions {
   reports?: ReportStore;
   /** Definitions of the actions. Default: those of the base game. */
   actions?: readonly ActionDef[];
+  /** World clock. Default: a new world, at real speed. */
+  clock?: WorldClock;
 }
 
 export interface TestContext {
@@ -69,6 +72,7 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     ...(options.accounts && { accounts: options.accounts }),
     ...(options.reports && { reports: options.reports }),
     ...(options.actions && { actions: options.actions }),
+    ...(options.clock && { clock: options.clock }),
   });
   initModules(ctx, options.modules ?? []);
 

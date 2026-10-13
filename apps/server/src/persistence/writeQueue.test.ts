@@ -19,12 +19,14 @@ const label = (saved: SavedChunk) => `${saved.cx}:${saved.palette[1]}`;
 function fakeStore() {
   const writes: string[][] = [];
   const characters: string[][] = [];
+  const times: number[] = [];
   let failNext = 0;
   let hold: Promise<void> | undefined;
   let release = () => {};
   return {
     writes,
     characters,
+    times,
     failNextWrites(count: number) {
       failNext = count;
     },
@@ -48,6 +50,9 @@ function fakeStore() {
       },
       async saveCharacters(batch: readonly SavedCharacter[]) {
         characters.push(batch.map((c) => `${c.playerId}@${c.x}`));
+      },
+      async saveWorldTime(worldTimeMs: number) {
+        times.push(worldTimeMs);
       },
     },
   };
@@ -75,6 +80,18 @@ describe('WriteQueue', () => {
     await queue.flush();
 
     expect(writes).toEqual([['1:v2', '2:v1']]);
+    expect(queue.pending).toBe(0);
+  });
+
+  it('writes only the latest world clock queued', async () => {
+    const { queue, times } = setup();
+
+    queue.saveWorldTime(1000);
+    queue.saveWorldTime(2000);
+    expect(queue.pending).toBe(1);
+    await queue.flush();
+
+    expect(times).toEqual([2000]);
     expect(queue.pending).toBe(0);
   });
 

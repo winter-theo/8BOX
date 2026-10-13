@@ -6,7 +6,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ### Étape 21 : Jour, nuit et lumière (branche `step/21-jour-nuit-lumiere`)
 - [x] Shared : cycle jour/nuit (`sim/time.ts`), lumière (`sim/light.ts`, `isLit`), config, message `time`
   (protocole 16), i18n, tests
-- [ ] Serveur : horloge du monde (`ctx.clock`), `TIME_SCALE` (dev), module `time` (avance, envoi toutes les 10 s et
+- [x] Serveur : horloge du monde (`ctx.clock`), `TIME_SCALE` (dev), module `time` (avance, envoi toutes les 10 s et
   à l'arrivée, sauvegarde dans `world_state`), tests
 - [ ] Client : horloge extrapolée entre deux envois, calque d'obscurité (halos des torches, lueur du joueur, teintes),
   horloge du HUD (soleil, lune), tests
