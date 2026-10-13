@@ -10,6 +10,15 @@ const BUTTONS: readonly { button: TouchButton; label: string }[] = [
   { button: 'inventory', label: 'ui.mobile.inventory' },
 ];
 
+/** Opens the chat on the tab that has unread lines, when the current one has none. */
+function openChat(): void {
+  const state = useChatStore.getState();
+  const other = state.tab === 'proximity' ? 'private' : 'proximity';
+  const tab =
+    unreadCount(state, state.tab) === 0 && unreadCount(state, other) > 0 ? other : state.tab;
+  useChatStore.setState({ open: true, tab });
+}
+
 /** Opens the chat panel; shows how many lines were not read yet. */
 function ChatButton() {
   const { t } = useTranslation();
@@ -20,7 +29,7 @@ function ChatButton() {
     <button
       type="button"
       className="touch-button touch-button--chat"
-      onClick={() => useChatStore.setState({ open: true })}
+      onClick={openChat}
     >
       {t('ui.mobile.chat')}
       {unread > 0 && <span className="badge">{unread}</span>}
