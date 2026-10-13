@@ -12,15 +12,22 @@ import {
 import type { EntityId } from '../../core/entities';
 import type { GameModule } from '../../core/module';
 import type { Session } from '../../net/session';
-import { dropPosition, expireGroundItems, pickUpGroundItems, spawnGroundItem } from './groundItems';
+import {
+  dropPosition,
+  expireGroundItems,
+  pickUpGroundItems,
+  spawnGroundItem,
+  takePile,
+} from './groundItems';
 
 /**
  * What players carry: 10 slots (the hotbar, plus those of a worn bag), a purse for gold and equipment.
  * Clients ask for operations (`invSelect`, `invMove`, `invDrop`); the server checks them with the
  * shared rules, so that no item is ever created or lost, and sends the whole inventory back after each
  * change. Dropped items become `groundItem` entities: anyone walking on them picks them up (the player
- * who dropped them after 2 s), piles of the same item merge, and they disappear after 10 minutes. The
- * inventory is loaded with the character and saved with it (see `characterToSave`).
+ * who dropped them after 2 s), or takes them with the "pick up" action, piles of the same item merge,
+ * and they disappear after 10 minutes. The inventory is loaded with the character and saved with it
+ * (see `characterToSave`).
  */
 export const inventoryModule: GameModule = {
   id: 'inventory',
@@ -124,6 +131,23 @@ export const inventoryModule: GameModule = {
         const added = addItems(inventory, items, { item, count });
         return added.left < count ? added.inventory : undefined;
       });
+    });
+
+    // The "pick up" action: on purpose, so the wait of the player who dropped the pile does not apply.
+    ctx.actions.register('pickUp', ({ entity, subject }) => {
+      const inventory = ctx.entities.get(entity, 'inventory');
+      if (subject.kind !== 'entity' || !inventory) {
+        return 'unavailable';
+      }
+      if (!ctx.entities.has(subject.id, 'groundItem')) {
+        return 'gone';
+      }
+      const next = takePile(ctx, inventory, subject.id);
+      if (!next) {
+        return 'inventoryFull';
+      }
+      update(entity, next);
+      return undefined;
     });
 
     ctx.systems.add({

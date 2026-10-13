@@ -1,4 +1,5 @@
 import {
+  type ActionDef,
   baseContent,
   type ClientMessage,
   CONFIG,
@@ -41,6 +42,8 @@ export interface TestContextOptions {
   accounts?: Accounts;
   /** Reports. Default: in memory, over the default accounts. */
   reports?: ReportStore;
+  /** Definitions of the actions. Default: those of the base game. */
+  actions?: readonly ActionDef[];
 }
 
 export interface TestContext {
@@ -65,6 +68,7 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     ...(options.persistence && { persistence: options.persistence }),
     ...(options.accounts && { accounts: options.accounts }),
     ...(options.reports && { reports: options.reports }),
+    ...(options.actions && { actions: options.actions }),
   });
   initModules(ctx, options.modules ?? []);
 

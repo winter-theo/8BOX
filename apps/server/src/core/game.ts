@@ -1,4 +1,4 @@
-import { CONFIG, type Content, type GameConfig } from '@8box/shared';
+import { type ActionDef, baseActions, CONFIG, type Content, type GameConfig } from '@8box/shared';
 import { Accounts } from '../accounts/Accounts';
 import { MemoryAccountStore } from '../accounts/account';
 import { NetServer } from '../net/net';
@@ -7,6 +7,7 @@ import { MemoryStore } from '../persistence/store';
 import { WriteQueue } from '../persistence/writeQueue';
 import { MemoryReportStore, type ReportStore } from '../reports/store';
 import type { World } from '../world/World';
+import { ServerActions } from './actions';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
 import { GameLoop, type TickStats } from './loop';
@@ -34,6 +35,8 @@ export interface ContextOptions {
   accounts?: Accounts;
   /** Reports of players (default: kept in memory, over the default accounts). */
   reports?: ReportStore;
+  /** Definitions of the actions (default: those of the base game; tests add their own). */
+  actions?: readonly ActionDef[];
 }
 
 /** Saves kept in memory: nothing outlives the process (tests). */
@@ -58,6 +61,7 @@ export function createContext({
   devAuth = false,
   now,
   persistence = memoryPersistence(content, log),
+  actions = baseActions,
   ...stores
 }: ContextOptions): ServerContext {
   // Kept in memory by default (tests): reports find the players of the default accounts.
@@ -90,6 +94,7 @@ export function createContext({
     }),
     persistence,
     reports,
+    actions: new ServerActions(actions),
   };
 }
 
