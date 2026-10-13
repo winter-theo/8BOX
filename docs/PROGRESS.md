@@ -3,7 +3,14 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 20 : Vie, faim, mort et réapparition (branche `step/20-survie-mort`)
+- [ ] Shared : logique pure de survie (faim, famine, régénération, fatigue des actions, perte d'or, point de
+  réapparition), action « Manger », config.
+- [ ] Serveur : module `survival` (composants `health` et `hunger`, `damage`, mort, réapparition, invulnérabilité),
+  sauvegarde des PV et de la faim.
+- [ ] Protocole et client : état de survie envoyé au joueur, HUD cœurs et faim (PC et téléphone), écran de mort
+  avec bouton Réapparaître, i18n.
+- [ ] Tests et clôture.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
