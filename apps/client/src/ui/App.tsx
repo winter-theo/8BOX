@@ -7,6 +7,9 @@ import { LoginScreen } from './auth/LoginScreen';
 import { ConnectionBanner } from './ConnectionBanner';
 import { ChatPanel } from './chat/ChatPanel';
 import { DevInfo } from './DevInfo';
+import { DragGhost } from './inventory/DragGhost';
+import { Hotbar } from './inventory/Hotbar';
+import { InventoryWindow } from './inventory/InventoryWindow';
 import { LanguageSelect } from './LanguageSelect';
 import { LongPressBubble } from './mobile/LongPressBubble';
 import { MobileControls } from './mobile/MobileControls';
@@ -26,6 +29,8 @@ export function App() {
     <div className={touch ? 'app app--touch' : 'app'}>
       <PhaserGame />
       {touch && status === 'online' && <MobileControls />}
+      {status === 'online' && <Hotbar touch={touch} />}
+      {status === 'online' && <InventoryWindow touch={touch} />}
       {status === 'online' && <ChatPanel touch={touch} />}
       <LongPressBubble />
       <ConnectionBanner />
@@ -40,6 +45,7 @@ export function App() {
         <LanguageSelect />
       </div>
       {CLERK_PUBLISHABLE_KEY && <ClerkAutoConnect />}
+      <DragGhost />
       {touch && portrait && <RotatePhone />}
     </div>
   );
