@@ -26,7 +26,7 @@ describe('players module', () => {
     const entity = client.session.player?.entity ?? -1;
     expect(client.last()).toEqual({
       t: 'welcome',
-      you: { entity, name: 'Ana', skin: 'default', position: spawnPosition(ctx.world) },
+      you: { entity, name: 'Ana', skin: 'theo', position: spawnPosition(ctx.world) },
       tick: 0,
     });
     expect(ctx.entities.typeOf(entity)).toBe('player');
@@ -81,7 +81,7 @@ describe('players module', () => {
       layer: 0,
       x: 20.5,
       y: 30.25,
-      skin: 'default',
+      skin: 'theo',
     });
 
     const again = await join('ANA');
@@ -110,7 +110,7 @@ describe('players module', () => {
     const first = await join('Bob');
     const playerId = first.session.account?.playerId ?? -1;
     ctx.net.handleClose(first.session);
-    ctx.persistence.saveCharacter({ playerId, layer: 0, x: 99_999, y: 5, skin: 'default' });
+    ctx.persistence.saveCharacter({ playerId, layer: 0, x: 99_999, y: 5, skin: 'theo' });
 
     const bob = await join('Bob');
 

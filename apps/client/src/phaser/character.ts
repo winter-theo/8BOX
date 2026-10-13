@@ -19,7 +19,7 @@ export function spriteSide(facing: Facing, previous: Side): Side {
   return facing === 'left' || facing === 'right' ? facing : previous;
 }
 
-/** Sprite id of a frame of a character skin (`char.default.idle`…). */
+/** Sprite id of a frame of a character skin (`char.theo.idle`…). */
 export function characterSprite(skin: Skin, frame: CharacterFrame): string {
   return `char.${skin}.${frame}`;
 }

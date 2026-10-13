@@ -50,8 +50,8 @@ describe('RemoteEntities', () => {
     remotes.update(1, [bob(1)], [], TICK_MS);
     expect(remotes.views(TICK_MS)[0]?.skin).toBe('cat');
 
-    remotes.update(2, [bob(2, { skin: 'hat' })], [], 2 * TICK_MS);
-    expect(remotes.views(2 * TICK_MS)[0]?.skin).toBe('hat');
+    remotes.update(2, [bob(2, { skin: 'freddy' })], [], 2 * TICK_MS);
+    expect(remotes.views(2 * TICK_MS)[0]?.skin).toBe('freddy');
   });
 
   it('moves evenly although snapshots arrive with jitter', () => {

@@ -10,7 +10,7 @@ export const PLAYER = {
   /** Characters allowed in a player name: ASCII letters, digits and underscore. */
   namePattern: /^[A-Za-z0-9_]+$/,
   /** Skins a player can pick (the client has their art); the first one is given to new players. */
-  skins: ['default', 'cat', 'hat'],
+  skins: ['theo', 'cat', 'freddy'],
 } as const;
 
 export type Skin = (typeof PLAYER.skins)[number];

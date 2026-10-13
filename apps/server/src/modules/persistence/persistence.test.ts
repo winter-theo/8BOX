@@ -61,7 +61,7 @@ describe('persistence module', () => {
       layer: 0,
       x: 10.5,
       y: 20.25,
-      skin: 'default',
+      skin: 'theo',
     });
   });
 

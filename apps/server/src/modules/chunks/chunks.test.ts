@@ -88,7 +88,7 @@ describe('chunks module', () => {
     client.session.player = {
       entity,
       name: 'Ana',
-      skin: 'default',
+      skin: 'theo',
       position: { layer: 0, x: 0, y: 0 },
     };
     client.send({ t: 'viewport', w: 1280, h: 720, zoom: 4 });

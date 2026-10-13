@@ -115,7 +115,7 @@ describe('GameClient', () => {
     expect(lastSocket().sent[0]).toEqual({ t: 'hello', version: PROTOCOL_VERSION, devName: 'Ana' });
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', skin: 'default', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
       tick: 10,
     });
     expect(state()).toMatchObject({ status: 'online', player: { entity: 3, name: 'Ana' } });
@@ -127,15 +127,15 @@ describe('GameClient', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', skin: 'hat', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'freddy', position: SPAWN },
       tick: 1,
     });
-    expect(state().player?.skin).toBe('hat');
-    expect(client.localView()?.skin).toBe('hat');
+    expect(state().player?.skin).toBe('freddy');
+    expect(client.localView()?.skin).toBe('freddy');
 
     client.setSkin('cat');
     expect(lastSocket().sent.at(-1)).toEqual({ t: 'setSkin', skin: 'cat' });
-    expect(state().player?.skin).toBe('hat');
+    expect(state().player?.skin).toBe('freddy');
 
     lastSocket().receive({
       t: 'snapshot',
@@ -154,7 +154,7 @@ describe('GameClient', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', skin: 'default', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
       tick: 10,
     });
 
@@ -190,7 +190,7 @@ describe('GameClient', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 1, name: 'Ana', skin: 'default', position: SPAWN },
+      you: { entity: 1, name: 'Ana', skin: 'theo', position: SPAWN },
       tick: 1,
     });
     lastSocket().drop();
@@ -230,7 +230,7 @@ describe('GameClient world streaming', () => {
   const welcome = () =>
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 1, name: 'Ana', skin: 'default', position: SPAWN },
+      you: { entity: 1, name: 'Ana', skin: 'theo', position: SPAWN },
       tick: 1,
     });
 
@@ -307,7 +307,7 @@ describe('GameClient world streaming', () => {
       y: 512.5,
       facing: 'down',
       moving: false,
-      skin: 'default',
+      skin: 'theo',
     });
     const step = (PLAYER.speedTilesPerSecond * NET.clientInputIntervalMs) / 1000;
 
@@ -468,7 +468,7 @@ describe('GameClient accounts', () => {
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', skin: 'default', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
       tick: 1,
     });
 

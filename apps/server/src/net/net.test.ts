@@ -10,7 +10,7 @@ const joinModule: GameModule = {
   init(ctx) {
     ctx.events.on('session.authenticated', ({ session }) => {
       const entity = ctx.entities.create('player');
-      session.player = { entity, name: session.name ?? '?', skin: 'default', position: SPAWN };
+      session.player = { entity, name: session.name ?? '?', skin: 'theo', position: SPAWN };
     });
   },
 };

@@ -801,6 +801,32 @@ html.page-admin #root {
 }
 
 /* Speech bubbles: placed by the game over the canvas, above the speakers' names. */
+.name-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.name-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  color: #f4f4f4;
+  font:
+    600 12px / 1.2 system-ui,
+    sans-serif;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 1px #000;
+  white-space: nowrap;
+}
+
+.name-label[hidden] {
+  display: none;
+}
+
 .chat-bubbles {
   position: absolute;
   inset: 0;

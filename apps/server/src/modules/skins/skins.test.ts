@@ -16,7 +16,7 @@ async function setup() {
 describe('skins module', () => {
   it('gives the skin a player picks to their character', async () => {
     const { client, skin } = await setup();
-    expect(skin()).toBe('default');
+    expect(skin()).toBe('theo');
 
     client.send({ t: 'setSkin', skin: 'cat' });
 
@@ -28,16 +28,16 @@ describe('skins module', () => {
 
     client.sendRaw(encodeMessage({ t: 'setSkin', skin: 'dragon' } as unknown as ClientMessage));
 
-    expect(skin()).toBe('default');
+    expect(skin()).toBe('theo');
   });
 
   it('saves the skin with the character when the player leaves', async () => {
     const { ctx, client } = await setup();
-    client.send({ t: 'setSkin', skin: 'hat' });
+    client.send({ t: 'setSkin', skin: 'freddy' });
 
     ctx.net.handleClose(client.session);
 
     const playerId = client.session.account?.playerId ?? -1;
-    expect(ctx.persistence.character(playerId)?.skin).toBe('hat');
+    expect(ctx.persistence.character(playerId)?.skin).toBe('freddy');
   });
 });

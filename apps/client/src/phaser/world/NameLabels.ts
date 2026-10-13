@@ -1,80 +1,68 @@
 import * as Phaser from 'phaser';
-import { drawPixelFont, fontText, PIXEL_FONT } from '../../assets/pixelFont';
-import { DEPTH } from '../depth';
 
-const FONT_KEY = 'pixel-font';
-/** Gap between the top of a character and its name, in world pixels. */
-const GAP_PX = 1;
-/** Glyph outlines overlap by one pixel, so that letters are not too far apart. */
-const LETTER_SPACING_PX = -1;
+/** Gap between the top of a character and its name, in CSS pixels. */
+const GAP_CSS_PX = 2;
 
-/** Registers the pixel font in Phaser once per game (a canvas texture read as a retro font). */
-function ensureFont(scene: Phaser.Scene): void {
-  if (scene.cache.bitmapFont.exists(FONT_KEY)) {
-    return;
-  }
-  const width = PIXEL_FONT.chars.length * PIXEL_FONT.cellWidth;
-  const texture = scene.textures.createCanvas(FONT_KEY, width, PIXEL_FONT.cellHeight);
-  if (!texture) {
-    return;
-  }
-  drawPixelFont((x, y, color) => {
-    texture.context.fillStyle = color;
-    texture.context.fillRect(x, y, 1, 1);
-  });
-  texture.refresh();
-  // Phaser 4 returns the whole cache entry: { data, texture, frame }.
-  const entry = Phaser.GameObjects.RetroFont.Parse(scene, {
-    image: FONT_KEY,
-    width: PIXEL_FONT.cellWidth,
-    height: PIXEL_FONT.cellHeight,
-    chars: PIXEL_FONT.chars,
-    charsPerRow: PIXEL_FONT.chars.length,
-    'offset.x': 0,
-    'offset.y': 0,
-    'spacing.x': 0,
-    'spacing.y': 0,
-    lineSpacing: 0,
-  });
-  scene.cache.bitmapFont.add(FONT_KEY, entry);
+interface Label {
+  element: HTMLDivElement;
+  /** Top of the character's sprite, in world pixels. */
+  top: { x: number; y: number };
 }
 
 /**
- * Names above the heads of characters, in a pixel font scaled with the world like the rest of the art,
- * drawn over everything (a tree never hides a name).
+ * Names above the heads of characters, in the font of the interface (like its buttons). They are HTML
+ * over the game canvas (sharp at every zoom, never hidden by a tree), moved after each render to where
+ * the camera shows the character.
  */
 export class NameLabels {
-  private readonly labels = new Map<number, Phaser.GameObjects.BitmapText>();
+  private readonly layer: HTMLDivElement;
+  private readonly labels = new Map<number, Label>();
+  private readonly camera: Phaser.Cameras.Scene2D.Camera;
 
-  constructor(private readonly scene: Phaser.Scene) {
-    ensureFont(scene);
+  constructor(scene: Phaser.Scene) {
+    this.layer = document.createElement('div');
+    this.layer.className = 'name-labels';
+    scene.game.canvas.parentElement?.append(this.layer);
+    this.camera = scene.cameras.main;
+    this.camera.on(Phaser.Cameras.Scene2D.Events.POST_RENDER, this.place, this);
   }
 
   /** Shows the name of entity `id` above a sprite whose top is at `top` (world pixels). */
   set(id: number, name: string, top: { x: number; y: number }): void {
     let label = this.labels.get(id);
-    const text = fontText(name);
     if (!label) {
-      label = this.scene.add
-        .bitmapText(0, 0, FONT_KEY, text) // Its own size: one font pixel per world pixel.
-        .setLetterSpacing(LETTER_SPACING_PX)
-        .setOrigin(0.5, 1)
-        .setDepth(DEPTH.labels);
+      const element = document.createElement('div');
+      element.className = 'name-label';
+      element.hidden = true; // Until placed.
+      this.layer.append(element);
+      label = { element, top };
       this.labels.set(id, label);
-    } else if (label.text !== text) {
-      label.setText(text);
     }
-    label.setPosition(top.x, top.y - GAP_PX);
+    if (label.element.textContent !== name) {
+      label.element.textContent = name;
+    }
+    label.top = top;
   }
 
   remove(id: number): void {
-    this.labels.get(id)?.destroy();
+    this.labels.get(id)?.element.remove();
     this.labels.delete(id);
   }
 
   destroy(): void {
-    for (const id of [...this.labels.keys()]) {
-      this.remove(id);
+    this.camera.off(Phaser.Cameras.Scene2D.Events.POST_RENDER, this.place, this);
+    this.layer.remove();
+    this.labels.clear();
+  }
+
+  /** After the camera rendered: each name just above its character. */
+  private place(camera: Phaser.Cameras.Scene2D.Camera): void {
+    const view = camera.worldView;
+    for (const { element, top } of this.labels.values()) {
+      const x = (top.x - view.x) * camera.zoom + camera.x;
+      const y = (top.y - view.y) * camera.zoom + camera.y - GAP_CSS_PX;
+      element.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
+      element.hidden = false;
     }
   }
 }

@@ -31,7 +31,7 @@ const clientMessages: ClientMessage[] = [
 const serverMessages: ServerMessage[] = [
   {
     t: 'welcome',
-    you: { entity: 7, name: 'Ana_42', skin: 'hat', position: { layer: 0, x: 512.5, y: 512.5 } },
+    you: { entity: 7, name: 'Ana_42', skin: 'freddy', position: { layer: 0, x: 512.5, y: 512.5 } },
     tick: 1200,
   },
   { t: 'chunkUnload', layer: 0, cx: 3, cy: 4 },

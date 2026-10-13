@@ -211,9 +211,9 @@
     },
     "skin": {
       "label": "Apparence",
-      "default": "Aventurier",
+      "theo": "Theo",
       "cat": "Chat",
-      "hat": "Chapeau"
+      "freddy": "Freddy"
     },
     "mobile": {
       "joystick": "Joystick de déplacement",

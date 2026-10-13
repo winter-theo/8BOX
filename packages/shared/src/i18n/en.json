@@ -211,9 +211,9 @@
     },
     "skin": {
       "label": "Look",
-      "default": "Adventurer",
+      "theo": "Theo",
       "cat": "Cat",
-      "hat": "Hat"
+      "freddy": "Freddy"
     },
     "mobile": {
       "joystick": "Movement joystick",
