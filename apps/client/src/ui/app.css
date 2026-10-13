@@ -146,6 +146,9 @@ body {
 }
 
 .top-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: 48px;
   padding: 0 12px;
   border: 1px solid rgb(255 255 255 / 20%);
@@ -154,6 +157,7 @@ body {
   color: #f4f4f4;
   font: inherit;
   font-size: 14px;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -350,4 +354,268 @@ body {
   z-index: 10;
   background: #1b1b24;
   text-align: center;
+}
+
+/* Pending requests count (admin link, admin tab). */
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f87171;
+  color: #1b1b24;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── Admin tab (/admin): a normal page, it scrolls and its text can be selected ─── */
+
+html.page-admin,
+html.page-admin body,
+html.page-admin #root {
+  height: auto;
+  min-height: 100%;
+  overflow: auto;
+  touch-action: auto;
+  overscroll-behavior: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.admin {
+  box-sizing: border-box;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  color: #f4f4f4;
+}
+
+.admin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-family: monospace;
+  font-size: 28px;
+}
+
+.admin-header h1 small {
+  font-family: system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.admin-header__nav {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  opacity: 0.85;
+}
+
+.admin-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.admin-error {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgb(248 113 113 / 15%);
+  color: #fca5a5;
+}
+
+.admin-section {
+  margin-top: 24px;
+}
+
+.admin-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.admin-empty {
+  margin: 0;
+  opacity: 0.6;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th {
+  padding: 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 25%);
+  font-weight: 600;
+  text-align: left;
+  opacity: 0.7;
+}
+
+.admin-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.admin-actions,
+.admin-ban {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-ban input {
+  flex: 1 1 160px;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 8px;
+  background: #1b1b24;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+
+.admin-button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 8px;
+  background: #262635;
+  color: #f4f4f4;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.admin-button--primary {
+  border-color: transparent;
+  background: #4ade80;
+  color: #1b1b24;
+  font-weight: 600;
+}
+
+.admin-button--danger {
+  border-color: rgb(248 113 113 / 60%);
+  color: #fca5a5;
+}
+
+.admin-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.admin-status--approved {
+  background: rgb(74 222 128 / 20%);
+  color: #86efac;
+}
+
+.admin-status--denied,
+.admin-status--banned {
+  background: rgb(248 113 113 / 20%);
+  color: #fca5a5;
+}
+
+.admin-reason {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.admin-tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgb(96 165 250 / 25%);
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.admin-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+/* Fingers: 48 px buttons. */
+@media (pointer: coarse) {
+  .admin-button,
+  .admin-ban input {
+    min-height: 48px;
+  }
+}
+
+/* Phones: each row becomes a card, each cell shows its column name. */
+@media (max-width: 640px) {
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+  }
+
+  .admin-table tr {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #262635;
+  }
+
+  .admin-table td {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 6px 0;
+    border-bottom: 0;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    flex: 0 0 110px;
+    opacity: 0.6;
+  }
+
+  .admin-table .admin-actions,
+  .admin-table .admin-ban {
+    flex: 1 1 100%;
+  }
 }

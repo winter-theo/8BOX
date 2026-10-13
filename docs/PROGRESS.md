@@ -9,7 +9,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
       journal ; approuver, refuser, bannir, débannir, expulser ; chaque action dans l'audit
 - [x] Effets immédiats côté réseau : bannissement, refus et expulsion déconnectent avec le bon écran ; un joueur
       approuvé qui attend entre en jeu (raison de refus `kicked`, protocole 6)
-- [ ] Client : page `/admin` (tableaux, rafraîchissement toutes les 30 s, téléphone), lien dans le menu avec le
+- [x] Client : page `/admin` (tableaux, rafraîchissement toutes les 30 s, téléphone), lien dans le menu avec le
       badge « N en attente », textes FR et EN
 - [ ] Tests (garde 403, approbation et bannissement avec audit, effets en direct) et vérification
 

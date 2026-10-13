@@ -52,6 +52,82 @@
       "reload": "Reload",
       "back": "Back"
     },
+    "admin": {
+      "link": "Admin",
+      "pendingBadge": "{{count}} pending",
+      "title": "Administration",
+      "backToGame": "Back to the game",
+      "refresh": "Refresh",
+      "updatedAt": "Updated at {{time}}",
+      "loading": "Loading…",
+      "signIn": "Sign in with your admin Google account.",
+      "signInButton": "Sign in with Google",
+      "pending": {
+        "title": "Pending",
+        "empty": "No pending request."
+      },
+      "players": {
+        "title": "Players",
+        "empty": "No player."
+      },
+      "audit": {
+        "title": "Audit log",
+        "empty": "No action yet."
+      },
+      "column": {
+        "name": "Name",
+        "email": "Email",
+        "requestedAt": "Requested",
+        "status": "Status",
+        "online": "Online",
+        "lastSeen": "Last seen",
+        "actions": "Actions",
+        "date": "Date",
+        "admin": "Admin",
+        "action": "Action",
+        "target": "Player",
+        "reason": "Reason"
+      },
+      "noName": "(no name chosen yet)",
+      "never": "never",
+      "online": "online",
+      "offline": "offline",
+      "adminRole": "admin",
+      "status": {
+        "pending": "pending",
+        "approved": "approved",
+        "denied": "denied",
+        "banned": "banned"
+      },
+      "action": {
+        "approve": "Approve",
+        "deny": "Deny",
+        "ban": "Ban",
+        "unban": "Unban",
+        "kick": "Kick"
+      },
+      "audited": {
+        "approve": "approved",
+        "deny": "denied",
+        "ban": "banned",
+        "unban": "unbanned",
+        "kick": "kicked"
+      },
+      "banReason": "Ban reason",
+      "confirmBan": "Ban",
+      "cancel": "Cancel",
+      "error": {
+        "unauthorized": "Your session expired: sign in again.",
+        "forbidden": "This page is for admins only.",
+        "notFound": "This player does not exist.",
+        "self": "You cannot act on your own account.",
+        "targetIsAdmin": "You cannot act on another admin.",
+        "wrongStatus": "This player's status changed: the list is refreshed.",
+        "notOnline": "This player is no longer connected.",
+        "invalidBody": "The reason must be 1 to 200 characters long.",
+        "network": "The server does not answer."
+      }
+    },
     "dev": {
       "chunks_one": "{{count}} chunk loaded",
       "chunks_other": "{{count}} chunks loaded",
