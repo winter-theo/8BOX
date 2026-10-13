@@ -8,7 +8,8 @@ export function ConnectionBanner() {
   const pingMs = useSessionStore((state) => state.pingMs);
   const name = useSessionStore((state) => state.player?.name);
 
-  if (status === 'idle' || status === 'rejected') {
+  // The account and refusal screens say it all.
+  if (status === 'idle' || status === 'account' || status === 'rejected') {
     return null;
   }
   return (

@@ -1,22 +1,20 @@
 import { SignInButton } from '@clerk/react';
 import { useTranslation } from 'react-i18next';
-import { readStoredDevName } from '../../devName';
 import { CLERK_PUBLISHABLE_KEY } from '../../env';
 import { LanguageSelect } from '../LanguageSelect';
 import { AdminPage } from './AdminPage';
-import { devAuthHeader, useClerkAuthHeader } from './adminAuth';
+import { pageDevAuthHeader, pageDevName, useClerkAuthHeader } from './adminAuth';
 
 /** With Clerk: the admin tab of the signed-in Google account, or a sign-in button. */
 function ClerkAdminGate() {
   const { t } = useTranslation();
-  const { isLoaded, isSignedIn, header } = useClerkAuthHeader();
+  const { isLoaded, isSignedIn, header } = useClerkAuthHeader(pageDevAuthHeader);
 
   if (!isLoaded) {
     return <p className="admin-notice">{t('ui.admin.loading')}</p>;
   }
   // In dev mode, without a Google account, the last dev name of this browser is used.
-  const devName = import.meta.env.DEV ? readStoredDevName() : '';
-  if (!isSignedIn && devName === '') {
+  if (!isSignedIn && pageDevName === '') {
     return (
       <div className="admin-notice">
         <p>{t('ui.admin.signIn')}</p>
@@ -49,7 +47,7 @@ export function AdminApp() {
         </nav>
       </header>
       <main>
-        {CLERK_PUBLISHABLE_KEY ? <ClerkAdminGate /> : <AdminPage authHeader={devAuthHeader} />}
+        {CLERK_PUBLISHABLE_KEY ? <ClerkAdminGate /> : <AdminPage authHeader={pageDevAuthHeader} />}
       </main>
     </div>
   );

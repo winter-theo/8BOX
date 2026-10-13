@@ -151,25 +151,27 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
           onCancel={() => setBanning(null)}
         />
       ) : (
-        <div className="admin-actions">
-          {actionsOf(player).map((action) => (
-            <button
-              key={action}
-              type="button"
-              className={
-                action === 'approve'
-                  ? 'admin-button admin-button--primary'
-                  : action === 'ban' || action === 'deny'
-                    ? 'admin-button admin-button--danger'
-                    : 'admin-button'
-              }
-              disabled={busy}
-              onClick={() => act(player, action)}
-            >
-              {t(`ui.admin.action.${action}`)}
-            </button>
-          ))}
-        </div>
+        actionsOf(player).length > 0 && (
+          <div className="admin-actions">
+            {actionsOf(player).map((action) => (
+              <button
+                key={action}
+                type="button"
+                className={
+                  action === 'approve'
+                    ? 'admin-button admin-button--primary'
+                    : action === 'ban' || action === 'deny'
+                      ? 'admin-button admin-button--danger'
+                      : 'admin-button'
+                }
+                disabled={busy}
+                onClick={() => act(player, action)}
+              >
+                {t(`ui.admin.action.${action}`)}
+              </button>
+            ))}
+          </div>
+        )
       )}
     </td>
   );

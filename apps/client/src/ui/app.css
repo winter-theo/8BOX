@@ -608,6 +608,10 @@ html.page-admin #root {
     border-bottom: 0;
   }
 
+  .admin-table td:empty {
+    display: none;
+  }
+
   .admin-table td::before {
     content: attr(data-label);
     flex: 0 0 110px;
