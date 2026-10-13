@@ -25,7 +25,8 @@ export function dropPosition(ctx: ServerContext, feet: Position, facing: Facing)
 }
 
 /**
- * Puts items on the ground. They join a pile of the same item lying close by when it has room (the
+ * Puts items on the ground (a worn tool keeps its uses left). They join a pile of the same item, worn
+ * the same, lying close by when it has room (the
  * pile then waits as long as a new one), otherwise they make a new pile. `droppedBy` (`players.id`)
  * waits before picking them up again.
  */
@@ -46,10 +47,15 @@ export function spawnGroundItem(
   const { layer, x, y } = position;
   for (const id of ctx.entities.near(layer, x, y, groundMergeRadiusTiles)) {
     const pile = ctx.entities.get(id, 'groundItem');
-    if (pile?.item === stack.item && pile.count + stack.count <= limit) {
+    if (
+      pile?.item === stack.item &&
+      pile.durability === stack.durability &&
+      pile.count + stack.count <= limit
+    ) {
       ctx.entities.set(id, 'groundItem', {
         item: pile.item,
         count: pile.count + stack.count,
+        ...(pile.durability !== undefined && { durability: pile.durability }),
         ...timing,
       });
       return id;
@@ -57,7 +63,12 @@ export function spawnGroundItem(
   }
   return ctx.entities.create('groundItem', {
     position,
-    groundItem: { item: stack.item, count: stack.count, ...timing },
+    groundItem: {
+      item: stack.item,
+      count: stack.count,
+      ...(stack.durability !== undefined && { durability: stack.durability }),
+      ...timing,
+    },
   });
 }
 

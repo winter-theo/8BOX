@@ -1,4 +1,10 @@
-import { type ItemStack, type LayerId, type TileSlot, TypedEmitter } from '@8box/shared';
+import {
+  type Inventory,
+  type ItemStack,
+  type LayerId,
+  type TileSlot,
+  TypedEmitter,
+} from '@8box/shared';
 import type { Session } from '../net/session';
 import type { TileChange } from '../world/World';
 import type { EntityId, EntityType } from './entities';
@@ -41,8 +47,28 @@ export type ServerEvents = {
    * does not fit. Handled by the inventory module.
    */
   'items.give': { entity: EntityId; items: readonly ItemStack[] };
-  /** A player hit something with the tool in hand (hotbar slot `slot`): its wear comes with step 17. */
+  /**
+   * Request: replace the inventory of a player by this one, computed with the shared operations from the
+   * current one (crafting, placing). Handled by the inventory module, which sends it to the client.
+   */
+  'inventory.set': { entity: EntityId; inventory: Inventory };
+  /**
+   * A player hit something with the tool in hand (hotbar slot `slot`): the inventory module wears it
+   * by one use, and it breaks at 0.
+   */
   'tool.used': { entity: EntityId; item: string; slot: number };
+  /** A player crafted a recipe once (its ingredients are taken, what it gives is in the inventory). */
+  'item.crafted': { entity: EntityId; recipe: string };
+  /** A player placed the item in hand: tile `tile` is now in slot `slot` of (x, y). */
+  'tile.placed': {
+    layer: LayerId;
+    x: number;
+    y: number;
+    slot: TileSlot;
+    tile: string;
+    /** The player who placed it. */
+    by: EntityId;
+  };
 };
 
 /** Synchronous typed bus: `emit` returns once every listener has run. */
