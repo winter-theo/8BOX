@@ -29,7 +29,7 @@ function validContent() {
         solid: true,
         tall: true,
         hp: 6,
-        harvest: { tool: 'axe' },
+        harvest: { action: 'cut', tool: 'axe' },
         loot: 'base:oak_tree',
       },
     ] as Record<string, unknown>[],
@@ -53,7 +53,7 @@ function validContent() {
         timeMs: 1000,
       },
     ] as Record<string, unknown>[],
-    loot: [{ id: 'base:oak_tree', drops: [{ item: 'base:oak_log', count: 3 }] }] as Record<
+    loot: [{ id: 'base:oak_tree', drops: [{ item: 'base:oak_log', min: 3 }] }] as Record<
       string,
       unknown
     >[],
@@ -156,6 +156,23 @@ describe('loadContent', () => {
       'tiles/base:oak_tree/loot',
       'items/base:workbench/place',
       'recipes/base:planks_at_workbench/station',
+    ]);
+  });
+
+  it('reports a harvested tile without HP, and broken pick and regrowth references', () => {
+    const raw = validContent();
+    raw.tiles[2] = { ...raw.tiles[2], hp: 0 };
+    raw.tiles[1] = {
+      ...raw.tiles[1],
+      pick: { loot: 'base:missing_loot', becomes: 'base:grass' },
+      regrow: { into: 'base:missing_tile', afterMs: 1000 },
+    };
+
+    expect(issuesOf(raw).map((issue) => `${issue.id}/${issue.field}: ${issue.message}`)).toEqual([
+      'base:oak_tree/hp: a harvested tile needs hp',
+      'base:workbench/pick.loot: unknown loot table "base:missing_loot"',
+      'base:workbench/pick.becomes: "base:grass" is not in the object slot',
+      'base:workbench/regrow.into: unknown tile "base:missing_tile"',
     ]);
   });
 

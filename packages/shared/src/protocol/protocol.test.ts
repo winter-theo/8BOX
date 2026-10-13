@@ -46,6 +46,18 @@ const serverMessages: ServerMessage[] = [
   { t: 'chunkUnload', layer: 0, cx: 3, cy: 4 },
   { t: 'tileUpdate', layer: 0, x: 10, y: 20, slot: 'object', tile: 'base:flowers' },
   { t: 'tileUpdate', layer: 0, x: 10, y: 20, slot: 'object', tile: null },
+  { t: 'tileDamage', layer: 0, x: 10, y: 20, hp: 4, maxHp: 6 },
+  {
+    t: 'welcome',
+    you: {
+      entity: 8,
+      name: 'Boss',
+      skin: 'theo',
+      position: { layer: 0, x: 1.5, y: 2.5 },
+      admin: true,
+    },
+    tick: 1,
+  },
   { t: 'rejected', reason: 'outdated' },
   { t: 'pong', time: 123456.789 },
   {

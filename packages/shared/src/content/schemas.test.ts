@@ -16,7 +16,7 @@ const tile = {
   solid: true,
   tall: true,
   hp: 6,
-  harvest: { tool: 'axe' },
+  harvest: { action: 'cut', tool: 'axe' },
 };
 
 describe('tileDefSchema', () => {
@@ -35,6 +35,23 @@ describe('tileDefSchema', () => {
     expect(tileDefSchema.safeParse({ ...tile, id: 'oak_tree' }).success).toBe(false);
     expect(tileDefSchema.safeParse({ ...tile, slot: 'roof' }).success).toBe(false);
     expect(tileDefSchema.safeParse({ ...tile, hp: -1 }).success).toBe(false);
+  });
+
+  it('accepts a harvest action with or without a tool, a pick and a regrowth', () => {
+    expect(tileDefSchema.safeParse({ ...tile, harvest: { action: 'uproot' } }).success).toBe(true);
+    expect(tileDefSchema.safeParse({ ...tile, harvest: { tool: 'axe' } }).success).toBe(false);
+    expect(tileDefSchema.safeParse({ ...tile, harvest: { action: 'chop' } }).success).toBe(false);
+    const bush = {
+      ...tile,
+      harvest: undefined,
+      pick: { loot: 'base:berry_bush', becomes: 'base:berry_bush_picked' },
+    };
+    expect(tileDefSchema.parse(bush).pick).toEqual(bush.pick);
+    const picked = { ...tile, regrow: { into: 'base:berry_bush', afterMs: 600_000 } };
+    expect(tileDefSchema.parse(picked).regrow).toEqual(picked.regrow);
+    expect(
+      tileDefSchema.safeParse({ ...tile, regrow: { into: 'base:berry_bush', afterMs: 0 } }).success,
+    ).toBe(false);
   });
 
   it('accepts a speed factor between 0 (excluded) and 1', () => {
@@ -107,7 +124,16 @@ describe('recipeDefSchema', () => {
 describe('lootTableSchema and creatureDefSchema (drafts)', () => {
   it('defaults the count and chance of a drop', () => {
     const table = lootTableSchema.parse({ id: 'base:oak_tree', drops: [{ item: 'base:oak_log' }] });
-    expect(table.drops).toEqual([{ item: 'base:oak_log', count: 1, chance: 1 }]);
+    expect(table.drops).toEqual([{ item: 'base:oak_log', min: 1, chance: 1 }]);
+  });
+
+  it('accepts a range of items, but not one that goes down', () => {
+    const drop = { item: 'base:oak_log', min: 2, max: 4, chance: 0.5 };
+    expect(lootTableSchema.parse({ id: 'base:oak_tree', drops: [drop] }).drops).toEqual([drop]);
+    const reversed = { id: 'base:oak_tree', drops: [{ item: 'base:oak_log', min: 3, max: 2 }] };
+    expect(lootTableSchema.safeParse(reversed).success).toBe(false);
+    const sure = { id: 'base:oak_tree', drops: [{ item: 'base:oak_log', chance: 1.5 }] };
+    expect(lootTableSchema.safeParse(sure).success).toBe(false);
   });
 
   it('accepts a creature', () => {

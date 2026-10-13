@@ -2,6 +2,7 @@ import type { Content } from '../content/load';
 import type { TileSlot } from '../content/schemas';
 import type { Inventory } from '../inventory/inventory';
 import type { EntityKind } from '../protocol/messages';
+import type { SafeZone } from '../world/safeZone';
 
 /** What an action can be aimed at: a tile, an entity standing there, or the player themselves. */
 export type ActionTargetKind = 'tile' | 'entity' | 'self';
@@ -39,6 +40,8 @@ export interface Actor {
   x: number;
   y: number;
   inventory: Inventory;
+  /** Admins may break things in the safe zone. */
+  admin?: boolean;
 }
 
 /** Why an action cannot be done; shown in the menu and when the server refuses (`ui.actions.reason.*`). */
@@ -54,7 +57,9 @@ export type ActionReason =
   /** The target is no longer there. */
   | 'gone'
   /** No such action on this target. */
-  | 'unavailable';
+  | 'unavailable'
+  /** Nothing is broken in the safe zone around the spawn (except by an admin). */
+  | 'safeZone';
 
 /** Whether an action can be done now; when not, why. */
 export type ActionCheck = { ok: true } | { ok: false; reason: ActionReason };
@@ -63,6 +68,8 @@ export interface ActionContext {
   actor: Actor;
   subject: ActionSubject;
   content: Content;
+  /** Where nothing is broken; none when absent. */
+  safeZone?: SafeZone;
 }
 
 /**
@@ -119,9 +126,21 @@ export interface ActionOption {
   check: ActionCheck;
 }
 
+/** The slot of the thing that names a tile: its object, otherwise its floor, otherwise its ground. */
+export function thingSlot(tiles: Partial<Record<TileSlot, string>>): TileSlot | undefined {
+  if (tiles.object !== undefined) {
+    return 'object';
+  }
+  if (tiles.floor !== undefined) {
+    return 'floor';
+  }
+  return tiles.ground === undefined ? undefined : 'ground';
+}
+
 /** The content id that names a tile: its object, otherwise its floor, otherwise its ground. */
 export function tileThing(tiles: Partial<Record<TileSlot, string>>): string | undefined {
-  return tiles.object ?? tiles.floor ?? tiles.ground;
+  const slot = thingSlot(tiles);
+  return slot && tiles[slot];
 }
 
 /** What the client sends to aim an action at this subject. */
@@ -154,12 +173,18 @@ export function listActions(
   actor: Actor,
   subjects: readonly ActionSubject[],
   content: Content,
+  safeZone?: SafeZone,
 ): ActionOption[] {
   const options: ActionOption[] = [];
   for (const action of registry.all) {
     for (const subject of subjects) {
       if (actionApplies(action, subject, content)) {
-        const check = action.canPerform({ actor, subject, content });
+        const check = action.canPerform({
+          actor,
+          subject,
+          content,
+          ...(safeZone && { safeZone }),
+        });
         options.push({ action, subject, target: targetOf(subject), check });
       }
     }

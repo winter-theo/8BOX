@@ -15,6 +15,11 @@ export const spriteIdSchema = z
 /** Layer of a world cell a tile occupies. */
 export const tileSlotSchema = z.enum(['ground', 'floor', 'object']);
 export const toolKindSchema = z.enum(['axe', 'pickaxe']);
+/**
+ * How a breakable tile is broken, hit after hit (the action of the same name): `cut` (trees),
+ * `uproot` (small plants), `break` (placed objects).
+ */
+export const harvestActionSchema = z.enum(['cut', 'uproot', 'break']);
 export const equipSlotSchema = z.enum(INVENTORY.equipmentSlots);
 
 const positiveInt = z.number().int().positive();
@@ -39,10 +44,37 @@ export const tileDefSchema = z.strictObject({
       radiusTiles: z.number().positive().default(LIGHT.defaultRadiusTiles),
     })
     .optional(),
-  /** Tool that harvests it best. */
-  harvest: z.strictObject({ tool: toolKindSchema }).optional(),
-  /** Loot table id rolled when it is harvested or broken. */
+  /**
+   * Broken hit after hit (needs `hp` > 0): each hit takes HP, depending on the item in hand (`tool`
+   * is the kind of tool that does the most); at 0 the tile goes away and its `loot` is rolled.
+   */
+  harvest: z
+    .strictObject({
+      action: harvestActionSchema,
+      /** Kind of tool that harvests it best. */
+      tool: toolKindSchema.optional(),
+    })
+    .optional(),
+  /** Loot table id rolled when it is broken. */
   loot: contentIdSchema.optional(),
+  /** Picked (berry bush): gives a roll of `loot` and becomes the tile `becomes`, in the same slot. */
+  pick: z
+    .strictObject({
+      /** Loot table id rolled when it is picked. */
+      loot: contentIdSchema,
+      /** Tile id it turns into once picked. */
+      becomes: contentIdSchema,
+    })
+    .optional(),
+  /** Grows back (picked berry bush): turns into the tile `into` after `afterMs`, in the same slot. */
+  regrow: z
+    .strictObject({
+      /** Tile id it turns back into. */
+      into: contentIdSchema,
+      /** Time before it does, in ms. */
+      afterMs: positiveInt,
+    })
+    .optional(),
   /** Crafting station this tile provides (recipes refer to it with `station`). */
   station: contentIdSchema.optional(),
 });
@@ -111,18 +143,26 @@ export const recipeDefSchema = z.strictObject({
   timeMs: durationMs,
 });
 
-/** Draft: completed with harvesting (step 16). */
+/** One possible drop of a loot table: `min` to `max` items (both included), with a probability. */
+export const lootDropSchema = z
+  .strictObject({
+    item: contentIdSchema,
+    /** Fewest items given when the drop happens. */
+    min: positiveInt.default(1),
+    /** Most items given when the drop happens; absent means `min`. */
+    max: positiveInt.optional(),
+    /** Probability of the drop, from 0 to 1. */
+    chance: z.number().min(0).max(1).default(1),
+  })
+  .refine((drop) => drop.max === undefined || drop.max >= drop.min, {
+    message: 'max must not be lower than min',
+    path: ['max'],
+  });
+
+/** What breaking or picking something gives (each drop rolled on its own). */
 export const lootTableSchema = z.strictObject({
   id: contentIdSchema,
-  drops: z.array(
-    z.strictObject({
-      item: contentIdSchema,
-      /** Items given when the drop happens. */
-      count: positiveInt.default(1),
-      /** Probability of the drop, from 0 to 1. */
-      chance: z.number().min(0).max(1).default(1),
-    }),
-  ),
+  drops: z.array(lootDropSchema),
 });
 
 /** Draft: completed with monsters (step 23). */
@@ -141,6 +181,8 @@ export const creatureDefSchema = z.strictObject({
 
 export type TileSlot = z.output<typeof tileSlotSchema>;
 export type ToolKind = z.output<typeof toolKindSchema>;
+export type HarvestAction = z.output<typeof harvestActionSchema>;
+export type LootDrop = z.output<typeof lootDropSchema>;
 export type EquipSlot = z.output<typeof equipSlotSchema>;
 export type TileDef = z.output<typeof tileDefSchema>;
 export type ItemDef = z.output<typeof itemDefSchema>;

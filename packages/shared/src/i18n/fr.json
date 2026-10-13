@@ -242,6 +242,10 @@
       "close": "Fermer le menu",
       "pickUp": "Ramasser ({{name}})",
       "examine": "Examiner ({{name}})",
+      "cut": "Couper ({{name}})",
+      "uproot": "Arracher ({{name}})",
+      "pick": "Cueillir ({{name}})",
+      "break": "Casser ({{name}})",
       "examined": "C'est : {{name}}.",
       "examinedPile": "C'est : {{name}} × {{count}}.",
       "examinedPlayer": "C'est {{name}}.",
@@ -255,7 +259,8 @@
         "busy": "Une autre action est en cours",
         "tooSoon": "Pas si vite",
         "gone": "Ce n'est plus là",
-        "unavailable": "Impossible ici"
+        "unavailable": "Impossible ici",
+        "safeZone": "Rien ne se casse dans la zone sûre"
       }
     },
     "mobile": {
@@ -278,6 +283,7 @@
       "deep_water": { "name": "Eau profonde" },
       "oak_tree": { "name": "Chêne" },
       "berry_bush": { "name": "Buisson à baies" },
+      "berry_bush_picked": { "name": "Buisson à baies (cueilli)" },
       "tall_grass": { "name": "Hautes herbes" },
       "flowers": { "name": "Fleurs" },
       "oak_log": { "name": "Bûche de chêne" },

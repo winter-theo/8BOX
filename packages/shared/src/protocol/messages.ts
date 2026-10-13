@@ -237,7 +237,14 @@ export interface WorldPosition {
 export interface WelcomeMessage {
   t: 'welcome';
   /** The player of this session. `entity` is only valid for this session. */
-  you: { entity: number; name: string; skin: Skin; position: WorldPosition };
+  you: {
+    entity: number;
+    name: string;
+    skin: Skin;
+    position: WorldPosition;
+    /** Present when the player is an admin (may break things in the safe zone). */
+    admin?: true;
+  };
   /** Server tick when the player joined. */
   tick: number;
 }
@@ -306,6 +313,21 @@ export interface TileUpdateMessage {
   slot: TileSlot;
   /** Tile id, or null when the slot is now empty. */
   tile: string | null;
+}
+
+/**
+ * Hit points of a tile being broken, in a subscribed chunk: after each hit that does not break it, and
+ * when it got them all back (`hp` = `maxHp`). Forget it when the tile changes.
+ */
+export interface TileDamageMessage {
+  t: 'tileDamage';
+  layer: number;
+  x: number;
+  y: number;
+  /** HP left. */
+  hp: number;
+  /** HP of the tile undamaged. */
+  maxHp: number;
 }
 
 /** Kinds of entities in the world. */
@@ -456,6 +478,7 @@ export type ServerMessage =
   | ChunkMessage
   | ChunkUnloadMessage
   | TileUpdateMessage
+  | TileDamageMessage
   | ChatLineMessage
   | ChatNoticeMessage
   | InventoryMessage

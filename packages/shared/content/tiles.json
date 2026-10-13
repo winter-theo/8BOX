@@ -47,7 +47,8 @@
     "solid": true,
     "tall": true,
     "hp": 6,
-    "harvest": { "tool": "axe" }
+    "harvest": { "action": "cut", "tool": "axe" },
+    "loot": "base:oak_tree"
   },
   {
     "id": "base:berry_bush",
@@ -55,7 +56,17 @@
     "sprite": "obj.berry_bush",
     "solid": true,
     "tall": false,
-    "hp": 3
+    "hp": 3,
+    "pick": { "loot": "base:berry_bush", "becomes": "base:berry_bush_picked" }
+  },
+  {
+    "id": "base:berry_bush_picked",
+    "slot": "object",
+    "sprite": "obj.berry_bush_picked",
+    "solid": true,
+    "tall": false,
+    "hp": 3,
+    "regrow": { "into": "base:berry_bush", "afterMs": 600000 }
   },
   {
     "id": "base:tall_grass",
@@ -63,7 +74,9 @@
     "sprite": "obj.tall_grass",
     "solid": false,
     "tall": false,
-    "hp": 1
+    "hp": 1,
+    "harvest": { "action": "uproot" },
+    "loot": "base:tall_grass"
   },
   {
     "id": "base:flowers",
@@ -71,6 +84,7 @@
     "sprite": "obj.flowers",
     "solid": false,
     "tall": false,
-    "hp": 1
+    "hp": 1,
+    "harvest": { "action": "uproot" }
   }
 ]

@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 ### Étape 16 : Récolte et zone sûre (branche `step/16-recolte`)
-- [ ] Shared : contenu (récolte, cueillette, repousse, butin), dégâts, tirage du butin, zone sûre, actions
+- [x] Shared : contenu (récolte, cueillette, repousse, butin), dégâts, tirage du butin, zone sûre, actions
   (Couper, Arracher, Cueillir, Casser), protocole (`tileDamage`, admin dans `welcome`), i18n, tests
 - [ ] Serveur : module `harvest` (PV des cases, dégâts, récupération, butin, `tile.broken`, cueillette et
   repousse, préparation de l'usure), butin dans l'inventaire ou au sol, zone sûre et admin, tests
