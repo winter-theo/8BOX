@@ -3,16 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 14 — Inventaire, barre, bourse, objets au sol (branche `step/14-inventaire`)
-- [x] Shared : modèle d'inventaire et opérations pures (déplacer, échanger, diviser, ajouter avec débordement), tests
-- [x] Serveur : module `inventory` (10 cases, case active, bourse, équipement, sac en fibres), messages validés,
-  envoi au client, sauvegarde dans `characters`
-- [x] Objets au sol : entité `groundItem`, lâcher, ramassage automatique (2 s pour qui l'a lâché), fusion, 10 min ;
-  test du ramassage simultané
-- [x] Commande de dev pour se donner des objets (message `devGive`, mode dev seulement)
-- [ ] Client : barre d'objets (1 à 0, molette, toucher), fenêtre d'inventaire (I), glisser-déposer, bourse,
-  sprites au sol
-- [ ] Vérification dans le navigateur, critères d'acceptation, clôture
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -352,8 +343,45 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   l'interface), à la demande de l'auteur.
 - (skins) Le choix se fait dans une liste en haut à droite, à côté de la langue, en attendant un menu des options.
   Il ne s'affiche qu'une fois confirmé par le serveur (pas d'affichage anticipé).
+- (14) Touche Q (A en AZERTY) : lâche toute la pile en main ; Maj + Q n'en lâche qu'un. Glisser une pile hors de
+  l'inventaire la lâche entière (la moitié avec le clic droit ou Maj).
+- (14) Un objet lâché tombe à 1 case devant le joueur (`dropDistanceTiles`), ou à ses pieds si cette case est solide :
+  il le ramasse alors de nouveau au bout de 2 s s'il ne bouge pas.
+- (14) Fusion des piles au moment du lâcher seulement : la pile rejoint une pile du même objet à moins d'une case
+  (`groundMergeRadiusTiles`) si le total tient dans une pile. La pile fusionnée repart pour 10 min.
+- (14) Les objets au sol ne sont pas sauvegardés : ils disparaissent au redémarrage du serveur.
+- (14) L'or va toujours dans la bourse, jamais dans les cases ; on le lâche avec un champ « quantité » dans la fenêtre
+  d'inventaire. La bourse plafonne à la taille de pile de `base:gold` (1 000 000) ; le surplus reste au sol.
+- (14) Le sac ne s'enlève (ou ne se lâche) que si ses cases sont vides. Un emplacement d'équipement tient un objet.
+- (14) Au doigt, pas de découpe de pile (on glisse la pile entière). À revoir avec l'auteur.
+- (14) L'objet en main n'est affiché qu'une fois confirmé par le serveur (règle du client) ; la molette repart de la
+  dernière case demandée. L'objet en main n'est pas sauvegardé : on revient sur la case 1.
+- (14) Nouvelles valeurs de config : `INVENTORY.maxSlots` 30, `pickupRadiusTiles` 0,5, `dropDistanceTiles` 1,
+  `groundMergeRadiusTiles` 1, `groundItemExpiryCheckMs` 1 s, `currencyItem` `base:gold`. Limites de débit :
+  `invSelect` 30/s, `invMove` 20/s, `invDrop` 10/s, `devGive` 5/s.
+- (14) Objet `base:fiber_bag` ajouté (pile de 1, +10 cases) ; sa recette viendra avec la fabrication. Tête et corps
+  n'ont encore aucun objet. L'usure des outils n'est pas encore dans les piles.
+- (14) Sur PC, la barre d'objets est centrée, mais décalée à droite du chat quand l'écran est étroit (moins de
+  1 400 px environ).
 
 ## Historique
+
+### 2026-10-13 — Étape 14 : Inventaire, barre, bourse, objets au sol ✅
+- Shared : modèle d'inventaire pur (`inventory/inventory.ts`) : piles, fusion, découpe, échange, ajout avec
+  débordement, sac (+10 cases), bourse, équipement, nettoyage d'un inventaire sauvegardé. Protocole 9 : `invSelect`,
+  `invMove`, `invDrop`, `devGive` (zod) et `inventory` (serveur → client) ; `item` des objets au sol dans les
+  snapshots (envoyés une fois, puis `gone`).
+- Serveur : module `inventory` (opérations validées, inventaire renvoyé après chaque changement, une fois par tick),
+  entités `groundItem` (lâcher devant soi, ramassage en marchant dessus, 2 s pour qui l'a lâché, fusion, 10 min),
+  sauvegarde avec le personnage (`characterToSave`, colonne `purse`, migration `0006_character_purse`).
+- Client : barre d'objets (1 à 0, molette, toucher), fenêtre d'inventaire (I ou bouton Sac), glisser-déposer à la
+  souris et au doigt, bourse, sprites 8 × 8 des objets (barre et sol), formulaire « Se donner » du panneau dev.
+- Tests : opérations d'inventaire (limites, débordement, conservation des objets), module (tentatives de triche,
+  ramassage simultané par deux joueurs, fusion, disparition, sauvegarde), snapshots, client.
+- Vérifié dans le navigateur avec Ana et Bob : objets donnés, sac équipé, découpe, Q et glisser hors de la fenêtre,
+  Bob ramasse les pommes d'Ana, inventaire intact après reconnexion et redémarrage du serveur, vue téléphone.
+- Écart : la « route ou commande de dev » est un message `devGive` (mode dev seulement) avec un formulaire dans le
+  panneau dev, en attendant `/give` (24).
 
 ### 2026-10-12 — Hors étape : choix du skin ✅
 - À la demande de l'auteur : ses trois sprites 8 × 8 deviennent les skins jouables Theo (par défaut), Chat et
