@@ -10,13 +10,18 @@ import {
   INTERACTION,
   type Inventory,
   listActions,
+  spawnSafeZone,
   type TileDef,
   type TilePoint,
   type TileSlot,
   tileInReach,
   tileSlotSchema,
+  WORLD,
 } from '@8box/shared';
 import type { RemoteView } from './world/RemoteEntities';
+
+/** Where nothing is broken: around the spawn, in the middle of the surface. */
+const SAFE_ZONE = spawnSafeZone(WORLD.layerSizeTiles, WORLD.safeZoneRadiusTiles);
 
 /** What the client knows that actions depend on. */
 export interface InteractionSources {
@@ -28,12 +33,14 @@ export interface InteractionSources {
   tile(layer: number, x: number, y: number, slot: TileSlot): TileDef | undefined;
   /** The other entities, where they are drawn. */
   remotes(): readonly RemoteView[];
+  /** Whether the player is an admin (may break things in the safe zone), as `welcome` said. */
+  admin(): boolean;
 }
 
 /**
  * The actions the player can do, as the client sees the world: the aimed tile (in front of the
- * player, or under the mouse when in reach), and the actions on a tile with `canPerform`. The server
- * checks every action again.
+ * player, or under the mouse when in reach), and the actions on a tile with `canPerform` (and the safe
+ * zone). The server checks every action again.
  */
 export class Interaction {
   /** Tile under the mouse (computer); undefined off the world or on a touch screen. */
@@ -101,7 +108,13 @@ export class Interaction {
     if (!player || !inventory) {
       return [];
     }
-    const actor: Actor = { layer: player.layer, x: player.x, y: player.y, inventory };
-    return listActions(this.registry, actor, this.subjectsAt(x, y), this.content);
+    const actor: Actor = {
+      layer: player.layer,
+      x: player.x,
+      y: player.y,
+      inventory,
+      admin: this.sources.admin(),
+    };
+    return listActions(this.registry, actor, this.subjectsAt(x, y), this.content, SAFE_ZONE);
   }
 }

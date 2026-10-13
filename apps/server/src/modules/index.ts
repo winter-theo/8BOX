@@ -2,6 +2,7 @@ import type { GameModule } from '../core/module';
 import { chatModule } from './chat';
 import { chunksModule } from './chunks';
 import { debugModule } from './debug';
+import { harvestModule } from './harvest';
 import { interactionModule } from './interaction';
 import { inventoryModule } from './inventory';
 import { movementModule } from './movement';
@@ -21,5 +22,6 @@ export const MODULES: readonly GameModule[] = [
   skinsModule,
   inventoryModule,
   interactionModule,
+  harvestModule,
   debugModule,
 ];

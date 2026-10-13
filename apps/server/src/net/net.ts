@@ -376,7 +376,10 @@ export class NetServer {
     session.state = 'playing';
     this.send(session, {
       t: 'welcome',
-      you: { ...session.player },
+      you: {
+        ...session.player,
+        ...(session.account?.role === 'admin' && { admin: true as const }),
+      },
       tick: this.options.scheduler.currentTick,
     });
   }

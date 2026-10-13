@@ -14,6 +14,7 @@ import { MovementKeys } from '../MovementKeys';
 import { AimHighlight } from '../world/AimHighlight';
 import { atlasFromScene } from '../world/atlasFromScene';
 import { ChatBubbles } from '../world/ChatBubbles';
+import { DamageBars } from '../world/DamageBars';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundItems } from '../world/GroundItems';
 import { GroundLayer } from '../world/GroundLayer';
@@ -45,6 +46,7 @@ export class WorldScene extends Phaser.Scene {
     const groundItems = new GroundItems(this, textures, content);
     const bubbles = new ChatBubbles(this, (entity) => entities.image(entity));
     const aim = new AimHighlight(this);
+    const damageBars = new DamageBars(this);
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -107,13 +109,18 @@ export class WorldScene extends Phaser.Scene {
     const unsubscribe = [
       eventBus.on('chunk.loaded', ({ chunk }) => showChunk(chunk)),
       eventBus.on('tile.changed', ({ chunk, x, y, slot }) => {
+        damageBars.clearTile(chunk.layer, x, y);
         if (slot === 'object') {
           objects.updateTile(chunk, x, y);
         } else {
           ground.updateTile(chunk.layer, x, y);
         }
       }),
+      eventBus.on('tile.damaged', ({ layer, x, y, hp, maxHp }) =>
+        damageBars.show(layer, x, y, hp, maxHp),
+      ),
       eventBus.on('chunk.unloaded', ({ layer, cx, cy }) => {
+        damageBars.clearChunk(layer, cx, cy);
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
       }),
@@ -136,6 +143,7 @@ export class WorldScene extends Phaser.Scene {
       inventoryKeys.destroy();
       actionInput.destroy();
       aim.destroy();
+      damageBars.destroy();
       debugCamera?.destroy();
       ground.destroy();
       objects.destroy();

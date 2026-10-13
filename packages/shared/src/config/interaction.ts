@@ -12,6 +12,10 @@ export const INTERACTION = {
    */
   priorities: {
     pickUp: 20,
+    pick: 10,
+    cut: 10,
+    uproot: 10,
+    break: 10,
     examine: 0,
   },
   /** Time the result of an action (what was examined, why it was refused) stays on screen, in ms. */

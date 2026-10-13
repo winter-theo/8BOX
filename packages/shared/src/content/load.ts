@@ -144,6 +144,21 @@ function checkReferences(content: Content, issues: ContentIssue[]): void {
     }
   };
 
+  /** A tile that turns into another one (picked, grown back) keeps its slot. */
+  const expectSameSlot = (tile: TileDef, target: string, field: string) => {
+    const other = content.tiles.get(target);
+    if (!other) {
+      issues.push({ file: 'tiles', id: tile.id, field, message: `unknown tile "${target}"` });
+    } else if (other.slot !== tile.slot) {
+      issues.push({
+        file: 'tiles',
+        id: tile.id,
+        field,
+        message: `"${target}" is not in the ${tile.slot} slot`,
+      });
+    }
+  };
+
   const stations = new Set<string>();
   for (const tile of content.tiles.all) {
     if (tile.station) {
@@ -151,6 +166,21 @@ function checkReferences(content: Content, issues: ContentIssue[]): void {
     }
     if (tile.loot) {
       expect(content.loot, tile.loot, 'tiles', tile.id, 'loot');
+    }
+    if (tile.harvest && tile.hp === 0) {
+      issues.push({
+        file: 'tiles',
+        id: tile.id,
+        field: 'hp',
+        message: 'a harvested tile needs hp',
+      });
+    }
+    if (tile.pick) {
+      expect(content.loot, tile.pick.loot, 'tiles', tile.id, 'pick.loot');
+      expectSameSlot(tile, tile.pick.becomes, 'pick.becomes');
+    }
+    if (tile.regrow) {
+      expectSameSlot(tile, tile.regrow.into, 'regrow.into');
     }
   }
 

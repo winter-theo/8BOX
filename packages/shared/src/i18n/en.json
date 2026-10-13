@@ -242,6 +242,10 @@
       "close": "Close the menu",
       "pickUp": "Pick up ({{name}})",
       "examine": "Examine ({{name}})",
+      "cut": "Cut ({{name}})",
+      "uproot": "Uproot ({{name}})",
+      "pick": "Pick ({{name}})",
+      "break": "Break ({{name}})",
       "examined": "It is: {{name}}.",
       "examinedPile": "It is: {{name}} × {{count}}.",
       "examinedPlayer": "It is {{name}}.",
@@ -255,7 +259,8 @@
         "busy": "Another action is in progress",
         "tooSoon": "Not so fast",
         "gone": "It is no longer there",
-        "unavailable": "Not possible here"
+        "unavailable": "Not possible here",
+        "safeZone": "Nothing can be broken in the safe zone"
       }
     },
     "mobile": {
@@ -278,6 +283,7 @@
       "deep_water": { "name": "Deep water" },
       "oak_tree": { "name": "Oak tree" },
       "berry_bush": { "name": "Berry bush" },
+      "berry_bush_picked": { "name": "Berry bush (picked)" },
       "tall_grass": { "name": "Tall grass" },
       "flowers": { "name": "Flowers" },
       "oak_log": { "name": "Oak log" },

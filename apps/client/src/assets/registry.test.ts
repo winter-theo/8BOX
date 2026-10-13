@@ -1,3 +1,4 @@
+import { baseContent, loadContent } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { PALETTE } from './palette';
 import { MISSING_PLACEHOLDER, placeholderFor } from './placeholders';
@@ -21,6 +22,12 @@ function fakeCanvases() {
 }
 
 describe('placeholders', () => {
+  it('exist for every tile and item of the base content', () => {
+    const content = loadContent(baseContent);
+    const sprites = [...content.tiles.all, ...content.items.all].map((entry) => entry.sprite);
+    expect(sprites.filter((sprite) => placeholderFor(sprite) === undefined)).toEqual([]);
+  });
+
   it.each([
     'ground.grass',
     'ground.dirt',

@@ -12,6 +12,8 @@ import {
   parseClientMessage,
   type ServerMessage,
   TypedEmitter,
+  tileCode,
+  tileIndex,
 } from '@8box/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearActions, useActionsStore } from '../store/actions';
@@ -626,13 +628,13 @@ describe('GameClient actions', () => {
     item: 'base:apple',
   } as const;
 
-  function online() {
+  function online(admin = false) {
     const client = createClient();
     client.connect({ devName: 'Ana' });
     lastSocket().open();
     lastSocket().receive({
       t: 'welcome',
-      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN, ...(admin && { admin }) },
       tick: 1,
     });
     lastSocket().receive({
@@ -653,6 +655,21 @@ describe('GameClient actions', () => {
       ackSeq: -1,
       you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
       entities: [APPLE_PILE],
+    });
+    clock = 1000;
+  }
+
+  /** The chunk of the spawn, with an oak on the tile in front of the player (in the safe zone). */
+  function oakInFront() {
+    const chunk = new Chunk(0, 16, 16);
+    chunk.slot('object')[tileIndex(0, 1)] = tileCode(content, 'base:oak_tree');
+    lastSocket().receive(encodeChunk(chunk, content));
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 2,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
+      entities: [],
     });
     clock = 1000;
   }
@@ -681,7 +698,7 @@ describe('GameClient actions', () => {
     ]);
   });
 
-  it('uses the item in hand only through actions marked `use` (none yet)', () => {
+  it('uses the item in hand only through actions marked `use` (not picking up)', () => {
     online();
     applesInFront();
     bus.emit('action.use', {});
@@ -726,6 +743,35 @@ describe('GameClient actions', () => {
     bus.emit('world.menu', { x: 520, y: 513, screen: { x: 300, y: 200 } });
     expect(actions().menu).toBeNull();
     expect(actions().feedback?.message).toEqual({ kind: 'refused', reason: 'outOfReach' });
+  });
+
+  it('greys breaking in the safe zone, with the reason', () => {
+    online();
+    oakInFront();
+    bus.emit('action.use', {});
+    expect(sentActions()).toEqual([]);
+    bus.emit('world.menu', { x: 512, y: 513, screen: { x: 0, y: 0 } });
+    expect(actions().menu?.entries.map((entry) => [entry.id, entry.reason])).toEqual([
+      ['cut', 'safeZone'],
+      ['examine', null],
+    ]);
+  });
+
+  it('lets an admin break things in the safe zone with the item in hand', () => {
+    online(true);
+    oakInFront();
+    bus.emit('action.use', {});
+    expect(sentActions()).toEqual([
+      { t: 'action', id: 'cut', target: { kind: 'tile', x: 512, y: 513 } },
+    ]);
+  });
+
+  it('passes the HP of a tile being broken on to the rendering', () => {
+    online();
+    const damaged: unknown[] = [];
+    bus.on('tile.damaged', (damage) => damaged.push(damage));
+    lastSocket().receive({ t: 'tileDamage', layer: 0, x: 512, y: 513, hp: 5, maxHp: 6 });
+    expect(damaged).toEqual([{ layer: 0, x: 512, y: 513, hp: 5, maxHp: 6 }]);
   });
 
   it('closes the menu when the player starts walking', () => {

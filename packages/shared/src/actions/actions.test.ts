@@ -54,7 +54,14 @@ const bob: ActionSubject = {
 
 describe('ActionRegistry', () => {
   it('sorts the actions by priority, highest first', () => {
-    expect(registry.all.map((action) => action.id)).toEqual(['pickUp', 'examine']);
+    expect(registry.all.map((action) => action.id)).toEqual([
+      'pickUp',
+      'break',
+      'cut',
+      'pick',
+      'uproot',
+      'examine',
+    ]);
     expect(INTERACTION.priorities.pickUp).toBeGreaterThan(INTERACTION.priorities.examine);
     expect(registry.get('pickUp')).toBe(pickUpAction);
     expect(registry.get('fly')).toBeUndefined();
@@ -80,6 +87,7 @@ describe('listActions', () => {
     const options = listActions(registry, actor(), [tree, apples], content);
     expect(options.map((option) => [option.action.id, option.subject])).toEqual([
       ['pickUp', apples],
+      ['cut', tree],
       ['examine', tree],
       ['examine', apples],
     ]);
@@ -136,11 +144,16 @@ describe('mainAction and heldItemAction', () => {
   });
 
   it('"use the item in hand" only picks actions marked `use`', () => {
-    expect(heldItemAction(listActions(withChop, actor(), [tree, apples], content))).toBeUndefined();
+    // Without a stick, "chop" is not possible: "cut" is the possible `use` action ("pick up" is not).
+    const bare = listActions(withChop, actor(), [tree, apples], content);
+    expect(mainAction(bare)?.action.id).toBe('pickUp');
+    expect(heldItemAction(bare)?.action.id).toBe('cut');
     const holding = addItems(emptyInventory(), content.items, { item: 'base:stick', count: 1 });
     const options = listActions(withChop, actor(holding.inventory), [tree, apples], content);
     expect(heldItemAction(options)?.action.id).toBe('chop');
-    expect(heldItemAction(listActions(registry, actor(), [tree, apples], content))).toBeUndefined();
+    expect(
+      heldItemAction(listActions(registry, actor(), [grass, apples], content)),
+    ).toBeUndefined();
   });
 });
 

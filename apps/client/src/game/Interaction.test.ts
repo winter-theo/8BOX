@@ -48,6 +48,7 @@ function setup(
         return id === undefined ? undefined : content.tiles.get(id);
       },
       remotes: () => options.remotes ?? [],
+      admin: () => false,
     },
     content,
   );
@@ -96,6 +97,7 @@ describe('Interaction subjects and options', () => {
         .map((option) => [option.action.id, option.target, option.check]),
     ).toEqual([
       ['pickUp', { kind: 'entity', id: 7 }, { ok: true }],
+      ['cut', { kind: 'tile', x: 11, y: 10 }, { ok: true }],
       ['examine', { kind: 'tile', x: 11, y: 10 }, { ok: true }],
       ['examine', { kind: 'entity', id: 7 }, { ok: true }],
     ]);

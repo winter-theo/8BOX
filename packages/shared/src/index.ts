@@ -14,6 +14,7 @@ export {
   listActions,
   mainAction,
   targetOf,
+  thingSlot,
   tileThing,
 } from './actions/actions';
 export {
@@ -26,6 +27,14 @@ export {
   tileInReach,
 } from './actions/aim';
 export { baseActions, examineAction, pickUpAction } from './actions/base';
+export {
+  breakAction,
+  cutAction,
+  harvestActions,
+  pickAction,
+  tileTarget,
+  uprootAction,
+} from './actions/harvest';
 export * from './config/index';
 export { baseContent } from './content/base';
 export {
@@ -41,6 +50,7 @@ export {
 } from './content/load';
 export { Registry } from './content/registry';
 export * from './content/schemas';
+export { harvestDamage, rollLoot } from './harvest/harvest';
 export {
   contentNameKey,
   DEFAULT_LANGUAGE,
@@ -113,4 +123,5 @@ export {
   type SurfaceGenerator,
   type SurfaceGenOptions,
 } from './world/gen/surface';
+export { inSafeZone, type SafeZone, spawnPoint, spawnSafeZone } from './world/safeZone';
 export { EMPTY_TILE, tileCode, tileOfCode } from './world/tileCodes';

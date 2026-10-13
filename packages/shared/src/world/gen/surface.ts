@@ -5,6 +5,7 @@ import type { Content } from '../../content/load';
 import { createRng, hashCoords, hashSeed } from '../../util/rng';
 import { Chunk } from '../chunk';
 import { CHUNK_SIZE, LAYER, tileIndex } from '../coords';
+import { spawnPoint } from '../safeZone';
 import { EMPTY_TILE, tileCode } from '../tileCodes';
 
 export interface SurfaceGenOptions {
@@ -75,8 +76,8 @@ export function createSurfaceGenerator(options: SurfaceGenOptions): SurfaceGener
     flowers: tileCode(content, g.tiles.flowers),
   };
 
-  const spawnTile = Math.floor(layerSizeTiles / 2);
-  const spawn = { x: spawnTile + 0.5, y: spawnTile + 0.5 };
+  const spawn = spawnPoint(layerSizeTiles);
+  const spawnTile = Math.floor(spawn.x);
   const clearingRadius = WORLD.spawnClearingRadiusTiles;
 
   const groundAt = (x: number, y: number, distance: number): number => {

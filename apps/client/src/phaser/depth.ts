@@ -8,6 +8,8 @@ const TILE_PX = WORLD.tileSizePx;
  */
 export const DEPTH = {
   ground: -1,
+  /** The HP bars of the tiles being broken: over every Y-sorted sprite, under the aim outline. */
+  damage: 999_999,
   /** The outline of the aimed tile: over every Y-sorted sprite (feet Y stays far below). */
   aim: 1_000_000,
 } as const;
