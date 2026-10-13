@@ -123,7 +123,7 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
   const act = (player: AdminPlayer, action: AdminAction) => {
     if (action === 'ban') {
       setBanning(player.id);
-    } else {
+    } else if (action !== 'mute') {
       void run(() => api.act(player.id, action));
     }
   };

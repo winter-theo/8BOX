@@ -19,12 +19,6 @@ export const CHAT = {
   bubbleMaxLength: 60,
   /** Lines kept in the chat panel, the oldest dropped first, in lines. */
   historySize: 100,
-  /** Shortest mute an admin can give, in minutes. */
-  muteMinMinutes: 1,
-  /** Longest mute an admin can give (30 days), in minutes. */
-  muteMaxMinutes: 30 * 24 * 60,
-  /** Mute durations offered by the admin tab, in minutes. */
-  mutePresetsMinutes: [5, 15, 60, 24 * 60],
   /** What replaces each filtered word. */
   filterMask: '***',
   /**

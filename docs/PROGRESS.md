@@ -9,7 +9,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
   limite de débit, filtre, joueurs mutés ; tests.
 - [x] Base : table `reports`, `muted_until` dans le compte, durée dans le journal (migration) ; commande
   `/signaler` (et `/report`) avec les 20 derniers messages vus ; tests.
-- [ ] API admin : signalements (liste, traiter, classer), muter X minutes, rendre la parole ; tests.
+- [x] API admin : signalements (liste, traiter, classer), muter X minutes, rendre la parole ; tests.
 - [ ] Client : panneau de chat (Entrée, historique, onglets Proximité et Privé, bouton sur téléphone), bulles
   au-dessus des têtes (5 s, texte tronqué), textes FR et EN ; tests.
 - [ ] Onglet admin : signalements avec leur contexte, muter et rendre la parole.

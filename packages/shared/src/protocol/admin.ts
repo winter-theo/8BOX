@@ -9,7 +9,7 @@ export type PlayerStatus = 'pending' | 'approved' | 'denied' | 'banned';
 export type PlayerRole = 'player' | 'admin';
 
 /** What an admin can do to a player; each one is written to the audit log. */
-export const ADMIN_ACTIONS = ['approve', 'deny', 'ban', 'unban', 'kick'] as const;
+export const ADMIN_ACTIONS = ['approve', 'deny', 'ban', 'unban', 'kick', 'mute', 'unmute'] as const;
 export type AdminAction = (typeof ADMIN_ACTIONS)[number];
 
 /** Body of `POST /admin/players/:id/ban`. */
@@ -17,6 +17,12 @@ export const banBodySchema = z.strictObject({
   reason: z.string().trim().min(1).max(ADMIN.banReasonMaxLength),
 });
 export type BanBody = z.infer<typeof banBodySchema>;
+
+/** Body of `POST /admin/players/:id/mute`: how long the player cannot chat. */
+export const muteBodySchema = z.strictObject({
+  minutes: z.number().int().min(ADMIN.muteMinMinutes).max(ADMIN.muteMaxMinutes),
+});
+export type MuteBody = z.infer<typeof muteBodySchema>;
 
 /** A player as the admin tab lists it. Dates are ISO strings. */
 export interface AdminPlayer {
@@ -27,6 +33,8 @@ export interface AdminPlayer {
   status: PlayerStatus;
   role: PlayerRole;
   banReason: string | null;
+  /** End of the mute the admin gave (the player cannot chat until then); null when never muted. */
+  mutedUntil: string | null;
   /** Connected right now: playing, or waiting for approval. */
   online: boolean;
   /** First sign-in (the date of the request, for a pending player). */
@@ -46,6 +54,8 @@ export interface AdminAuditEntry {
   targetName: string | null;
   /** Ban reason. */
   reason: string | null;
+  /** Length of a mute, in minutes. */
+  minutes: number | null;
 }
 
 /** A chat line kept with a report: what the reporter saw. */
@@ -63,6 +73,10 @@ export interface ReportContextLine {
 /** `open` until the admin deals with it: `resolved` (acted on) or `dismissed` (nothing to do). */
 export const REPORT_STATUSES = ['open', 'resolved', 'dismissed'] as const;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
+
+/** What the admin does with an open report: `resolve` it (acted on) or `dismiss` it. */
+export const REPORT_ACTIONS = ['resolve', 'dismiss'] as const;
+export type ReportAction = (typeof REPORT_ACTIONS)[number];
 
 /** A report as the admin tab lists it. Dates are ISO strings. */
 export interface AdminReport {
@@ -84,11 +98,17 @@ export interface AdminReport {
 /** `GET /admin/me`: answered for admins only (403 otherwise), for the menu link and its badge. */
 export interface AdminMe {
   pendingCount: number;
+  openReportCount: number;
 }
 
 /** `GET /admin/players` (pending requests are the `pending` ones). */
 export interface AdminPlayersResponse {
   players: AdminPlayer[];
+}
+
+/** `GET /admin/reports`: the open ones first, then the most recent. */
+export interface AdminReportsResponse {
+  reports: AdminReport[];
 }
 
 /** `GET /admin/audit`: the most recent first. */
@@ -112,8 +132,10 @@ export type AdminError =
   | 'wrongStatus'
   /** Kick: the player is not in the game. */
   | 'notOnline'
-  /** Invalid body (ban reason empty or too long). */
-  | 'invalidBody';
+  /** Invalid body (ban reason empty or too long, mute length out of range). */
+  | 'invalidBody'
+  /** The report is not open any more (or does not exist). */
+  | 'reportClosed';
 
 /** Answer of a refused admin request (status 400, 401, 403, 404 or 409). */
 export interface AdminErrorResponse {

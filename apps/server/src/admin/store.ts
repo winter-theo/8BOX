@@ -17,11 +17,17 @@ export interface AuditRecord {
   targetId: number;
   targetName: string | null;
   reason: string | null;
+  /** Length of a mute, in minutes. */
+  minutes: number | null;
 }
 
-export type NewAuditRecord = Pick<AuditRecord, 'adminId' | 'action' | 'targetId' | 'reason'>;
+export type NewAuditRecord = Pick<
+  AuditRecord,
+  'adminId' | 'action' | 'targetId' | 'reason' | 'minutes'
+>;
 
-export type StatusChange = Pick<Account, 'status' | 'banReason'>;
+/** What an admin action changes in an account: its status (and ban reason), or its mute. */
+export type AccountChange = Partial<Pick<Account, 'status' | 'banReason' | 'mutedUntil'>>;
 
 /** Where the admin tab reads players and writes its actions: the database, or memory in tests. */
 export interface AdminStore {
@@ -29,10 +35,10 @@ export interface AdminStore {
   listPlayers(): Promise<PlayerRecord[]>;
   findPlayer(playerId: number): Promise<PlayerRecord | undefined>;
   countPending(): Promise<number>;
-  /** Changes the status of a player and writes the action to the audit log, together. */
-  changeStatus(
+  /** Changes an account and writes the action to the audit log, together. */
+  changeAccount(
     playerId: number,
-    change: StatusChange,
+    change: AccountChange,
     audit: NewAuditRecord,
   ): Promise<PlayerRecord>;
   /** Writes an action that changes nothing else (a kick). */
@@ -60,7 +66,7 @@ export class MemoryAdminStore implements AdminStore {
     return this.accounts.accounts.filter((account) => account.status === 'pending').length;
   }
 
-  async changeStatus(playerId: number, change: StatusChange, audit: NewAuditRecord) {
+  async changeAccount(playerId: number, change: AccountChange, audit: NewAuditRecord) {
     const account = await this.accounts.update(playerId, change);
     await this.record(audit);
     return this.toRecord(account);

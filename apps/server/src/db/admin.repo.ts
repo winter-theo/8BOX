@@ -27,7 +27,7 @@ export function pgAdminStore(db: Database): AdminStore {
         .where(eq(players.status, 'pending'));
       return row?.pending ?? 0;
     },
-    async changeStatus(playerId, change, audit) {
+    async changeAccount(playerId, change, audit) {
       return db.transaction(async (tx) => {
         const [row] = await tx
           .update(players)
@@ -57,6 +57,7 @@ export function pgAdminStore(db: Database): AdminStore {
           targetId: adminAudit.targetId,
           targetName: target.name,
           reason: adminAudit.reason,
+          minutes: adminAudit.minutes,
         })
         .from(adminAudit)
         .innerJoin(admin, eq(admin.id, adminAudit.adminId))

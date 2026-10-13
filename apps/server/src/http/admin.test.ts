@@ -1,4 +1,9 @@
-import type { AdminAuditResponse, AdminMe, AdminPlayersResponse } from '@8box/shared';
+import type {
+  AdminAuditResponse,
+  AdminMe,
+  AdminPlayersResponse,
+  AdminReportsResponse,
+} from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { Accounts, type ClerkIdentity } from '../accounts/Accounts';
 import { type Account, MemoryAccountStore, type NewAccount } from '../accounts/account';
@@ -6,6 +11,7 @@ import { Admin, type LiveSessions } from '../admin/Admin';
 import { MemoryAdminStore } from '../admin/store';
 import { buildApp } from '../app';
 import { createTestContext } from '../core/testing';
+import { MemoryReportStore } from '../reports/store';
 
 /** Clerk stand-in: `token-<user>` is the valid token of `user_<user>`. */
 const fakeClerk: ClerkIdentity = {
@@ -55,7 +61,17 @@ async function setup({ devAuth = false } = {}) {
   const store = new MemoryAdminStore(accountStore);
   const sessions = new FakeSessions();
   const { ctx } = createTestContext();
-  const admin = new Admin({ store, sessions, log: ctx.log, auditListSize: 100 });
+  const reports = new MemoryReportStore(accountStore);
+  let now = Date.parse('2026-10-12T12:00:00Z');
+  const admin = new Admin({
+    store,
+    reports,
+    sessions,
+    log: ctx.log,
+    auditListSize: 100,
+    reportListSize: 100,
+    now: () => now,
+  });
   const boss = await accountStore.create(player('boss', { role: 'admin' }));
   const ana = await accountStore.create(player('ana'));
   const newbie = await accountStore.create(player('newbie', { status: 'pending' }));
@@ -71,7 +87,22 @@ async function setup({ devAuth = false } = {}) {
       headers: { authorization: `Bearer ${token}` },
       ...(payload && { payload }),
     });
-  return { app, store, sessions, accountStore, boss, ana, newbie, request };
+  const advance = (ms: number) => {
+    now += ms;
+  };
+  return {
+    app,
+    store,
+    reports,
+    sessions,
+    accountStore,
+    boss,
+    ana,
+    newbie,
+    request,
+    advance,
+    now: () => now,
+  };
 }
 
 describe('admin API guard', () => {
@@ -81,7 +112,10 @@ describe('admin API guard', () => {
       ['GET', '/admin/me'],
       ['GET', '/admin/players'],
       ['GET', '/admin/audit'],
+      ['GET', '/admin/reports'],
       ['POST', `/admin/players/${newbie.playerId}/approve`],
+      ['POST', `/admin/players/${newbie.playerId}/mute`],
+      ['POST', '/admin/reports/1/resolve'],
     ] as const) {
       const response = await request(method, url, 'token-ana');
       expect(response.statusCode, url).toBe(403);
@@ -143,7 +177,7 @@ describe('admin API', () => {
     const me = (await request('GET', '/admin/me')).json<AdminMe>();
     const { players } = (await request('GET', '/admin/players')).json<AdminPlayersResponse>();
 
-    expect(me).toEqual({ pendingCount: 1 });
+    expect(me).toEqual({ pendingCount: 1, openReportCount: 0 });
     expect(players.map(({ name, status, online }) => ({ name, status, online }))).toEqual([
       { name: 'newbie', status: 'pending', online: false },
       { name: 'ana', status: 'approved', online: true },
@@ -252,5 +286,104 @@ describe('admin API', () => {
     });
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({ error: 'targetIsAdmin' });
+  });
+});
+
+describe('admin API: mutes', () => {
+  it('mutes a player for some minutes, then gives the chat back', async () => {
+    const { request, store, sessions, accountStore, ana, now } = await setup();
+    const url = `/admin/players/${ana.playerId}`;
+
+    expect((await request('POST', `${url}/mute`, 'token-boss', { minutes: 15 })).statusCode).toBe(
+      200,
+    );
+    const until = new Date(now() + 15 * 60_000);
+    expect(accountStore.accounts[1]?.mutedUntil).toEqual(until);
+    expect(sessions.applied.at(-1)).toMatchObject({ name: 'ana', mutedUntil: until });
+    expect(store.audit[0]).toMatchObject({ action: 'mute', targetName: 'ana', minutes: 15 });
+    const { players } = (await request('GET', '/admin/players')).json<AdminPlayersResponse>();
+    expect(players.find((player) => player.name === 'ana')?.mutedUntil).toBe(until.toISOString());
+
+    expect((await request('POST', `${url}/unmute`)).statusCode).toBe(200);
+    expect(accountStore.accounts[1]?.mutedUntil).toBeNull();
+    expect(sessions.applied.at(-1)).toMatchObject({ name: 'ana', mutedUntil: null });
+    expect(store.audit[0]).toMatchObject({ action: 'unmute', minutes: null });
+
+    const again = await request('POST', `${url}/unmute`);
+    expect(again.statusCode).toBe(409);
+    expect(again.json()).toEqual({ error: 'wrongStatus' });
+  });
+
+  it('refuses a mute length out of range, a player not approved, and an ended mute', async () => {
+    const { request, store, ana, newbie, advance } = await setup();
+    const url = `/admin/players/${ana.playerId}/mute`;
+    for (const body of [{ minutes: 0 }, { minutes: 1.5 }, { minutes: 50_000 }, {}]) {
+      const response = await request('POST', url, 'token-boss', body);
+      expect(response.statusCode, JSON.stringify(body)).toBe(400);
+      expect(response.json()).toEqual({ error: 'invalidBody' });
+    }
+    const pending = await request('POST', `/admin/players/${newbie.playerId}/mute`, 'token-boss', {
+      minutes: 5,
+    });
+    expect(pending.json()).toEqual({ error: 'wrongStatus' });
+    expect(store.audit).toEqual([]);
+
+    await request('POST', url, 'token-boss', { minutes: 5 });
+    advance(6 * 60_000);
+    expect((await request('POST', `/admin/players/${ana.playerId}/unmute`)).json()).toEqual({
+      error: 'wrongStatus',
+    });
+  });
+});
+
+describe('admin API: reports', () => {
+  it('lists the reports with their context, the open ones first, and closes them', async () => {
+    const { request, reports, ana, newbie } = await setup();
+    const context = [{ ts: 1, channel: 'proximity' as const, from: 'newbie', text: '***' }];
+    await reports.create({
+      reporterId: ana.playerId,
+      targetName: 'NEWBIE',
+      reason: 'insults',
+      context,
+    });
+    await reports.create({
+      reporterId: newbie.playerId,
+      targetName: 'ana',
+      reason: 'spam',
+      context: [],
+    });
+
+    expect((await request('GET', '/admin/me')).json<AdminMe>().openReportCount).toBe(2);
+    const listed = (await request('GET', '/admin/reports')).json<AdminReportsResponse>().reports;
+    expect(listed.map((report) => report.reason)).toEqual(['spam', 'insults']);
+    expect(listed[1]).toMatchObject({
+      reporterName: 'ana',
+      targetName: 'newbie',
+      targetId: newbie.playerId,
+      context,
+      status: 'open',
+      handledByName: null,
+      handledAt: null,
+    });
+
+    expect((await request('POST', '/admin/reports/2/resolve')).statusCode).toBe(200);
+    const after = (await request('GET', '/admin/reports')).json<AdminReportsResponse>().reports;
+    expect(after.map(({ reason, status }) => ({ reason, status }))).toEqual([
+      { reason: 'insults', status: 'open' },
+      { reason: 'spam', status: 'resolved' },
+    ]);
+    expect(after[1]?.handledByName).toBe('boss');
+    expect((await request('GET', '/admin/me')).json<AdminMe>().openReportCount).toBe(1);
+
+    expect((await request('POST', '/admin/reports/1/dismiss')).statusCode).toBe(200);
+    for (const [url, status, error] of [
+      ['/admin/reports/1/resolve', 409, 'reportClosed'],
+      ['/admin/reports/999/dismiss', 409, 'reportClosed'],
+      ['/admin/reports/1/delete', 404, 'notFound'],
+    ] as const) {
+      const response = await request('POST', url);
+      expect(response.statusCode, url).toBe(status);
+      expect(response.json(), url).toEqual({ error });
+    }
   });
 });

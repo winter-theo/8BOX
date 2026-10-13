@@ -124,9 +124,11 @@ const app = buildApp({
   admin: {
     admin: new Admin({
       store: pgAdminStore(connection.db),
+      reports,
       sessions: game.ctx.net,
       log: log.child({ scope: 'admin' }),
       auditListSize: CONFIG.admin.auditListSize,
+      reportListSize: CONFIG.admin.reportListSize,
     }),
     accounts,
     devAuth,
