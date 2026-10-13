@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { Accounts, type ClerkIdentity } from '../accounts/Accounts';
 import { MemoryAccountStore } from '../accounts/account';
 import { connectFakeClient, createTestContext, settle } from '../core/testing';
+import { chatModule } from '../modules/chat';
 import { playersModule } from '../modules/players';
 import { CloseCode } from '../net/net';
+import { MemoryReportStore } from '../reports/store';
 import { Admin } from './Admin';
 import { MemoryAdminStore } from './store';
 
@@ -22,9 +24,17 @@ const fakeClerk: ClerkIdentity = {
 async function setup() {
   const accountStore = new MemoryAccountStore();
   const accounts = new Accounts(accountStore, fakeClerk, ['boss@mail.test']);
-  const { ctx } = createTestContext({ accounts, modules: [playersModule] });
+  const { ctx } = createTestContext({ accounts, modules: [playersModule, chatModule] });
   const store = new MemoryAdminStore(accountStore);
-  const admin = new Admin({ store, sessions: ctx.net, log: ctx.log, auditListSize: 100 });
+  const reports = new MemoryReportStore(accountStore);
+  const admin = new Admin({
+    store,
+    reports,
+    sessions: ctx.net,
+    log: ctx.log,
+    auditListSize: 100,
+    reportListSize: 100,
+  });
   const boss = await accountStore.create({
     clerkUserId: 'user_boss',
     email: 'boss@mail.test',
@@ -122,5 +132,19 @@ describe('admin actions on connected players', () => {
 
     const again = await connect('token-ana');
     expect(again.last()).toMatchObject({ t: 'welcome' });
+  });
+
+  it('mutes a player in the game at once, then gives the chat back', async () => {
+    const { admin, boss, connect, accountOf } = await setup();
+    const client = await connect('token-ana', 'Ana');
+    await admin.approve(boss, accountOf('Ana').playerId);
+
+    expect(await admin.mute(boss, accountOf('Ana').playerId, 10)).toEqual({ ok: true });
+    client.send({ t: 'chat', text: 'hello' });
+    expect(client.last()).toMatchObject({ t: 'chatNotice', notice: 'muted' });
+
+    expect(await admin.unmute(boss, accountOf('Ana').playerId)).toEqual({ ok: true });
+    client.send({ t: 'chat', text: 'hello' });
+    expect(client.last()).toMatchObject({ t: 'chat', from: 'Ana', text: 'hello' });
   });
 });

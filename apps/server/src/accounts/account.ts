@@ -15,6 +15,8 @@ export interface Account {
   status: AccountStatus;
   role: AccountRole;
   banReason: string | null;
+  /** End of the mute an admin gave (the player cannot chat until then); null when never muted. */
+  mutedUntil: Date | null;
 }
 
 export type NewAccount = Pick<Account, 'clerkUserId' | 'email' | 'name' | 'status' | 'role'>;
@@ -45,7 +47,12 @@ export class MemoryAccountStore implements AccountStore {
   }
 
   async create(account: NewAccount) {
-    const created: Account = { ...account, playerId: this.accounts.length + 1, banReason: null };
+    const created: Account = {
+      ...account,
+      playerId: this.accounts.length + 1,
+      banReason: null,
+      mutedUntil: null,
+    };
     this.accounts.push(created);
     return created;
   }

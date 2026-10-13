@@ -4,7 +4,10 @@ import {
   type AdminError,
   type AdminMe,
   type AdminPlayersResponse,
+  type AdminReportsResponse,
   banBodySchema,
+  muteBodySchema,
+  REPORT_ACTIONS,
 } from '@8box/shared';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -26,6 +29,11 @@ const actionParamsSchema = z.strictObject({
   action: z.enum(ADMIN_ACTIONS),
 });
 
+const reportParamsSchema = z.strictObject({
+  id: z.coerce.number().int().positive(),
+  action: z.enum(REPORT_ACTIONS),
+});
+
 /** HTTP status of each refusal. */
 const ERROR_STATUS: Record<AdminError, number> = {
   unauthorized: 401,
@@ -36,6 +44,7 @@ const ERROR_STATUS: Record<AdminError, number> = {
   targetIsAdmin: 409,
   wrongStatus: 409,
   notOnline: 409,
+  reportClosed: 409,
 };
 
 function refuse(reply: FastifyReply, error: AdminError) {
@@ -94,7 +103,7 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRoutesOpti
 
   app.get(
     '/admin/me',
-    guarded(async (): Promise<AdminMe> => ({ pendingCount: await admin.pendingCount() })),
+    guarded(async (): Promise<AdminMe> => admin.me()),
   );
 
   app.get(
@@ -105,6 +114,23 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRoutesOpti
   app.get(
     '/admin/audit',
     guarded(async (): Promise<AdminAuditResponse> => ({ entries: await admin.audit() })),
+  );
+
+  app.get(
+    '/admin/reports',
+    guarded(async (): Promise<AdminReportsResponse> => ({ reports: await admin.reports() })),
+  );
+
+  app.post(
+    '/admin/reports/:id/:action',
+    guarded(async (account, request, reply) => {
+      const params = reportParamsSchema.safeParse(request.params);
+      if (!params.success) {
+        return refuse(reply, 'notFound');
+      }
+      const result = await admin.closeReport(account, params.data.id, params.data.action);
+      return result.ok ? { ok: true } : refuse(reply, result.error);
+    }),
   );
 
   app.post(
@@ -122,6 +148,12 @@ export async function adminRoutes(app: FastifyInstance, options: AdminRoutesOpti
           return refuse(reply, 'invalidBody');
         }
         result = await admin.ban(account, id, body.data.reason);
+      } else if (action === 'mute') {
+        const body = muteBodySchema.safeParse(request.body);
+        if (!body.success) {
+          return refuse(reply, 'invalidBody');
+        }
+        result = await admin.mute(account, id, body.data.minutes);
       } else {
         result = await admin[action](account, id);
       }

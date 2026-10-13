@@ -55,7 +55,8 @@ export interface NetOptions {
 export class NetServer {
   private readonly sessions = new Map<number, Session>();
   private readonly handlers = new Map<GameMessageType, MessageHandler<GameMessageType>>();
-  private readonly now: () => number;
+  /** Clock of the network layer (rate limits, latency), in ms. */
+  readonly now: () => number;
   private nextId = 1;
 
   constructor(private readonly options: NetOptions) {

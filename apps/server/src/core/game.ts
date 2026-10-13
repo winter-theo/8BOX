@@ -5,6 +5,7 @@ import { NetServer } from '../net/net';
 import { Persistence } from '../persistence/Persistence';
 import { MemoryStore } from '../persistence/store';
 import { WriteQueue } from '../persistence/writeQueue';
+import { MemoryReportStore, type ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
@@ -31,6 +32,8 @@ export interface ContextOptions {
   persistence?: Persistence;
   /** Sign-in (default: dev accounts kept in memory, no Clerk). */
   accounts?: Accounts;
+  /** Reports of players (default: kept in memory, over the default accounts). */
+  reports?: ReportStore;
 }
 
 /** Saves kept in memory: nothing outlives the process (tests). */
@@ -55,8 +58,12 @@ export function createContext({
   devAuth = false,
   now,
   persistence = memoryPersistence(content, log),
-  accounts = new Accounts(new MemoryAccountStore(), undefined, []),
+  ...stores
 }: ContextOptions): ServerContext {
+  // Kept in memory by default (tests): reports find the players of the default accounts.
+  const memoryAccounts = new MemoryAccountStore();
+  const accounts = stores.accounts ?? new Accounts(memoryAccounts, undefined, []);
+  const reports = stores.reports ?? new MemoryReportStore(memoryAccounts);
   const events = createEventBus();
   world.onChange((change) => events.emit('tile.changed', change));
   const scheduler = new Scheduler({
@@ -82,6 +89,7 @@ export function createContext({
       ...(now && { now }),
     }),
     persistence,
+    reports,
   };
 }
 
@@ -100,6 +108,7 @@ export interface GameOptions {
   devAuth?: boolean;
   persistence?: Persistence;
   accounts?: Accounts;
+  reports?: ReportStore;
 }
 
 export interface Game {
@@ -119,6 +128,7 @@ export function createGame({
   devAuth = false,
   persistence,
   accounts,
+  reports,
 }: GameOptions): Game {
   const ctx = createContext({
     config,
@@ -128,6 +138,7 @@ export function createGame({
     devAuth,
     ...(persistence && { persistence }),
     ...(accounts && { accounts }),
+    ...(reports && { reports }),
   });
   const order = initModules(ctx, modules);
   log.info({ modules: order, devAuth }, 'modules initialized');

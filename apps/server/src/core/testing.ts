@@ -13,6 +13,7 @@ import { pino } from 'pino';
 import type { Accounts } from '../accounts/Accounts';
 import type { Session, Transport } from '../net/session';
 import type { Persistence } from '../persistence/Persistence';
+import type { ReportStore } from '../reports/store';
 import { World } from '../world/World';
 import { createContext, runTick } from './game';
 import { type GameModule, initModules, type ServerContext } from './module';
@@ -38,6 +39,8 @@ export interface TestContextOptions {
   persistence?: Persistence;
   /** Sign-in. Default: dev accounts in memory, no Clerk. */
   accounts?: Accounts;
+  /** Reports. Default: in memory, over the default accounts. */
+  reports?: ReportStore;
 }
 
 export interface TestContext {
@@ -61,6 +64,7 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     ...(options.now && { now: options.now }),
     ...(options.persistence && { persistence: options.persistence }),
     ...(options.accounts && { accounts: options.accounts }),
+    ...(options.reports && { reports: options.reports }),
   });
   initModules(ctx, options.modules ?? []);
 

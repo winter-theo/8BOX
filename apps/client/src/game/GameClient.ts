@@ -11,6 +11,7 @@ import {
   type ServerMessage,
   VIEW,
 } from '@8box/shared';
+import { clearChat, receiveChatLine, receiveChatNotice } from '../store/chat';
 import { useSessionStore } from '../store/session';
 import type { ClientEventBus } from './events';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
@@ -72,6 +73,8 @@ export class GameClient {
   private inputSeq = 0;
   /** The player of this connection, predicted; undefined when not in the world. */
   private local: LocalPlayerState | undefined;
+  /** Name of the player of this connection, once welcomed. */
+  private name: string | undefined;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly options: GameClientOptions) {
@@ -129,6 +132,11 @@ export class GameClient {
     this.send({ t: 'setName', name });
   }
 
+  /** Sends a chat line: said nearby, a command (`/msg`…), or a private message to `to`. */
+  say(text: string, to?: string): void {
+    this.send({ t: 'chat', text, ...(to !== undefined && { to }) });
+  }
+
   /** Leaves the game and goes back to the login screen. */
   disconnect(): void {
     this.stopped = true;
@@ -137,6 +145,8 @@ export class GameClient {
     this.socket = undefined;
     this.goOffline();
     socket?.close(1000, 'left');
+    this.name = undefined;
+    clearChat();
     useSessionStore.setState({
       status: 'idle',
       player: null,
@@ -199,6 +209,7 @@ export class GameClient {
       case 'welcome': {
         const { entity, name, position } = message.you;
         this.attempt = 0;
+        this.name = name;
         this.online = true;
         useSessionStore.setState({ status: 'online', player: { entity, name }, account: null });
         if (this.view) {
@@ -254,6 +265,15 @@ export class GameClient {
         return;
       case 'tileUpdate':
         this.chunks.applyTileUpdate(message);
+        return;
+      case 'chat':
+        receiveChatLine(message, this.name);
+        if (message.entity !== undefined) {
+          this.options.bus.emit('chat.said', { entity: message.entity, text: message.text });
+        }
+        return;
+      case 'chatNotice':
+        receiveChatNotice(message);
         return;
     }
   }

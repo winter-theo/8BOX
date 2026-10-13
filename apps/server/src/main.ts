@@ -16,6 +16,7 @@ import { pgAccountStore } from './db/accounts.repo';
 import { pgAdminStore } from './db/admin.repo';
 import { type DatabaseConnection, openDatabase } from './db/database';
 import { pgGameStore } from './db/pgStore';
+import { pgReportStore } from './db/reports.repo';
 import { env } from './env';
 import { MODULES } from './modules';
 import { saveEverything } from './modules/persistence';
@@ -45,6 +46,7 @@ try {
   process.exit(1);
 }
 const store = pgGameStore(connection);
+const reports = pgReportStore(connection.db);
 
 // Google sign-in through Clerk; without a key, only dev names can sign in.
 if (env.CLERK_SECRET_KEY === undefined) {
@@ -111,6 +113,7 @@ const game = createGame({
   devAuth,
   persistence,
   accounts,
+  reports,
 });
 
 const app = buildApp({
@@ -121,9 +124,11 @@ const app = buildApp({
   admin: {
     admin: new Admin({
       store: pgAdminStore(connection.db),
+      reports,
       sessions: game.ctx.net,
       log: log.child({ scope: 'admin' }),
       auditListSize: CONFIG.admin.auditListSize,
+      reportListSize: CONFIG.admin.reportListSize,
     }),
     accounts,
     devAuth,

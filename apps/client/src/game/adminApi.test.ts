@@ -22,6 +22,24 @@ describe('AdminApi', () => {
     });
   });
 
+  it('sends the mute length, and closes reports', async () => {
+    const fetchMock = vi.fn(async () => answer(200, { ok: true }));
+    const api = new AdminApi('http://server.test', async () => 'Bearer abc', fetchMock);
+
+    await api.mute(7, { minutes: 15 });
+    await api.closeReport(3, 'dismiss');
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, 'http://server.test/admin/players/7/mute', {
+      method: 'POST',
+      headers: { authorization: 'Bearer abc', 'content-type': 'application/json' },
+      body: '{"minutes":15}',
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, 'http://server.test/admin/reports/3/dismiss', {
+      method: 'POST',
+      headers: { authorization: 'Bearer abc' },
+    });
+  });
+
   it('sends no body for the other actions', async () => {
     const fetchMock = vi.fn(async () => answer(200, { ok: true }));
     const api = new AdminApi('http://server.test', async () => 'Bearer abc', fetchMock);

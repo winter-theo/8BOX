@@ -24,6 +24,8 @@ export const NET = {
     /** 30 movement inputs per second (the client sends 20). */
     input: { max: 30, windowMs: SECOND_MS },
     viewport: { max: 5, windowMs: SECOND_MS },
+    /** Flood guard only: the chat module has a lower limit of its own, which tells the player. */
+    chat: { max: 10, windowMs: 10 * SECOND_MS },
     /** Dev mode only. */
     debugCamera: { max: 20, windowMs: SECOND_MS },
   },

@@ -42,6 +42,11 @@ export class EntityLayer {
     return entry.image.setPosition(anchor.x, anchor.y).setFlipX(flipX);
   }
 
+  /** The sprite of an entity drawn now, if any. */
+  image(id: number): Phaser.GameObjects.Image | undefined {
+    return this.sprites.get(id)?.image;
+  }
+
   remove(id: number): void {
     this.sprites.get(id)?.image.destroy();
     this.sprites.delete(id);

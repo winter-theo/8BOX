@@ -4,7 +4,10 @@ import type {
   AdminError,
   AdminMe,
   AdminPlayersResponse,
+  AdminReportsResponse,
   BanBody,
+  MuteBody,
+  ReportAction,
 } from '@8box/shared';
 
 /** Gives the `Authorization` header of the admin API; null when nobody is signed in. */
@@ -39,12 +42,25 @@ export class AdminApi {
     return this.request('GET', '/admin/audit');
   }
 
-  act(playerId: number, action: Exclude<AdminAction, 'ban'>): Promise<unknown> {
+  reports(): Promise<AdminReportsResponse> {
+    return this.request('GET', '/admin/reports');
+  }
+
+  act(playerId: number, action: Exclude<AdminAction, 'ban' | 'mute'>): Promise<unknown> {
     return this.request('POST', `/admin/players/${playerId}/${action}`);
   }
 
   ban(playerId: number, body: BanBody): Promise<unknown> {
     return this.request('POST', `/admin/players/${playerId}/ban`, body);
+  }
+
+  mute(playerId: number, body: MuteBody): Promise<unknown> {
+    return this.request('POST', `/admin/players/${playerId}/mute`, body);
+  }
+
+  /** Resolves or dismisses an open report. */
+  closeReport(reportId: number, action: ReportAction): Promise<unknown> {
+    return this.request('POST', `/admin/reports/${reportId}/${action}`);
   }
 
   private async request<T>(method: 'GET' | 'POST', path: string, body?: object): Promise<T> {

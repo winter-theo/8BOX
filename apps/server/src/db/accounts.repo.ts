@@ -17,6 +17,7 @@ export function toAccount(row: PlayerRow): Account {
     status: row.status,
     role: row.role,
     banReason: row.banReason,
+    mutedUntil: row.mutedUntil,
   };
 }
 

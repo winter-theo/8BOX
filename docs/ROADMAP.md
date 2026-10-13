@@ -20,7 +20,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 | 10 | [Base de données et sauvegarde](steps/10-base-de-donnees.md) | 08 | ✅ |
 | 11 | [Connexion Google, pseudo et liste blanche](steps/11-connexion-clerk.md) | 10 | ✅ |
 | 12 | [Onglet admin v1](steps/12-admin-v1.md) | 11 | ✅ |
-| 13 | [Chat, filtre et signalements](steps/13-chat.md) | 12 | ⬜ |
+| 13 | [Chat, filtre et signalements](steps/13-chat.md) | 12 | ✅ |
 | 14 | [Inventaire, barre, bourse, objets au sol](steps/14-inventaire.md) | 09, 10 | ⬜ |
 | 15 | [Interactions : visée, action, menu](steps/15-interactions.md) | 14 | ⬜ |
 | 16 | [Récolte et zone sûre](steps/16-recolte.md) | 15 | ⬜ |

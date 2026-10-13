@@ -9,6 +9,7 @@ import { DebugCamera } from '../DebugCamera';
 import { LongPress } from '../LongPress';
 import { MovementKeys } from '../MovementKeys';
 import { atlasFromScene } from '../world/atlasFromScene';
+import { ChatBubbles } from '../world/ChatBubbles';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundLayer } from '../world/GroundLayer';
 import { LocalPlayer } from '../world/LocalPlayer';
@@ -35,6 +36,7 @@ export class WorldScene extends Phaser.Scene {
     const localPlayer = new LocalPlayer(entities);
     const labels = new NameLabels(this);
     const remotePlayers = new RemotePlayers(entities, labels);
+    const bubbles = new ChatBubbles(this, (entity) => entities.image(entity));
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -101,6 +103,7 @@ export class WorldScene extends Phaser.Scene {
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
       }),
+      eventBus.on('chat.said', ({ entity, text }) => bubbles.say(entity, text)),
     ];
 
     let cleaned = false;
@@ -121,6 +124,7 @@ export class WorldScene extends Phaser.Scene {
       objects.destroy();
       entities.destroy();
       labels.destroy();
+      bubbles.destroy();
       textures.destroy();
     };
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);

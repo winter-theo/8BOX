@@ -195,7 +195,7 @@ body {
 .dev-info {
   position: fixed;
   left: max(8px, env(safe-area-inset-left));
-  bottom: max(8px, env(safe-area-inset-bottom));
+  top: max(8px, env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -206,11 +206,6 @@ body {
   font-family: monospace;
   font-size: 12px;
   pointer-events: none;
-}
-
-.app--touch .dev-info {
-  top: max(8px, env(safe-area-inset-top));
-  bottom: auto;
 }
 
 /* ─── Touch controls (landscape) ─── */
@@ -264,7 +259,7 @@ body {
   bottom: calc(var(--hotbar-height) + max(16px, env(safe-area-inset-bottom)));
   display: grid;
   grid-template-areas:
-    ". inventory"
+    "chat inventory"
     "action use";
   gap: 12px;
   align-items: end;
@@ -302,6 +297,11 @@ body {
 
 .touch-button--inventory {
   grid-area: inventory;
+}
+
+.touch-button--chat {
+  grid-area: chat;
+  position: relative;
 }
 
 .hotbar-slot {
@@ -547,6 +547,43 @@ html.page-admin #root {
   color: #fca5a5;
 }
 
+.admin-status--report-open {
+  background: rgb(250 204 21 / 20%);
+  color: #fde68a;
+}
+
+.admin-status--report-resolved {
+  background: rgb(74 222 128 / 20%);
+  color: #86efac;
+}
+
+/* The chat lines a reporter saw, folded under the reason. */
+.admin-context {
+  margin-top: 6px;
+}
+
+.admin-context summary {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.admin-context ol {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 30%);
+  list-style: none;
+  font-size: 13px;
+}
+
+.admin-context time {
+  opacity: 0.6;
+}
+
+.admin-context__target {
+  color: #fca5a5;
+}
+
 .admin-reason {
   display: block;
   margin-top: 4px;
@@ -622,4 +659,177 @@ html.page-admin #root {
   .admin-table .admin-ban {
     flex: 1 1 100%;
   }
+}
+
+/* ─── Chat: bottom left on a computer, opened by the chat button on a phone ─── */
+
+.chat {
+  position: fixed;
+  z-index: 1;
+  left: max(8px, env(safe-area-inset-left));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100vw - 16px));
+  border-radius: 8px;
+  background: rgb(0 0 0 / 35%);
+  color: #f4f4f4;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.chat--active,
+.chat:hover {
+  background: rgb(0 0 0 / 70%);
+}
+
+.chat-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 0;
+}
+
+.chat-tab,
+.chat-close,
+.chat-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #b8b8c4;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chat-tab--active {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+
+.chat-close {
+  margin-left: auto;
+  font-size: 22px;
+}
+
+.chat-log {
+  height: 160px;
+  margin: 0;
+  padding: 6px 8px;
+  overflow-y: auto;
+  list-style: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.chat-entry {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 2px #000;
+}
+
+.chat-entry--notice {
+  color: #f2c94c;
+  font-style: italic;
+}
+
+.chat-entry--hint {
+  color: #b8b8c4;
+}
+
+.chat-time {
+  color: #9a9aa8;
+  font-size: 11px;
+}
+
+.chat-name {
+  color: #8ecbff;
+  font-weight: 600;
+}
+
+.chat-entry--own .chat-name {
+  color: #b8f28e;
+}
+
+.chat-form {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 45%);
+  color: inherit;
+  font: inherit;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.chat-send {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+
+/* On a phone: a panel over the left of the screen, big enough for fingers. */
+.app--touch .chat {
+  top: calc(max(8px, env(safe-area-inset-top)) + 56px);
+  width: min(460px, 60vw);
+  background: rgb(0 0 0 / 85%);
+}
+
+.app--touch .chat-log {
+  flex: 1;
+  height: auto;
+}
+
+.app--touch .chat-tab,
+.app--touch .chat-close,
+.app--touch .chat-send,
+.app--touch .chat-input {
+  min-height: 48px;
+}
+
+/* Speech bubbles: placed by the game over the canvas, above the speakers' names. */
+.chat-bubbles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.chat-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: 200px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 92%);
+  color: #1b1b24;
+  font:
+    13px / 1.3 system-ui,
+    sans-serif;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.chat-bubble[hidden] {
+  display: none;
+}
+
+.touch-button--chat .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
 }

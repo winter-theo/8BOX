@@ -1,4 +1,4 @@
-import { ADMIN } from '@8box/shared';
+import { ADMIN, type AdminMe } from '@8box/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SERVER_URL } from '../../env';
@@ -7,22 +7,22 @@ import { useSessionStore } from '../../store/session';
 import { ADMIN_PATH, devAuthHeaderOf, useClerkAuthHeader } from './adminAuth';
 
 /**
- * Link to the admin tab, with the number of pending requests; shown to admins only (the server
+ * Link to the admin tab, with the number of pending requests and open reports; shown to admins only (the server
  * answers `/admin/me` for them alone). The count is refreshed every 30 s.
  */
 function AdminLink({ authHeader }: { authHeader: AuthHeader }) {
   const { t } = useTranslation();
   /** Null while unknown, or for a player who is not an admin. */
-  const [pending, setPending] = useState<number | null>(null);
+  const [me, setMe] = useState<AdminMe | null>(null);
 
   useEffect(() => {
     const api = new AdminApi(SERVER_URL, authHeader);
     let active = true;
     const load = () =>
       api.me().then(
-        (me) => {
+        (answer) => {
           if (active) {
-            setPending(me.pendingCount);
+            setMe(answer);
           }
         },
         (error: unknown) => {
@@ -30,7 +30,7 @@ function AdminLink({ authHeader }: { authHeader: AuthHeader }) {
           if (failure === 'unauthorized' || failure === 'forbidden') {
             clearInterval(timer); // Not an admin: no need to ask again.
             if (active) {
-              setPending(null);
+              setMe(null);
             }
           }
         },
@@ -43,20 +43,26 @@ function AdminLink({ authHeader }: { authHeader: AuthHeader }) {
     };
   }, [authHeader]);
 
-  if (pending === null) {
+  if (me === null) {
     return null;
   }
-  const badge = t('ui.admin.pendingBadge', { count: pending });
+  const count = me.pendingCount + me.openReportCount;
+  const badge = [
+    me.pendingCount > 0 && t('ui.admin.pendingBadge', { count: me.pendingCount }),
+    me.openReportCount > 0 && t('ui.admin.reportsBadge', { count: me.openReportCount }),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <a
       className="top-button"
       href={ADMIN_PATH}
-      aria-label={pending > 0 ? `${t('ui.admin.link')} · ${badge}` : undefined}
+      aria-label={count > 0 ? `${t('ui.admin.link')} · ${badge}` : undefined}
     >
       {t('ui.admin.link')}
-      {pending > 0 && (
+      {count > 0 && (
         <span className="badge" title={badge}>
-          {pending}
+          {count}
         </span>
       )}
     </a>
