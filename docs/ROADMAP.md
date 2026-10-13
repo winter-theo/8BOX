@@ -28,7 +28,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 | 18 | [Construction : sols, murs, portes, meubles](steps/18-construction.md) | 17 | ✅ |
 | 19 | [Pièces et toits automatiques](steps/19-toits.md) | 18 | ✅ |
 | 20 | [Vie, faim, mort et réapparition](steps/20-survie-mort.md) | 18 | ✅ |
-| 21 | [Jour, nuit et lumière](steps/21-jour-nuit-lumiere.md) | 18 | ⬜ |
+| 21 | [Jour, nuit et lumière](steps/21-jour-nuit-lumiere.md) | 18 | 🟡 |
 | 22 | [Combat façon Zelda et PvP](steps/22-combat-pvp.md) | 20 | ⬜ |
 | 23 | [Monstres de nuit](steps/23-monstres.md) | 21, 22 | ⬜ |
 | 24 | [Commandes admin et mode admin](steps/24-commandes-admin.md) | 13, 23 | ⬜ |
