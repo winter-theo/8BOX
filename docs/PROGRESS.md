@@ -3,13 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 16 : Récolte et zone sûre (branche `step/16-recolte`)
-- [x] Shared : contenu (récolte, cueillette, repousse, butin), dégâts, tirage du butin, zone sûre, actions
-  (Couper, Arracher, Cueillir, Casser), protocole (`tileDamage`, admin dans `welcome`), i18n, tests
-- [x] Serveur : module `harvest` (PV des cases, dégâts, récupération, butin, `tile.broken`, cueillette et
-  repousse, préparation de l'usure), butin dans l'inventaire ou au sol, zone sûre et admin, tests
-- [x] Client : zone sûre et admin dans les actions, affichage des dégâts, buisson cueilli, tests
-- [ ] Clôture : critères d'acceptation, PROGRESS, ROADMAP, PR
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -396,7 +390,50 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (15) Aucune action du contenu ne dure encore : la barre de progression ne se verra qu'à partir de l'étape 16 (elle
   est testée avec une action de test).
 
+- (16) Couper, Arracher et Casser : un coup par appui, sans durée, au plus un toutes les 250 ms
+  (`actionCooldownMs`) ; Cueillir dure 1 s (`HARVEST.pickDurationMs`), avec la barre de progression.
+- (16) Dégâts : main 1, outil inadapté 1 (`HARVEST.handDamage`, `wrongToolDamage`) ; un objet qui n'est pas un outil
+  compte comme la main. Les hautes herbes et les fleurs ne demandent aucun outil. Un chêne tombe en 6 coups à la main.
+- (16) Le butin et la repousse sont du contenu (`loot.json`, champ `regrow` d'une case) : `HARVEST.appleChance` et
+  `berryRegrowMs` ont quitté la config. Une table de butin donne `min` à `max` objets par tirage (au lieu de
+  `count`). Choix par défaut : chêne 2 à 4 bûches + pomme à 20 % ; hautes herbes 1 fibre ; buisson 1 à 3 baies.
+- (16) Les fleurs s'arrachent aussi (sans butin). Une case cassable déclare son action : `harvest.action`
+  (`cut`, `uproot` ou `break`), avec l'outil conseillé facultatif.
+- (16) Buisson cueilli = nouvelle case `base:berry_bush_picked` (même buisson, sans baies), qui redevient un buisson
+  10 min plus tard. Le temps restant n'est pas sauvegardé : au démarrage, chaque buisson cueilli repart pour 10 min.
+- (16) Cueillir est permis dans la zone sûre (rien n'est cassé) ; arracher les hautes herbes y est interdit.
+- (16) Zone sûre : les cases de la surface dont le centre est à moins de 32 cases du centre du spawn. Le client la
+  calcule lui-même (le spawn est le centre de la carte) ; `welcome` dit si le joueur est admin (`you.admin`), pour
+  que son client ne grise pas l'action. Message : « Rien ne se casse dans la zone sûre ».
+- (16) Le butin qui ne rentre pas tombe aux pieds du joueur (pas sur la case cassée), et tout le monde peut le
+  ramasser tout de suite.
+- (16) Barre de PV : 8 × 3 pixels (cadre sombre, PV en rouge) en bas de la case, au-dessus des objets. Elle n'est
+  envoyée (`tileDamage`) qu'aux joueurs qui suivent le chunk au moment du coup : un joueur qui arrive ensuite ne voit
+  pas les dégâts en cours.
+- (16) Un coup sur une case déjà cassée est refusé avec « Impossible ici » (`unavailable`), pas « Ce n'est plus là ».
+- (16) Usure préparée : l'événement `tool.used` (joueur, objet, case de la barre) part à chaque coup donné avec un
+  outil en main, adapté ou non ; l'étape 17 décomptera la durabilité.
+- (16) « Casser » est prêt pour les objets posés (`harvest.action: "break"`) mais aucun contenu ne l'utilise encore.
+  Un objet cassé donne sa table de butin : à l'étape 18, choisir s'il rend l'objet posé.
+- (16) Le butin est tiré avec un générateur à graine (heure de démarrage et graine du monde) : il ne se rejoue pas
+  d'un lancement à l'autre. Protocole passé à la version 11.
+
 ## Historique
+
+### 2026-10-13 — Étape 16 : Récolte et zone sûre ✅
+- Shared : contenu de récolte (`harvest.action` et outil conseillé, `pick`, `regrow`, tables de butin `min`/`max`),
+  chêne, hautes herbes, fleurs, buisson à baies et buisson cueilli ; `harvestDamage`, `rollLoot` (générateur à
+  graine), zone sûre (`inSafeZone`) ; actions Couper, Arracher, Cueillir (1 s) et Casser, marquées `use`, refusées
+  dans la zone sûre sauf pour un admin. Protocole 11 : `tileDamage`, `welcome.you.admin`.
+- Serveur : module `harvest` (PV des cases, récupération après 30 s sans coup, `tile.broken`, butin par
+  `items.give` vers l'inventaire ou le sol, cueillette et repousse, même après un redémarrage, `tool.used`) ;
+  l'interaction passe la zone sûre et le rôle admin à `canPerform`.
+- Client : actions grisées dans la zone sûre (sauf admin), barre de PV sur la case frappée, buisson cueilli.
+- Tests : dégâts selon l'outil, butin déterministe, règle de la zone sûre, chêne coupé (inventaire ou sol), deux
+  joueurs sur le même arbre, refus en zone sûre et admin, récupération des PV, cueillette et repousse.
+- Non vérifié dans un navigateur pendant la session (tests automatisés et build seulement).
+- Écarts : le point 4 (`tileUpdate`, chunk « sale ») existait déjà ; pomme et repousse dans le contenu plutôt que
+  dans la config ; les fleurs s'arrachent aussi.
 
 ### 2026-10-13 — Étape 15 : Interactions : visée, action, menu ✅
 - Shared : registre d'actions (`actions/`) : cibles, priorité, durée, clé i18n, `appliesTo` et `canPerform` avec

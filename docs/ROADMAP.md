@@ -23,7 +23,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 | 13 | [Chat, filtre et signalements](steps/13-chat.md) | 12 | ✅ |
 | 14 | [Inventaire, barre, bourse, objets au sol](steps/14-inventaire.md) | 09, 10 | ✅ |
 | 15 | [Interactions : visée, action, menu](steps/15-interactions.md) | 14 | ✅ |
-| 16 | [Récolte et zone sûre](steps/16-recolte.md) | 15 | 🟡 |
+| 16 | [Récolte et zone sûre](steps/16-recolte.md) | 15 | ✅ |
 | 17 | [Craft, établi et outils](steps/17-craft-outils.md) | 16 | ⬜ |
 | 18 | [Construction : sols, murs, portes, meubles](steps/18-construction.md) | 17 | ⬜ |
 | 19 | [Pièces et toits automatiques](steps/19-toits.md) | 18 | ⬜ |
