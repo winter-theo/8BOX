@@ -22,6 +22,13 @@
       "when": 1791839451242,
       "tag": "0002_admin_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791854415197,
+      "tag": "0003_reports_and_mutes",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { ADMIN_ACTIONS } from '@8box/shared';
+import { ADMIN_ACTIONS, REPORT_STATUSES, type ReportContextLine } from '@8box/shared';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -95,9 +95,34 @@ export const adminAudit = pgTable(
       .references(() => players.id),
     /** Ban reason. */
     reason: text('reason'),
+    /** Length of a mute, in minutes. */
+    minutes: integer('minutes'),
     createdAt: createdAt(),
   },
   (table) => [index('admin_audit_created_at_idx').on(table.createdAt)],
+);
+
+/** Reports of players by other players (`/signaler`), with the chat lines the reporter saw. */
+export const reports = pgTable(
+  'reports',
+  {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    reporterId: integer('reporter_id')
+      .notNull()
+      .references(() => players.id),
+    targetId: integer('target_id')
+      .notNull()
+      .references(() => players.id),
+    reason: text('reason').notNull(),
+    /** The last chat lines the reporter saw, the oldest first. */
+    context: jsonb('context').$type<ReportContextLine[]>().notNull(),
+    status: text('status', { enum: REPORT_STATUSES }).notNull().default('open'),
+    /** The admin who resolved or dismissed it, and when. */
+    handledBy: integer('handled_by').references(() => players.id),
+    handledAt: timestamp('handled_at', { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (table) => [index('reports_status_created_at_idx').on(table.status, table.createdAt)],
 );
 
 /** The character of each player: where it is (survival and inventory columns come with their steps). */

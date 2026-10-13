@@ -2,6 +2,7 @@ import type { Content, GameConfig } from '@8box/shared';
 import type { FastifyBaseLogger } from 'fastify';
 import type { NetServer } from '../net/net';
 import type { Persistence } from '../persistence/Persistence';
+import type { ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import type { EntityStore } from './entities';
 import type { EventBus } from './events';
@@ -24,6 +25,8 @@ export interface ServerContext {
   readonly world: World;
   /** Saves to the database, queued without waiting (never `await` in a tick). */
   readonly persistence: Persistence;
+  /** Reports of players, read by the admin tab (the database; promises, never awaited in a tick). */
+  readonly reports: ReportStore;
 }
 
 export interface GameModule {

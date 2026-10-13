@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ADMIN } from '../config/admin';
+import type { ChatChannel } from './messages';
 
 // The admin HTTP API (`/admin/*`): request bodies validated by the server (zod), answers typed.
 
@@ -45,6 +46,39 @@ export interface AdminAuditEntry {
   targetName: string | null;
   /** Ban reason. */
   reason: string | null;
+}
+
+/** A chat line kept with a report: what the reporter saw. */
+export interface ReportContextLine {
+  /** Server clock when said, in ms since 1970. */
+  ts: number;
+  channel: ChatChannel;
+  from: string;
+  /** Private line: who it was for. */
+  to?: string;
+  /** As the reporter saw it (filtered). */
+  text: string;
+}
+
+/** `open` until the admin deals with it: `resolved` (acted on) or `dismissed` (nothing to do). */
+export const REPORT_STATUSES = ['open', 'resolved', 'dismissed'] as const;
+export type ReportStatus = (typeof REPORT_STATUSES)[number];
+
+/** A report as the admin tab lists it. Dates are ISO strings. */
+export interface AdminReport {
+  id: number;
+  at: string;
+  reporterId: number;
+  reporterName: string | null;
+  targetId: number;
+  targetName: string | null;
+  reason: string;
+  /** The last chat lines the reporter saw, the oldest first. */
+  context: ReportContextLine[];
+  status: ReportStatus;
+  /** The admin who resolved or dismissed it, and when. */
+  handledByName: string | null;
+  handledAt: string | null;
 }
 
 /** `GET /admin/me`: answered for admins only (403 otherwise), for the menu link and its badge. */

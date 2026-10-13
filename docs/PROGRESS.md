@@ -7,7 +7,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] Protocole 7 et `shared` : messages `chat` et `chatNotice`, listes de mots FR et EN (config), tests.
 - [x] Serveur `modules/chat/` : proximité (16 cases, même couche), privé (`/msg`, `/r`, `to`), 200 caractères,
   limite de débit, filtre, joueurs mutés ; tests.
-- [ ] Base : table `reports`, `muted_until` dans le compte, durée dans le journal (migration) ; commande
+- [x] Base : table `reports`, `muted_until` dans le compte, durée dans le journal (migration) ; commande
   `/signaler` (et `/report`) avec les 20 derniers messages vus ; tests.
 - [ ] API admin : signalements (liste, traiter, classer), muter X minutes, rendre la parole ; tests.
 - [ ] Client : panneau de chat (Entrée, historique, onglets Proximité et Privé, bouton sur téléphone), bulles

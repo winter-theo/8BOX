@@ -1,4 +1,4 @@
-import type { ChatLineMessage, ChatNoticeMessage } from '@8box/shared';
+import type { ChatLineMessage, ChatNoticeMessage, ReportContextLine } from '@8box/shared';
 import type { GameModule, ServerContext } from '../../core/module';
 import { TokenBucket } from '../../net/rateLimit';
 import type { Session } from '../../net/session';
@@ -18,7 +18,7 @@ interface ChatPlayer {
 /**
  * Proximity and private chat: lines are cleaned, limited in rate and length, filtered, then sent to
  * the players nearby (same layer, within `CHAT.proximityRadiusTiles`) or to one player at any distance.
- * Muted players cannot talk.
+ * Muted players cannot talk. `/signaler` records a report with the last lines the reporter saw.
  */
 class Chat {
   private readonly players = new Map<number, ChatPlayer>();
@@ -64,6 +64,7 @@ class Chat {
         return;
       }
       case 'report':
+        this.report(session, playerId, line.name, line.reason);
         return;
       case 'usage':
         this.notify(session, { notice: line.notice });
@@ -72,6 +73,43 @@ class Chat {
         this.notify(session, { notice: 'unknownCommand' });
         return;
     }
+  }
+
+  /**
+   * Records a report against a player (in the game or not), with the last lines the reporter saw.
+   * Muted players can report too. Written outside the tick; the reporter is told once it is saved.
+   */
+  private report(session: Session, reporterId: number, name: string, reason: string): void {
+    if (name.toLowerCase() === session.name?.toLowerCase()) {
+      this.notify(session, { notice: 'self' });
+      return;
+    }
+    const context = this.playerOf(reporterId).seen.map(
+      ({ ts, channel, from, to, text }): ReportContextLine => ({
+        ts,
+        channel,
+        from,
+        ...(to !== undefined && { to }),
+        text,
+      }),
+    );
+    this.ctx.reports.create({ reporterId, targetName: name, reason, context }).then(
+      (created) => {
+        if (!created) {
+          this.notify(session, { notice: 'unknownPlayer', name });
+          return;
+        }
+        this.ctx.log.info(
+          { reporter: session.name, target: created.targetName },
+          'player reported',
+        );
+        this.notify(session, { notice: 'reported', name: created.targetName });
+      },
+      (error: unknown) => {
+        this.ctx.log.error({ err: error, reporter: session.name }, 'report failed');
+        this.notify(session, { notice: 'reportFailed' });
+      },
+    );
   }
 
   /** Whether the player may send this message; tells them why not. */

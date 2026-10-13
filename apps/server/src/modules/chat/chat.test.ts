@@ -170,3 +170,75 @@ describe('chat module', () => {
     expect(lines(bob)).toEqual([expect.objectContaining({ text: 'back' })]);
   });
 });
+
+describe('reports', () => {
+  it('records a report with the last lines the reporter saw, and tells them', async () => {
+    const { ctx, join, say, advance } = setup();
+    const ana = await join('Ana', 10, 10);
+    const bob = await join('Bob', 12, 10);
+    const lineCount = CHAT.reportContextMessages + 5;
+    for (let i = 0; i < lineCount; i++) {
+      say(bob, `line ${i}`);
+      advance(CHAT.rateLimitWindowMs);
+    }
+    say(bob, 'espèce de connard');
+
+    say(ana, '/signaler bob insultes répétées');
+    await settle();
+
+    expect(notices(ana)).toEqual([{ t: 'chatNotice', notice: 'reported', name: 'Bob' }]);
+    const [report] = await ctx.reports.list(10);
+    expect(report).toMatchObject({
+      reporterName: 'Ana',
+      targetName: 'Bob',
+      reason: 'insultes répétées',
+      status: 'open',
+    });
+    expect(report?.context).toHaveLength(CHAT.reportContextMessages);
+    expect(report?.context.at(-1)).toEqual({
+      ts: expect.any(Number),
+      channel: 'proximity',
+      from: 'Bob',
+      text: 'espèce de ***',
+    });
+    expect(report?.context[0]?.text).toBe(`line ${lineCount - CHAT.reportContextMessages + 1}`);
+  });
+
+  it('keeps private lines in the context, and lets muted players report', async () => {
+    const { ctx, join, say } = setup();
+    const ana = await join('Ana', 10, 10);
+    await join('Bob', 60, 60);
+    const account = ana.session.account;
+    if (!account) {
+      throw new Error('no account');
+    }
+    say(ana, '/msg Bob arrête');
+    ctx.net.applyAccount({ ...account, mutedUntil: new Date(Date.now() + 60_000) });
+
+    say(ana, '/report Bob spam');
+    await settle();
+
+    expect(notices(ana).at(-1)).toEqual({ t: 'chatNotice', notice: 'reported', name: 'Bob' });
+    const [report] = await ctx.reports.list(10);
+    expect(report?.context).toEqual([
+      { ts: expect.any(Number), channel: 'private', from: 'Ana', to: 'Bob', text: 'arrête' },
+    ]);
+  });
+
+  it('refuses reports against nobody or oneself', async () => {
+    const { ctx, join, say } = setup();
+    const ana = await join('Ana', 10, 10);
+
+    say(ana, '/signaler Ghost triche');
+    say(ana, '/signaler ana test');
+    say(ana, '/signaler Ghost');
+    await settle();
+
+    expect(notices(ana)).toEqual([
+      { t: 'chatNotice', notice: 'self' },
+      { t: 'chatNotice', notice: 'reportUsage' },
+      { t: 'chatNotice', notice: 'unknownPlayer', name: 'Ghost' },
+    ]);
+    expect(await ctx.reports.list(10)).toEqual([]);
+  });
+});
