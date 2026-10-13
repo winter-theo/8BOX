@@ -547,6 +547,43 @@ html.page-admin #root {
   color: #fca5a5;
 }
 
+.admin-status--report-open {
+  background: rgb(250 204 21 / 20%);
+  color: #fde68a;
+}
+
+.admin-status--report-resolved {
+  background: rgb(74 222 128 / 20%);
+  color: #86efac;
+}
+
+/* The chat lines a reporter saw, folded under the reason. */
+.admin-context {
+  margin-top: 6px;
+}
+
+.admin-context summary {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.admin-context ol {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 30%);
+  list-style: none;
+  font-size: 13px;
+}
+
+.admin-context time {
+  opacity: 0.6;
+}
+
+.admin-context__target {
+  color: #fca5a5;
+}
+
 .admin-reason {
   display: block;
   margin-top: 4px;

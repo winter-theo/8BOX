@@ -55,6 +55,8 @@
     "admin": {
       "link": "Admin",
       "pendingBadge": "{{count}} pending",
+      "reportsBadge_one": "{{count}} report",
+      "reportsBadge_other": "{{count}} reports",
       "title": "Administration",
       "backToGame": "Back to the game",
       "refresh": "Refresh",
@@ -69,6 +71,13 @@
       "players": {
         "title": "Players",
         "empty": "No player."
+      },
+      "reports": {
+        "title": "Reports",
+        "empty": "No reports.",
+        "context_one": "See the message the player saw",
+        "context_other": "See the {{count}} messages the player saw",
+        "noContext": "The player saw no messages."
       },
       "audit": {
         "title": "Audit log",
@@ -86,7 +95,8 @@
         "admin": "Admin",
         "action": "Action",
         "target": "Player",
-        "reason": "Reason"
+        "reason": "Reason",
+        "reporter": "Reported by"
       },
       "noName": "(no name chosen yet)",
       "never": "never",
@@ -104,14 +114,39 @@
         "deny": "Deny",
         "ban": "Ban",
         "unban": "Unban",
-        "kick": "Kick"
+        "kick": "Kick",
+        "mute": "Mute",
+        "unmute": "Unmute"
       },
       "audited": {
         "approve": "approved",
         "deny": "denied",
         "ban": "banned",
         "unban": "unbanned",
-        "kick": "kicked"
+        "kick": "kicked",
+        "mute": "muted",
+        "unmute": "unmuted"
+      },
+      "reportStatus": {
+        "open": "to handle",
+        "resolved": "resolved",
+        "dismissed": "dismissed"
+      },
+      "reportAction": {
+        "resolve": "Resolve",
+        "dismiss": "Dismiss"
+      },
+      "handledBy": "by {{name}}, {{date}}",
+      "mutedUntil": "muted until {{date}}",
+      "muteFor": "Mute length",
+      "confirmMute": "Mute",
+      "duration": {
+        "minutes_one": "{{count}} minute",
+        "minutes_other": "{{count}} minutes",
+        "hours_one": "{{count}} hour",
+        "hours_other": "{{count}} hours",
+        "days_one": "{{count}} day",
+        "days_other": "{{count}} days"
       },
       "banReason": "Ban reason",
       "confirmBan": "Ban",
@@ -124,6 +159,7 @@
         "targetIsAdmin": "You cannot act on another admin.",
         "wrongStatus": "This player's status changed: the list is refreshed.",
         "notOnline": "This player is no longer connected.",
+        "reportClosed": "This report was already handled: the list is refreshed.",
         "invalidBody": "The reason must be 1 to 200 characters long.",
         "network": "The server does not answer."
       }

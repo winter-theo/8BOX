@@ -55,6 +55,8 @@
     "admin": {
       "link": "Admin",
       "pendingBadge": "{{count}} en attente",
+      "reportsBadge_one": "{{count}} signalement",
+      "reportsBadge_other": "{{count}} signalements",
       "title": "Administration",
       "backToGame": "Retour au jeu",
       "refresh": "Actualiser",
@@ -69,6 +71,13 @@
       "players": {
         "title": "Joueurs",
         "empty": "Aucun joueur."
+      },
+      "reports": {
+        "title": "Signalements",
+        "empty": "Aucun signalement.",
+        "context_one": "Voir le message vu par le joueur",
+        "context_other": "Voir les {{count}} messages vus par le joueur",
+        "noContext": "Aucun message vu par le joueur."
       },
       "audit": {
         "title": "Journal",
@@ -86,7 +95,8 @@
         "admin": "Admin",
         "action": "Action",
         "target": "Joueur",
-        "reason": "Raison"
+        "reason": "Raison",
+        "reporter": "Signalé par"
       },
       "noName": "(pseudo pas encore choisi)",
       "never": "jamais",
@@ -104,14 +114,39 @@
         "deny": "Refuser",
         "ban": "Bannir",
         "unban": "Débannir",
-        "kick": "Expulser"
+        "kick": "Expulser",
+        "mute": "Muter",
+        "unmute": "Rendre la parole"
       },
       "audited": {
         "approve": "approuvé",
         "deny": "refusé",
         "ban": "banni",
         "unban": "débanni",
-        "kick": "expulsé"
+        "kick": "expulsé",
+        "mute": "rendu muet",
+        "unmute": "parole rendue"
+      },
+      "reportStatus": {
+        "open": "à traiter",
+        "resolved": "traité",
+        "dismissed": "classé"
+      },
+      "reportAction": {
+        "resolve": "Traiter",
+        "dismiss": "Classer"
+      },
+      "handledBy": "par {{name}}, le {{date}}",
+      "mutedUntil": "muet jusqu'au {{date}}",
+      "muteFor": "Durée du silence",
+      "confirmMute": "Muter",
+      "duration": {
+        "minutes_one": "{{count}} minute",
+        "minutes_other": "{{count}} minutes",
+        "hours_one": "{{count}} heure",
+        "hours_other": "{{count}} heures",
+        "days_one": "{{count}} jour",
+        "days_other": "{{count}} jours"
       },
       "banReason": "Raison du bannissement",
       "confirmBan": "Bannir",
@@ -124,6 +159,7 @@
         "targetIsAdmin": "On ne peut pas agir sur un autre administrateur.",
         "wrongStatus": "Le statut de ce joueur a changé : la liste est actualisée.",
         "notOnline": "Ce joueur n'est plus connecté.",
+        "reportClosed": "Ce signalement est déjà traité : la liste est actualisée.",
         "invalidBody": "La raison doit faire entre 1 et 200 caractères.",
         "network": "Le serveur ne répond pas."
       }

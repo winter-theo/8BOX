@@ -3,7 +3,12 @@ import {
   type AdminAction,
   type AdminAuditEntry,
   type AdminPlayer,
+  type AdminReport,
   banBodySchema,
+  DAY_MS,
+  HOUR_MS,
+  MINUTE_MS,
+  type ReportContextLine,
 } from '@8box/shared';
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +17,14 @@ import { AdminApi, type AdminFailure, type AuthHeader, failureOf } from '../../g
 
 interface Lists {
   players: AdminPlayer[];
+  reports: AdminReport[];
   audit: AdminAuditEntry[];
   updatedAt: Date;
+}
+
+/** Whether the player cannot chat right now. */
+function isMuted(player: AdminPlayer): boolean {
+  return player.mutedUntil !== null && Date.parse(player.mutedUntil) > Date.now();
 }
 
 /** Actions offered for a player, by status (admins get none). */
@@ -25,7 +36,11 @@ function actionsOf(player: AdminPlayer): AdminAction[] {
     case 'pending':
       return ['approve', 'deny'];
     case 'approved':
-      return player.online ? ['kick', 'ban'] : ['ban'];
+      return [
+        ...(player.online ? ['kick' as const] : []),
+        isMuted(player) ? 'unmute' : 'mute',
+        'ban',
+      ];
     case 'denied':
       return ['approve', 'ban'];
     case 'banned':
@@ -42,6 +57,94 @@ function useDateFormat() {
     });
     return (iso: string) => format.format(new Date(iso));
   }, [i18n.resolvedLanguage]);
+}
+
+/** "15 minutes", "1 hour", "1 day"… */
+function useDurationFormat(): (minutes: number) => string {
+  const { t } = useTranslation();
+  return (minutes) => {
+    const ms = minutes * MINUTE_MS;
+    if (ms % DAY_MS === 0) {
+      return t('ui.admin.duration.days', { count: ms / DAY_MS });
+    }
+    if (ms % HOUR_MS === 0) {
+      return t('ui.admin.duration.hours', { count: ms / HOUR_MS });
+    }
+    return t('ui.admin.duration.minutes', { count: minutes });
+  };
+}
+
+/** The mute length form, shown in place of the actions of the player being muted. */
+function MuteForm({
+  onMute,
+  onCancel,
+}: {
+  onMute: (minutes: number) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const formatDuration = useDurationFormat();
+  const [minutes, setMinutes] = useState<number>(ADMIN.mutePresetsMinutes[0]);
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    onMute(minutes);
+  };
+
+  return (
+    <form className="admin-ban" onSubmit={submit}>
+      <select
+        aria-label={t('ui.admin.muteFor')}
+        value={minutes}
+        onChange={(event) => setMinutes(Number(event.target.value))}
+      >
+        {ADMIN.mutePresetsMinutes.map((preset) => (
+          <option key={preset} value={preset}>
+            {formatDuration(preset)}
+          </option>
+        ))}
+      </select>
+      <button type="submit" className="admin-button admin-button--danger">
+        {t('ui.admin.confirmMute')}
+      </button>
+      <button type="button" className="admin-button" onClick={onCancel}>
+        {t('ui.admin.cancel')}
+      </button>
+    </form>
+  );
+}
+
+/** The chat lines a reporter saw, folded; the reported player's own lines stand out. */
+function ReportContext({ lines, target }: { lines: ReportContextLine[]; target: string | null }) {
+  const { t, i18n } = useTranslation();
+  const format = useMemo(
+    () => new Intl.DateTimeFormat(i18n.resolvedLanguage, { timeStyle: 'short' }),
+    [i18n.resolvedLanguage],
+  );
+  if (lines.length === 0) {
+    return <small className="admin-reason">{t('ui.admin.reports.noContext')}</small>;
+  }
+  return (
+    <details className="admin-context">
+      <summary>{t('ui.admin.reports.context', { count: lines.length })}</summary>
+      <ol>
+        {lines.map((line, index) => (
+          <li
+            // biome-ignore lint/suspicious/noArrayIndexKey: a fixed list, never reordered.
+            key={index}
+            className={line.from === target ? 'admin-context__target' : undefined}
+          >
+            <time>{format.format(new Date(line.ts))}</time>{' '}
+            <b>
+              {line.from}
+              {line.to !== undefined && ` → ${line.to}`}
+            </b>{' '}
+            {line.text}
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
 }
 
 /** The ban reason form, shown in place of the actions of the player being banned. */
@@ -77,8 +180,8 @@ function BanForm({ onBan, onCancel }: { onBan: (reason: string) => void; onCance
 }
 
 /**
- * The admin tab: pending requests, players and the audit log, reloaded every 30 s and after each
- * action. It shows what the server answers, nothing more.
+ * The admin tab: pending requests, reports (with the chat lines the reporter saw), players and the
+ * audit log, reloaded every 30 s and after each action. It shows what the server answers, nothing more.
  */
 export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
   const { t } = useTranslation();
@@ -90,11 +193,18 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
   const [busy, setBusy] = useState(false);
   /** The player whose ban reason is being typed. */
   const [banning, setBanning] = useState<number | null>(null);
+  /** The player whose mute length is being chosen. */
+  const [muting, setMuting] = useState<number | null>(null);
+  const formatDuration = useDurationFormat();
 
   const refresh = useCallback(async () => {
     try {
-      const [{ players }, { entries }] = await Promise.all([api.players(), api.audit()]);
-      setLists({ players, audit: entries, updatedAt: new Date() });
+      const [{ players }, { reports }, { entries }] = await Promise.all([
+        api.players(),
+        api.reports(),
+        api.audit(),
+      ]);
+      setLists({ players, reports, audit: entries, updatedAt: new Date() });
       setLoadFailure(null);
     } catch (error) {
       setLoadFailure(failureOf(error));
@@ -116,6 +226,7 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
       setActionFailure(failureOf(error));
     }
     setBanning(null);
+    setMuting(null);
     await refresh();
     setBusy(false);
   };
@@ -123,7 +234,11 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
   const act = (player: AdminPlayer, action: AdminAction) => {
     if (action === 'ban') {
       setBanning(player.id);
-    } else if (action !== 'mute') {
+      setMuting(null);
+    } else if (action === 'mute') {
+      setMuting(player.id);
+      setBanning(null);
+    } else {
       void run(() => api.act(player.id, action));
     }
   };
@@ -141,6 +256,7 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
 
   const pending = lists.players.filter((player) => player.status === 'pending');
   const others = lists.players.filter((player) => player.status !== 'pending');
+  const openReports = lists.reports.filter((report) => report.status === 'open').length;
   const nameOf = (player: AdminPlayer) => player.name ?? t('ui.admin.noName');
 
   const actionCell = (player: AdminPlayer) => (
@@ -149,6 +265,11 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
         <BanForm
           onBan={(reason) => void run(() => api.ban(player.id, { reason }))}
           onCancel={() => setBanning(null)}
+        />
+      ) : muting === player.id ? (
+        <MuteForm
+          onMute={(minutes) => void run(() => api.mute(player.id, { minutes }))}
+          onCancel={() => setMuting(null)}
         />
       ) : (
         actionsOf(player).length > 0 && (
@@ -231,6 +352,81 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
       </section>
 
       <section className="admin-section">
+        <h2>
+          {t('ui.admin.reports.title')}
+          {openReports > 0 && <span className="badge">{openReports}</span>}
+        </h2>
+        {lists.reports.length === 0 ? (
+          <p className="admin-empty">{t('ui.admin.reports.empty')}</p>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>{t('ui.admin.column.date')}</th>
+                <th>{t('ui.admin.column.reporter')}</th>
+                <th>{t('ui.admin.column.target')}</th>
+                <th>{t('ui.admin.column.reason')}</th>
+                <th>{t('ui.admin.column.status')}</th>
+                <th>{t('ui.admin.column.actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lists.reports.map((report) => (
+                <tr key={report.id}>
+                  <td data-label={t('ui.admin.column.date')}>{formatDate(report.at)}</td>
+                  <td data-label={t('ui.admin.column.reporter')}>
+                    {report.reporterName ?? `#${report.reporterId}`}
+                  </td>
+                  <td data-label={t('ui.admin.column.target')}>
+                    {report.targetName ?? `#${report.targetId}`}
+                  </td>
+                  <td data-label={t('ui.admin.column.reason')}>
+                    {report.reason}
+                    <ReportContext lines={report.context} target={report.targetName} />
+                  </td>
+                  <td data-label={t('ui.admin.column.status')}>
+                    <span className={`admin-status admin-status--report-${report.status}`}>
+                      {t(`ui.admin.reportStatus.${report.status}`)}
+                    </span>
+                    {report.handledAt && (
+                      <small className="admin-reason">
+                        {t('ui.admin.handledBy', {
+                          name: report.handledByName ?? '?',
+                          date: formatDate(report.handledAt),
+                        })}
+                      </small>
+                    )}
+                  </td>
+                  <td data-label={t('ui.admin.column.actions')}>
+                    {report.status === 'open' && (
+                      <div className="admin-actions">
+                        <button
+                          type="button"
+                          className="admin-button admin-button--primary"
+                          disabled={busy}
+                          onClick={() => void run(() => api.closeReport(report.id, 'resolve'))}
+                        >
+                          {t('ui.admin.reportAction.resolve')}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-button"
+                          disabled={busy}
+                          onClick={() => void run(() => api.closeReport(report.id, 'dismiss'))}
+                        >
+                          {t('ui.admin.reportAction.dismiss')}
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className="admin-section">
         <h2>{t('ui.admin.players.title')}</h2>
         {others.length === 0 ? (
           <p className="admin-empty">{t('ui.admin.players.empty')}</p>
@@ -259,6 +455,11 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
                       {t(`ui.admin.status.${player.status}`)}
                     </span>
                     {player.banReason && <small className="admin-reason">{player.banReason}</small>}
+                    {player.mutedUntil && isMuted(player) && (
+                      <small className="admin-reason">
+                        {t('ui.admin.mutedUntil', { date: formatDate(player.mutedUntil) })}
+                      </small>
+                    )}
                   </td>
                   <td data-label={t('ui.admin.column.online')}>
                     {player.online ? (
@@ -308,7 +509,9 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
                   <td data-label={t('ui.admin.column.target')}>
                     {entry.targetName ?? `#${entry.targetId}`}
                   </td>
-                  <td data-label={t('ui.admin.column.reason')}>{entry.reason ?? '—'}</td>
+                  <td data-label={t('ui.admin.column.reason')}>
+                    {entry.minutes === null ? (entry.reason ?? '—') : formatDuration(entry.minutes)}
+                  </td>
                 </tr>
               ))}
             </tbody>

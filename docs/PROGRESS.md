@@ -12,7 +12,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] API admin : signalements (liste, traiter, classer), muter X minutes, rendre la parole ; tests.
 - [x] Client : panneau de chat (Entrée, historique, onglets Proximité et Privé, bouton sur téléphone), bulles
   au-dessus des têtes (5 s, texte tronqué), textes FR et EN ; tests.
-- [ ] Onglet admin : signalements avec leur contexte, muter et rendre la parole.
+- [x] Onglet admin : signalements avec leur contexte, muter et rendre la parole.
 - [ ] Vérification dans le navigateur, clôture.
 
 ## À valider par l'humain
