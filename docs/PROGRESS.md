@@ -5,6 +5,9 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ## En cours
 _Aucune étape en cours._
 
+Pause le 2026-10-13 (limite d'usage hebdomadaire à 95 %, remise à zéro le 2026-10-14 vers 16 h UTC) :
+les étapes 15 à 22 ont été faites à la suite. Reprendre par `/etape 23`, puis `/etape 24`.
+
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
 
