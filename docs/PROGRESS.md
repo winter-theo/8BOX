@@ -3,7 +3,13 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 17 — Craft, établi et outils (branche `step/17-craft-outils`)
+- [ ] Shared : contenu (recettes, objets, cases posables, butin), usure des outils, logique de fabrication,
+  station à portée, action Poser, protocole (`craft`, `craft` en retour, `itemBroken`), i18n, tests
+- [ ] Serveur : module `crafting` (station, ingrédients, place, durée, annulation), module `building` (Poser),
+  usure et casse des outils (module `inventory`), tests
+- [ ] Client : fenêtre de fabrication (C, bouton sur téléphone), barre de progression, outil brisé, barre
+  d'usure, sprites des nouveaux objets, tests
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
