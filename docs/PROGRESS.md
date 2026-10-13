@@ -3,14 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 20 : Vie, faim, mort et réapparition (branche `step/20-survie-mort`)
-- [x] Shared : logique pure de survie (faim, famine, régénération, fatigue des actions, perte d'or, point de
-  réapparition), action « Manger », config.
-- [x] Serveur : module `survival` (composants `health` et `hunger`, `damage`, mort, réapparition, invulnérabilité),
-  sauvegarde des PV et de la faim.
-- [x] Protocole et client : état de survie envoyé au joueur, HUD cœurs et faim (PC et téléphone), écran de mort
-  avec bouton Réapparaître, i18n.
-- [ ] Tests et clôture.
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -489,8 +482,40 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
   `roof.default` (bardeaux bruns).
 - (19) On est « dans » une pièce quand ses pieds sont sur une de ses cases : dans l'encadrement de la porte, le toit
   reste visible. Fondu de 250 ms (`VIEW.roofFadeMs`).
+- (20) Fatigue des actions : chaque action « d'effort » (coups de récolte, cueillette, poser) rapproche la prochaine
+  perte de faim de 3 s (`SURVIVAL.actionFatigueMs`), soit 1 point de faim pour 30 actions. Drapeau `effort` sur la
+  définition de l'action ; manger, examiner, ouvrir une porte ou dormir ne fatiguent pas.
+- (20) Perte d'or à la mort arrondie à l'inférieur (moins de 10 pièces : rien de perdu). L'or tombe à l'endroit de la
+  mort, ramassable tout de suite par tous ; le mort ne ramasse rien tant qu'il n'a pas réapparu.
+- (20) On réapparaît avec 20 PV et 20 de faim (`SURVIVAL.respawnHealth`, `SURVIVAL.respawnHunger`).
+- (20) Le lit est solide : on réapparaît sur une case libre autour (devant lui d'abord) ; si aucune n'est libre, au
+  spawn (le lit reste le point de réapparition). Un lit détruit est oublié.
+- (20) Mort : le personnage reste visible et immobile là où il est mort, sans animation, jusqu'au clic sur
+  « Réapparaître ». Il ne peut ni bouger, ni agir, ni fabriquer, ni ramasser ; le chat reste possible.
+- (20) Un joueur qui part en étant mort (PV 0 sauvegardés) réapparaît (lit ou spawn) à sa reconnexion.
+- (20) Manger est refusé quand la faim est pleine (« Pas faim »). « Utiliser l'objet en main » (Espace, clic gauche,
+  bouton Utiliser) mange d'abord si on tient de la nourriture et qu'on a faim, sinon agit sur la case visée ; dans le
+  menu, « Manger » apparaît sur sa propre case.
+- (20) HUD : 10 cœurs et 10 cuisses (2 points par icône) au-dessus de la barre d'objets, cœurs à gauche, faim à
+  droite ; icônes provisoires générées (`hud.heart.*`, `hud.hunger.*`).
+- (20) L'écran de mort vouvoie (« Vous êtes mort », comme la fiche) alors que le reste de l'interface tutoie.
 
 ## Historique
+
+### 2026-10-13 — Étape 20 : Vie, faim, mort et réapparition ✅
+- Shared : règles pures de survie (`stepVitals` : faim, famine, régénération ; `addFatigue`, `eatFood`,
+  `deathGoldLoss`), action « Manger » (`eatAction`, cible soi-même), messages `vitals` et `respawn` (protocole 15).
+- Serveur : module `survival` (composants `health` et `hunger`, manger, fatigue via `action.performed`, mort,
+  réapparition au lit ou au spawn avec 5 s d'invulnérabilité), `damage` générique dans `core/damage.ts`,
+  événement `entity.died` (le module `inventory` y lâche 10 % de l'or) ; PV et faim sauvegardés (colonnes existantes).
+- Client : store `survival`, cœurs et faim en pixel art au-dessus de la barre d'objets, écran de mort avec bouton
+  Réapparaître, manger avec « Utiliser », pas de déplacement prédit pendant la mort.
+- Tests : faim, famine, régénération, fatigue, perte d'or, choix du point de réapparition (lit présent, encerclé,
+  détruit), module (manger, mort et or ramassable, réapparition et invulnérabilité, sauvegarde), client.
+- Non vérifié dans un navigateur pendant la session (tests automatisés seulement).
+- Écarts : `damage(ctx, entity, amount, source)` est une fonction du cœur (`core/damage.ts`) et non d'un module ;
+  seule cause de mort pour l'instant : la famine (`DamageCause`, que l'étape 22 complétera) ; drapeau `effort` ajouté
+  aux actions ; pas de migration (les colonnes `hp` et `hunger` existaient).
 
 ### 2026-10-13 — Étape 19 : Pièces et toits automatiques ✅
 - Shared : id de pièce dans la `meta` (`roomOf`, `withRoom`), gardé quand l'objet de la case change
