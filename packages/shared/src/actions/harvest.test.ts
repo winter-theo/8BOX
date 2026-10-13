@@ -19,7 +19,7 @@ function actor(x: number, y: number, extra: Partial<Actor> = {}): Actor {
 /** The harvest actions that apply to a subject. */
 function applying(subject: ActionSubject): string[] {
   return [cutAction, uprootAction, pickAction, breakAction]
-    .filter((action) => actionApplies(action, subject, content))
+    .filter((action) => actionApplies(action, subject, content, actor(0, 0)))
     .map((action) => action.id);
 }
 

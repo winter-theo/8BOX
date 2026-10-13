@@ -10,10 +10,13 @@ import {
   heldStack,
   type Inventory,
   type ItemStack,
+  maxDurability,
   moveItems,
+  removeItems,
   selectSlot,
   takeGold,
   takeItems,
+  wearItem,
 } from './inventory';
 
 const { items } = loadContent(baseContent);
@@ -263,5 +266,107 @@ describe('cleanInventory', () => {
     expect(countItem(inventory, BAG)).toBe(1);
     expect(lost).toEqual([{ item: 'base:removed', count: 3 }]);
     expect(inventory.selected).toBe(0);
+  });
+});
+
+describe('removeItems', () => {
+  it('takes items of a kind from the last slots first, and never the equipment', () => {
+    const inventory = withSlots(
+      { item: LOG, count: 5 },
+      { item: BERRIES, count: 2 },
+      { item: LOG, count: 3 },
+    );
+    inventory.equipment.bag = { item: BAG, count: 1 };
+
+    const next = removeItems(inventory, LOG, 4);
+
+    expect(next?.slots.slice(0, 3)).toEqual([
+      { item: LOG, count: 4 },
+      { item: BERRIES, count: 2 },
+      null,
+    ]);
+    expect(next?.equipment.bag).toEqual({ item: BAG, count: 1 });
+    expect(removeItems(inventory, LOG, 9)).toBeUndefined();
+    expect(removeItems(inventory, BAG, 1)).toBeUndefined();
+    expect(removeItems(inventory, LOG, 0)).toBeUndefined();
+  });
+});
+
+describe('durability', () => {
+  const AXE = 'base:wooden_axe';
+
+  it('starts full: absent until the first use', () => {
+    expect(maxDurability(items, AXE)).toBe(60);
+    expect(maxDurability(items, 'base:wooden_sword')).toBe(60);
+    expect(maxDurability(items, LOG)).toBeUndefined();
+  });
+
+  it('wears a tool by one use, and breaks it at 0', () => {
+    let inventory = withSlots({ item: AXE, count: 1 });
+    for (let use = 1; use < 60; use++) {
+      const worn = wearItem(inventory, items, 0);
+      expect(worn?.broken).toBe(false);
+      inventory = worn?.inventory ?? inventory;
+    }
+    expect(inventory.slots[0]).toEqual({ item: AXE, count: 1, durability: 1 });
+
+    const last = wearItem(inventory, items, 0);
+
+    expect(last?.broken).toBe(true);
+    expect(last?.inventory.slots[0]).toBeNull();
+  });
+
+  it('only wears tools and weapons', () => {
+    expect(wearItem(withSlots({ item: LOG, count: 3 }), items, 0)).toBeUndefined();
+    expect(wearItem(emptyInventory(), items, 0)).toBeUndefined();
+  });
+
+  it('keeps the uses left when a tool is moved, dropped or picked up again', () => {
+    const axe = { item: AXE, count: 1, durability: 12 };
+    const inventory = withSlots(axe, { item: AXE, count: 1 });
+
+    expect(moveItems(inventory, items, 0, 5)?.slots[5]).toEqual(axe);
+    // Two axes worn differently swap.
+    expect(moveItems(inventory, items, 0, 1)?.slots.slice(0, 2)).toEqual([
+      { item: AXE, count: 1 },
+      axe,
+    ]);
+    expect(takeItems(inventory, items, 0)?.taken).toEqual(axe);
+    expect(addItems(emptyInventory(), items, axe).inventory.slots[0]).toEqual(axe);
+  });
+
+  it('only merges stacks worn the same', () => {
+    const added = addItems(withSlots({ item: LOG, count: 1, durability: 3 }), items, {
+      item: LOG,
+      count: 2,
+    });
+
+    expect(added.inventory.slots.slice(0, 2)).toEqual([
+      { item: LOG, count: 1, durability: 3 },
+      { item: LOG, count: 2 },
+    ]);
+  });
+
+  it('cleans the uses left of a saved inventory', () => {
+    const { inventory } = cleanInventory(
+      {
+        slots: [
+          { item: AXE, count: 1, durability: 30 },
+          { item: AXE, count: 1, durability: 500 },
+          { item: AXE, count: 1, durability: 0 },
+          { item: LOG, count: 4, durability: 2 },
+        ],
+        equipment: {},
+        purse: 0,
+      },
+      items,
+    );
+
+    expect(inventory.slots.slice(0, 4)).toEqual([
+      { item: AXE, count: 1, durability: 30 },
+      { item: AXE, count: 1 },
+      { item: AXE, count: 1 },
+      { item: LOG, count: 4 },
+    ]);
   });
 });

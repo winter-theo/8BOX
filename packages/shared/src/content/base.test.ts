@@ -7,10 +7,10 @@ describe('base content', () => {
     const content = loadContent(baseContent);
 
     expect(contentSizes(content)).toEqual({
-      tiles: 10,
-      items: 8,
-      recipes: 0,
-      loot: 3,
+      tiles: 16,
+      items: 17,
+      recipes: 12,
+      loot: 9,
       creatures: 0,
     });
   });
@@ -40,5 +40,46 @@ describe('base content', () => {
       into: 'base:berry_bush',
       afterMs: 10 * 60 * 1000,
     });
+  });
+
+  it('has the recipes of the starting items, by hand or at the workbench', () => {
+    const content = loadContent(baseContent);
+    const recipe = (id: string) => content.recipes.require(id);
+
+    expect(recipe('base:plank')).toMatchObject({
+      inputs: [{ item: 'base:oak_log', count: 1 }],
+      outputs: [{ item: 'base:plank', count: 4 }],
+    });
+    expect(recipe('base:workbench').station).toBeUndefined();
+    expect(recipe('base:wooden_axe')).toMatchObject({
+      inputs: [
+        { item: 'base:plank', count: 3 },
+        { item: 'base:stick', count: 2 },
+      ],
+      station: 'base:workbench',
+    });
+    for (const { id, timeMs } of content.recipes.all) {
+      expect(timeMs, id).toBeGreaterThanOrEqual(500);
+      expect(timeMs, id).toBeLessThanOrEqual(2000);
+    }
+    expect(content.tiles.require('base:workbench').station).toBe('base:workbench');
+  });
+
+  it('has wooden tools that wear, and items that are placed and give themselves back', () => {
+    const content = loadContent(baseContent);
+
+    expect(content.items.require('base:wooden_axe').tool).toEqual({
+      kind: 'axe',
+      power: 2,
+      durability: 60,
+    });
+    expect(content.items.require('base:wooden_sword').weapon?.durability).toBe(60);
+    for (const item of content.items.all.filter((def) => def.place)) {
+      const tile = content.tiles.require(item.place ?? '');
+      expect(tile.loot, item.id).toBe(item.id);
+      expect(tile.harvest?.action, item.id).toBe('break');
+    }
+    expect(content.tiles.require('base:wooden_wall').hp).toBe(20);
+    expect(content.tiles.require('base:wooden_floor').slot).toBe('floor');
   });
 });

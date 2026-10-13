@@ -289,6 +289,71 @@ const berryBushPicked = pixelSprite(TREE, [
   },
 ]);
 
+const FURNITURE: Legend = {
+  o: P.ink,
+  d: P.soilDark,
+  b: P.soil,
+  l: P.soilLight,
+  w: P.bone,
+  r: P.berry,
+  p: P.petal,
+};
+
+const furniture = (rows: readonly string[]) => pixelSprite(FURNITURE, [{ weight: 1, rows }]);
+
+/** A workbench: a thick top on four legs. */
+const workbench = furniture([
+  '........',
+  'oooooooo',
+  'olllllwo',
+  'olbllllo',
+  'obbbbbbo',
+  'oooooooo',
+  'od.oo.do',
+  'oo....oo',
+]);
+
+/** A torch stuck in the ground. */
+const torch = furniture([
+  '........',
+  '....p...',
+  '...prp..',
+  '...rpr..',
+  '....d...',
+  '....d...',
+  '....d...',
+  '...ddd..',
+]);
+
+/** A bed seen from above: the pillow at the top. */
+const bed = furniture([
+  'oooooooo',
+  'owwwwwwo',
+  'owwwwwwo',
+  'orrrrrro',
+  'orrrrrro',
+  'orrrrrro',
+  'oddddddo',
+  'od....do',
+]);
+
+/** Wooden floor planks, covering the whole tile (drawn over the ground). */
+const woodenFloor = pixelSprite(WOOD, [
+  {
+    weight: 1,
+    rows: [
+      'bbbbBbbb',
+      'LLLLBLLL',
+      'bbbbBbbb',
+      'BBBBBBBB',
+      'bbBbbbbb',
+      'LLBLLLLL',
+      'bbBbbbbb',
+      'BBBBBBBB',
+    ],
+  },
+]);
+
 /** Placeholders of the objects and characters, by sprite id. */
 export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.oak_tree': oakTree,
@@ -298,6 +363,10 @@ export const OBJECT_PLACEHOLDERS: Readonly<Record<string, Placeholder>> = {
   'obj.flowers': flowers,
   'obj.wooden_wall': woodenWall,
   'obj.wooden_door': woodenDoor,
+  'obj.workbench': workbench,
+  'obj.torch': torch,
+  'obj.bed': bed,
+  'floor.wooden_floor': woodenFloor,
   // Only the feet move: apart at rest, then striding and together in turn.
   'char.theo.idle': theoFrame('.ogoogo.'),
   'char.theo.walk1': theoFrame('ogo..ogo'),

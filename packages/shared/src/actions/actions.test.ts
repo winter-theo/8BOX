@@ -60,6 +60,7 @@ describe('ActionRegistry', () => {
       'cut',
       'pick',
       'uproot',
+      'place',
       'examine',
     ]);
     expect(INTERACTION.priorities.pickUp).toBeGreaterThan(INTERACTION.priorities.examine);

@@ -202,7 +202,7 @@
       "player": "player: {{x}}, {{y}}",
       "camera": "free camera: {{x}}, {{y}}",
       "controls": "WASD or arrows: walk · + / -: zoom · F2: free camera (arrows, Shift: slowly)",
-      "inventoryControls": "1 to 0 or wheel: item in hand · I: inventory · Q: drop (Shift: just one)",
+      "inventoryControls": "1 to 0 or wheel: item in hand · I: inventory · C: crafting · Q: drop (Shift: just one)",
       "give": "Give myself",
       "giveItem": "Item",
       "giveCount": "Count",
@@ -260,7 +260,36 @@
         "tooSoon": "Not so fast",
         "gone": "It is no longer there",
         "unavailable": "Not possible here",
-        "safeZone": "Nothing can be broken in the safe zone"
+        "safeZone": "Not allowed in the safe zone",
+        "occupied": "Something is in the way"
+      },
+      "place": "Place here",
+      "broken": "Item broken: {{name}}."
+    },
+    "crafting": {
+      "title": "Crafting",
+      "close": "Close",
+      "hand": "By hand",
+      "count": "Quantity",
+      "less": "Less",
+      "more": "More",
+      "craft": "Craft",
+      "ingredients": "Ingredients",
+      "gives": "Gives",
+      "ingredient": "{{name}}: {{have}} / {{need}}",
+      "output": "{{name}} × {{count}}",
+      "time": "{{seconds}} s",
+      "progress": "Crafting",
+      "left": "Crafting: {{name}} ({{left}} to go)",
+      "done": "Crafting done.",
+      "cancelled": "Crafting cancelled.",
+      "help": "Stand within {{reach}} tiles of a workbench for its recipes. Moving cancels crafting.",
+      "reason": {
+        "unknownRecipe": "Unknown recipe",
+        "missingItems": "Missing ingredients",
+        "noStation": "Too far from: {{station}}",
+        "inventoryFull": "Inventory full",
+        "busy": "Already crafting"
       }
     },
     "mobile": {
@@ -268,6 +297,7 @@
       "use": "Hit",
       "action": "Action",
       "inventory": "Bag",
+      "craft": "Craft",
       "chat": "Chat",
       "rotate": "Turn your phone",
       "rotateHint": "8Box is played in landscape.",
@@ -293,7 +323,16 @@
       "berries": { "name": "Berries" },
       "apple": { "name": "Apple" },
       "gold": { "name": "Gold" },
-      "fiber_bag": { "name": "Fiber bag" }
+      "fiber_bag": { "name": "Fiber bag" },
+      "torch": { "name": "Torch" },
+      "workbench": { "name": "Workbench" },
+      "wooden_axe": { "name": "Wooden axe" },
+      "wooden_pickaxe": { "name": "Wooden pickaxe" },
+      "wooden_sword": { "name": "Wooden sword" },
+      "wooden_wall": { "name": "Wooden wall" },
+      "wooden_floor": { "name": "Wooden floor" },
+      "wooden_door": { "name": "Wooden door" },
+      "bed": { "name": "Bed" }
     }
   }
 }

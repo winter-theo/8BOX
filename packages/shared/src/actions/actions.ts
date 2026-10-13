@@ -58,8 +58,10 @@ export type ActionReason =
   | 'gone'
   /** No such action on this target. */
   | 'unavailable'
-  /** Nothing is broken in the safe zone around the spawn (except by an admin). */
-  | 'safeZone';
+  /** Nothing is broken nor built in the safe zone around the spawn (except by an admin). */
+  | 'safeZone'
+  /** Something is in the way of what is placed (an object, deep water, a character). */
+  | 'occupied';
 
 /** Whether an action can be done now; when not, why. */
 export type ActionCheck = { ok: true } | { ok: false; reason: ActionReason };
@@ -89,8 +91,11 @@ export interface ActionDef {
   labelKey: string;
   /** Also chosen by "use the item in hand" (Space, left click, Use button). */
   use?: boolean;
-  /** Whether the action makes sense on this subject at all: when not, it is not listed. */
-  appliesTo(subject: ActionSubject, content: Content): boolean;
+  /**
+   * Whether the action makes sense on this subject, with what the actor holds: when not, it is not
+   * listed.
+   */
+  appliesTo(subject: ActionSubject, content: Content, actor: Actor): boolean;
   /** Whether it can be done now; when not, it is greyed in the menu with the reason. */
   canPerform(ctx: ActionContext): ActionCheck;
 }
@@ -160,8 +165,9 @@ export function actionApplies(
   action: ActionDef,
   subject: ActionSubject,
   content: Content,
+  actor: Actor,
 ): boolean {
-  return action.targets.includes(subject.kind) && action.appliesTo(subject, content);
+  return action.targets.includes(subject.kind) && action.appliesTo(subject, content, actor);
 }
 
 /**
@@ -178,7 +184,7 @@ export function listActions(
   const options: ActionOption[] = [];
   for (const action of registry.all) {
     for (const subject of subjects) {
-      if (actionApplies(action, subject, content)) {
+      if (actionApplies(action, subject, content, actor)) {
         const check = action.canPerform({
           actor,
           subject,

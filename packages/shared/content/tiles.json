@@ -86,5 +86,67 @@
     "tall": false,
     "hp": 1,
     "harvest": { "action": "uproot" }
+  },
+  {
+    "id": "base:torch",
+    "slot": "object",
+    "sprite": "obj.torch",
+    "solid": false,
+    "tall": false,
+    "hp": 1,
+    "light": {},
+    "harvest": { "action": "break" },
+    "loot": "base:torch"
+  },
+  {
+    "id": "base:workbench",
+    "slot": "object",
+    "sprite": "obj.workbench",
+    "solid": true,
+    "tall": false,
+    "hp": 10,
+    "harvest": { "action": "break", "tool": "axe" },
+    "station": "base:workbench",
+    "loot": "base:workbench"
+  },
+  {
+    "id": "base:wooden_wall",
+    "slot": "object",
+    "sprite": "obj.wooden_wall",
+    "solid": true,
+    "tall": true,
+    "hp": 20,
+    "harvest": { "action": "break", "tool": "axe" },
+    "loot": "base:wooden_wall"
+  },
+  {
+    "id": "base:wooden_floor",
+    "slot": "floor",
+    "sprite": "floor.wooden_floor",
+    "solid": false,
+    "tall": false,
+    "hp": 5,
+    "harvest": { "action": "break", "tool": "axe" },
+    "loot": "base:wooden_floor"
+  },
+  {
+    "id": "base:wooden_door",
+    "slot": "object",
+    "sprite": "obj.wooden_door",
+    "solid": true,
+    "tall": true,
+    "hp": 20,
+    "harvest": { "action": "break", "tool": "axe" },
+    "loot": "base:wooden_door"
+  },
+  {
+    "id": "base:bed",
+    "slot": "object",
+    "sprite": "obj.bed",
+    "solid": true,
+    "tall": false,
+    "hp": 10,
+    "harvest": { "action": "break", "tool": "axe" },
+    "loot": "base:bed"
   }
 ]

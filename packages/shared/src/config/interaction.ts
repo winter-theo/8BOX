@@ -16,6 +16,7 @@ export const INTERACTION = {
     cut: 10,
     uproot: 10,
     break: 10,
+    place: 5,
     examine: 0,
   },
   /** Time the result of an action (what was examined, why it was refused) stays on screen, in ms. */
