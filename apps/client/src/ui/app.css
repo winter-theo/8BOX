@@ -877,6 +877,56 @@ html.page-admin #root {
   left: 50%;
 }
 
+/* Health and hunger: just above the item bar, hearts on its left, drumsticks on its right. */
+.vitals {
+  --slot-size: 44px;
+  --hotbar-width: calc(10 * var(--slot-size) + 9 * 4px + 8px);
+  position: fixed;
+  z-index: 1;
+  bottom: calc(max(8px, env(safe-area-inset-bottom)) + var(--slot-size) + 8px + 4px);
+  left: max(50%, calc(436px + var(--hotbar-width) / 2));
+  display: flex;
+  justify-content: space-between;
+  width: var(--hotbar-width);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.app--touch .vitals {
+  --slot-size: min(48px, calc((100vw - 32px - 44px) / 10));
+  bottom: calc(max(4px, env(safe-area-inset-bottom)) + var(--slot-size) + 8px + 4px);
+  left: 50%;
+}
+
+.vitals-gauge {
+  display: flex;
+  gap: 1px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 45%);
+}
+
+.vitals-icon {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+}
+
+/* Above the whole HUD: nothing else to do while dead. */
+.death-screen {
+  z-index: 20;
+  background: rgb(80 0 0 / 55%);
+}
+
+.death-screen h2 {
+  margin: 0;
+  text-align: center;
+}
+
+.death-screen button {
+  min-height: 48px;
+}
+
 .item-slot {
   position: relative;
   display: grid;

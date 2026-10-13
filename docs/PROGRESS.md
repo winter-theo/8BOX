@@ -8,7 +8,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
   réapparition), action « Manger », config.
 - [x] Serveur : module `survival` (composants `health` et `hunger`, `damage`, mort, réapparition, invulnérabilité),
   sauvegarde des PV et de la faim.
-- [ ] Protocole et client : état de survie envoyé au joueur, HUD cœurs et faim (PC et téléphone), écran de mort
+- [x] Protocole et client : état de survie envoyé au joueur, HUD cœurs et faim (PC et téléphone), écran de mort
   avec bouton Réapparaître, i18n.
 - [ ] Tests et clôture.
 

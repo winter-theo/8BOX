@@ -22,6 +22,7 @@ import { useChatStore } from '../store/chat';
 import { clearCrafting, useCraftingStore } from '../store/crafting';
 import { useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
+import { clearSurvival, useSurvivalStore } from '../store/survival';
 import type { ClientEvents } from './events';
 import { GameClient, toWebSocketUrl } from './GameClient';
 
@@ -682,6 +683,7 @@ describe('GameClient actions', () => {
   beforeEach(() => {
     useInventoryStore.setState({ inventory: null, open: false });
     clearActions();
+    clearSurvival();
   });
 
   it('the action key does the main action on the aimed tile, or tells there is nothing', () => {
@@ -706,6 +708,45 @@ describe('GameClient actions', () => {
     bus.emit('action.use', {});
     bus.emit('input.button', { button: 'use' });
     expect(sentActions()).toEqual([]);
+  });
+
+  it('eats the food in hand with Use, unless full', () => {
+    online();
+    oakInFront();
+    lastSocket().receive({
+      t: 'inventory',
+      slots: [{ item: 'base:apple', count: 2 }, ...Array(9).fill(null)],
+      equipment: {},
+      purse: 0,
+      selected: 0,
+    });
+    lastSocket().receive({ t: 'vitals', health: 20, hunger: 12 });
+    bus.emit('action.use', {});
+    expect(sentActions()).toEqual([{ t: 'action', id: 'eat', target: { kind: 'self' } }]);
+
+    lastSocket().receive({ t: 'vitals', health: 20, hunger: 20 });
+    bus.emit('action.use', {});
+    expect(sentActions()).toHaveLength(1);
+    expect(actions().feedback?.message).toEqual({ kind: 'refused', reason: 'full' });
+  });
+
+  it('keeps the vitals the server sends; dead, it stands still until it asks to respawn', () => {
+    const client = online();
+    lastSocket().receive({ t: 'vitals', health: 0, hunger: 0, dead: 'starvation' });
+    expect(useSurvivalStore.getState()).toEqual({ health: 0, hunger: 0, dead: 'starvation' });
+    bus.emit('input.direction', { dir: 3 });
+    vi.advanceTimersByTime(NET.clientInputIntervalMs * 3);
+    expect(lastSocket().sent.filter((message) => message.t === 'input')).toEqual([]);
+
+    client.respawn();
+    expect(lastSocket().sent.at(-1)).toEqual({ t: 'respawn' });
+    lastSocket().receive({ t: 'vitals', health: 20, hunger: 20 });
+    expect(useSurvivalStore.getState().dead).toBeNull();
+    vi.advanceTimersByTime(NET.clientInputIntervalMs);
+    expect(lastSocket().sent.at(-1)).toMatchObject({ t: 'input', dir: 3 });
+
+    lastSocket().drop();
+    expect(useSurvivalStore.getState()).toEqual({ health: null, hunger: null, dead: null });
   });
 
   it('opens the menu of a tile in reach, greys what cannot be done, and sends the choice', () => {

@@ -38,6 +38,8 @@ export interface InteractionSources {
   remotes(): readonly RemoteView[];
   /** Whether the player is an admin (may break things in the safe zone), as `welcome` said. */
   admin(): boolean;
+  /** Hunger of the player, as the server last sent it (eating needs room); unknown when absent. */
+  hunger?(): number | undefined;
 }
 
 /**
@@ -107,18 +109,33 @@ export class Interaction {
 
   /** Every action on tile (x, y), possible or not, highest priority first. */
   optionsAt(x: number, y: number): ActionOption[] {
+    const actor = this.actor();
+    return actor
+      ? listActions(this.registry, actor, this.subjectsAt(x, y), this.content, SAFE_ZONE)
+      : [];
+  }
+
+  /** Every action on oneself (eat the food in hand), possible or not, highest priority first. */
+  selfOptions(): ActionOption[] {
+    const actor = this.actor();
+    return actor ? listActions(this.registry, actor, [{ kind: 'self' }], this.content) : [];
+  }
+
+  /** The player as actions see them; undefined when not in the world. */
+  private actor(): Actor | undefined {
     const player = this.sources.player();
     const inventory = this.sources.inventory();
     if (!player || !inventory) {
-      return [];
+      return undefined;
     }
-    const actor: Actor = {
+    const hunger = this.sources.hunger?.();
+    return {
       layer: player.layer,
       x: player.x,
       y: player.y,
       inventory,
       admin: this.sources.admin(),
+      ...(hunger !== undefined && { hunger }),
     };
-    return listActions(this.registry, actor, this.subjectsAt(x, y), this.content, SAFE_ZONE);
   }
 }
