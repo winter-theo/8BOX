@@ -7,6 +7,7 @@ import {
   LAYER,
   type LayerId,
   localCoord,
+  metaAfterObjectChange,
   type TileDef,
   type TileMeta,
   type TileSlot,
@@ -129,7 +130,7 @@ export class World {
 
   /**
    * Puts a tile in a slot (`null` empties it) and marks its chunk as modified. A new object (or none)
-   * also clears the meta of the tile: the meta belongs to the object (an open door).
+   * also clears the meta of the tile, but its room: the rest belongs to the object (an open door).
    */
   setTile(layer: LayerId, x: number, y: number, slot: TileSlot, id: string | null): void {
     const chunk = this.chunkOf(layer, x, y);
@@ -137,7 +138,12 @@ export class World {
     const index = tileIndex(localCoord(x), localCoord(y));
     chunk.slot(slot)[index] = code;
     if (slot === 'object') {
-      chunk.meta.delete(index);
+      const kept = metaAfterObjectChange(chunk.meta.get(index));
+      if (kept) {
+        chunk.meta.set(index, kept);
+      } else {
+        chunk.meta.delete(index);
+      }
     }
     this.dirty.add(chunk);
     this.changeListener?.({ layer, x, y, slot, tile: id });

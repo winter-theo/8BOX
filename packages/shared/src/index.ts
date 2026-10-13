@@ -144,5 +144,6 @@ export {
   type SurfaceGenerator,
   type SurfaceGenOptions,
 } from './world/gen/surface';
+export { closesRooms, metaAfterObjectChange, roomOf, withRoom } from './world/rooms';
 export { inSafeZone, type SafeZone, spawnPoint, spawnSafeZone } from './world/safeZone';
 export { EMPTY_TILE, tileCode, tileOfCode } from './world/tileCodes';
