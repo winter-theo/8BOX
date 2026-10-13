@@ -243,7 +243,8 @@
       "fiber": { "name": "Fibre" },
       "berries": { "name": "Baies" },
       "apple": { "name": "Pomme" },
-      "gold": { "name": "Or" }
+      "gold": { "name": "Or" },
+      "fiber_bag": { "name": "Sac en fibres" }
     }
   }
 }

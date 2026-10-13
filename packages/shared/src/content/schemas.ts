@@ -85,7 +85,7 @@ export const itemDefSchema = z
       .strictObject({
         slot: equipSlotSchema,
         /** Inventory slots added while equipped (bags), in slots. */
-        extraSlots: positiveInt.optional(),
+        extraSlots: positiveInt.max(INVENTORY.maxSlots - INVENTORY.mainSlots).optional(),
       })
       .optional(),
   })

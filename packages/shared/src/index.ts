@@ -22,6 +22,26 @@ export {
   type Language,
   resolveLanguage,
 } from './i18n/index';
+export {
+  addItems,
+  capacityOf,
+  cleanInventory,
+  countItem,
+  emptyInventory,
+  heldStack,
+  type Inventory,
+  type ItemDefs,
+  type ItemStack,
+  isEquipSlot,
+  moveItems,
+  purseLimit,
+  type Slot,
+  type SlotRef,
+  selectSlot,
+  stackLimit,
+  takeGold,
+  takeItems,
+} from './inventory/inventory';
 export { checkPlayerName, type NameError } from './moderation/names';
 export * from './protocol/admin';
 export { decodeChunk, encodeChunk } from './protocol/chunk';

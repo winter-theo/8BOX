@@ -82,6 +82,13 @@ describe('itemDefSchema', () => {
     expect(itemDefSchema.safeParse({ ...item, equip: { slot: 'feet' } }).success).toBe(false);
     expect(itemDefSchema.safeParse({ ...item, stack: 0 }).success).toBe(false);
   });
+
+  it('rejects a bag that would go beyond the most slots of an inventory', () => {
+    const extraSlots = INVENTORY.maxSlots - INVENTORY.mainSlots;
+    const bag = (slots: number) => ({ ...item, equip: { slot: 'bag', extraSlots: slots } });
+    expect(itemDefSchema.safeParse(bag(extraSlots)).success).toBe(true);
+    expect(itemDefSchema.safeParse(bag(extraSlots + 1)).success).toBe(false);
+  });
 });
 
 describe('recipeDefSchema', () => {
