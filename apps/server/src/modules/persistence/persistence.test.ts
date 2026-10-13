@@ -1,4 +1,4 @@
-import { baseContent, LAYER, loadContent, PROTOCOL_VERSION } from '@8box/shared';
+import { baseContent, emptyInventory, LAYER, loadContent, PROTOCOL_VERSION } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { connectFakeClient, createTestContext, settle } from '../../core/testing';
 import { Persistence } from '../../persistence/Persistence';
@@ -62,6 +62,7 @@ describe('persistence module', () => {
       x: 10.5,
       y: 20.25,
       skin: 'theo',
+      inventory: { slots: emptyInventory().slots, equipment: {}, purse: 0 },
     });
   });
 

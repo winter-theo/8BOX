@@ -26,6 +26,9 @@ export interface Inventory {
   selected: number;
 }
 
+/** What is saved of an inventory: the item in hand is not. */
+export type StoredInventory = Omit<Inventory, 'selected'>;
+
 /** The item definitions the operations need (the content registry). */
 export interface ItemDefs {
   get(id: string): ItemDef | undefined;
@@ -246,7 +249,7 @@ export function selectSlot(inventory: Inventory, slot: number): Inventory | unde
  * slot, beyond the capacity) are added again where they fit. Returns what could not be kept.
  */
 export function cleanInventory(
-  saved: Inventory,
+  saved: StoredInventory,
   items: ItemDefs,
 ): { inventory: Inventory; lost: ItemStack[] } {
   const loose: ItemStack[] = [];

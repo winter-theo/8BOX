@@ -37,6 +37,7 @@ export {
   purseLimit,
   type Slot,
   type SlotRef,
+  type StoredInventory,
   selectSlot,
   stackLimit,
   takeGold,

@@ -167,4 +167,33 @@ describe('snapshots module', () => {
     expect(lastSnapshot(ana)?.entities).toEqual([]);
     expect(lastSnapshot(ana)?.gone).toEqual([bobEntity]);
   });
+
+  it('sends an item on the ground once, with its item id, until it is gone', async () => {
+    const { ctx, join, tick } = setup();
+    const ana = await join('Ana');
+    const pile = ctx.entities.create('groundItem', {
+      position: { layer: LAYER.surface, x: world.spawn.x + 1, y: world.spawn.y },
+      groundItem: { item: 'base:apple', count: 2, dropperWaitUntilTick: 0, expiresAtTick: 9999 },
+    });
+
+    tick();
+    expect(lastSnapshot(ana)?.entities).toEqual([
+      {
+        id: pile,
+        kind: 'groundItem',
+        x: world.spawn.x + 1,
+        y: world.spawn.y,
+        facing: 'down',
+        anim: 'idle',
+        item: 'base:apple',
+      },
+    ]);
+    tick();
+    expect(lastSnapshot(ana)?.entities).toEqual([]);
+    expect(lastSnapshot(ana)?.gone).toBeUndefined();
+
+    ctx.entities.remove(pile);
+    tick();
+    expect(lastSnapshot(ana)?.gone).toEqual([pile]);
+  });
 });

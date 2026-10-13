@@ -5,11 +5,11 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 ## En cours
 ### Étape 14 — Inventaire, barre, bourse, objets au sol (branche `step/14-inventaire`)
 - [x] Shared : modèle d'inventaire et opérations pures (déplacer, échanger, diviser, ajouter avec débordement), tests
-- [ ] Serveur : module `inventory` (10 cases, case active, bourse, équipement, sac en fibres), messages validés,
+- [x] Serveur : module `inventory` (10 cases, case active, bourse, équipement, sac en fibres), messages validés,
   envoi au client, sauvegarde dans `characters`
-- [ ] Objets au sol : entité `groundItem`, lâcher, ramassage automatique (2 s pour qui l'a lâché), fusion, 10 min ;
+- [x] Objets au sol : entité `groundItem`, lâcher, ramassage automatique (2 s pour qui l'a lâché), fusion, 10 min ;
   test du ramassage simultané
-- [ ] Commande de dev pour se donner des objets
+- [x] Commande de dev pour se donner des objets (message `devGive`, mode dev seulement)
 - [ ] Client : barre d'objets (1 à 0, molette, toucher), fenêtre d'inventaire (I), glisser-déposer, bourse,
   sprites au sol
 - [ ] Vérification dans le navigateur, critères d'acceptation, clôture

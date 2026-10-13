@@ -1,4 +1,4 @@
-import { LAYER, PROTOCOL_VERSION } from '@8box/shared';
+import { emptyInventory, LAYER, PROTOCOL_VERSION } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import { connectFakeClient, createTestContext, settle } from '../../core/testing';
 import { playersModule, spawnPosition } from './index';
@@ -82,6 +82,7 @@ describe('players module', () => {
       x: 20.5,
       y: 30.25,
       skin: 'theo',
+      inventory: { slots: emptyInventory().slots, equipment: {}, purse: 0 },
     });
 
     const again = await join('ANA');
@@ -110,7 +111,14 @@ describe('players module', () => {
     const first = await join('Bob');
     const playerId = first.session.account?.playerId ?? -1;
     ctx.net.handleClose(first.session);
-    ctx.persistence.saveCharacter({ playerId, layer: 0, x: 99_999, y: 5, skin: 'theo' });
+    ctx.persistence.saveCharacter({
+      playerId,
+      layer: 0,
+      x: 99_999,
+      y: 5,
+      skin: 'theo',
+      inventory: emptyInventory(),
+    });
 
     const bob = await join('Bob');
 
