@@ -1,4 +1,4 @@
-import type { ActionReason, ActionSubject, ActionTarget } from '@8box/shared';
+import type { ActionReason, ActionSubject, ActionTarget, CraftReason } from '@8box/shared';
 import { tileThing } from '@8box/shared';
 import { create } from 'zustand';
 
@@ -31,7 +31,13 @@ export type ActionFeedback =
   | { kind: 'examined'; name: SubjectName; count?: number }
   | { kind: 'refused'; reason: ActionReason }
   | { kind: 'cancelled' }
-  | { kind: 'nothing' };
+  | { kind: 'nothing' }
+  /** The server refused a craft; `station` is the station id the recipe needs. */
+  | { kind: 'craftRefused'; reason: CraftReason; station?: string }
+  | { kind: 'craftCancelled' }
+  | { kind: 'craftDone' }
+  /** The tool or weapon in hand broke. */
+  | { kind: 'broken'; item: string };
 
 interface ActionsState {
   /** The open action menu (right click, long press). */

@@ -224,7 +224,8 @@
       "dropGoldAmount": "Quantité d'or à lâcher",
       "help": "Glisse un objet hors de la fenêtre pour le lâcher. Clic droit ou Maj : la moitié de la pile.",
       "helpTouch": "Glisse un objet hors de la fenêtre pour le lâcher.",
-      "stack": "{{name}} × {{count}}"
+      "stack": "{{name}} × {{count}}",
+      "durability": "{{name}} ({{left}}/{{max}})"
     },
     "language": {
       "label": "Langue",

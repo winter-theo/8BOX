@@ -45,6 +45,8 @@ export type ClientEvents = {
   'inventory.dropHeld': { one: boolean };
   /** Keyboard → UI: open or close the inventory window. */
   'inventory.toggle': Record<string, never>;
+  /** Keyboard → UI: open or close the crafting window. */
+  'crafting.toggle': Record<string, never>;
   /** Phaser → game (dev mode): frames per second, camera zoom and object sprites shown. */
   'debug.stats': DebugStats;
 };
@@ -57,7 +59,7 @@ export interface DebugStats {
 }
 
 /** Buttons of the touch controls. */
-export type TouchButton = 'use' | 'action' | 'inventory';
+export type TouchButton = 'use' | 'action' | 'inventory' | 'craft';
 
 export type ClientEventBus = TypedEmitter<ClientEvents>;
 

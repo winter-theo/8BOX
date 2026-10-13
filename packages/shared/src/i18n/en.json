@@ -224,7 +224,8 @@
       "dropGoldAmount": "Gold to drop",
       "help": "Drag an item out of the window to drop it. Right click or Shift: half the stack.",
       "helpTouch": "Drag an item out of the window to drop it.",
-      "stack": "{{name}} × {{count}}"
+      "stack": "{{name}} × {{count}}",
+      "durability": "{{name}} ({{left}}/{{max}})"
     },
     "language": {
       "label": "Language",

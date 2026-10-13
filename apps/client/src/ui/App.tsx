@@ -8,6 +8,7 @@ import { ClerkAutoConnect, SignOutButton } from './auth/ClerkLogin';
 import { LoginScreen } from './auth/LoginScreen';
 import { ConnectionBanner } from './ConnectionBanner';
 import { ChatPanel } from './chat/ChatPanel';
+import { CraftingWindow } from './crafting/CraftingWindow';
 import { DevInfo } from './DevInfo';
 import { DragGhost } from './inventory/DragGhost';
 import { Hotbar } from './inventory/Hotbar';
@@ -32,6 +33,7 @@ export function App() {
       {touch && status === 'online' && <MobileControls />}
       {status === 'online' && <Hotbar touch={touch} />}
       {status === 'online' && <InventoryWindow touch={touch} />}
+      {status === 'online' && <CraftingWindow touch={touch} />}
       {status === 'online' && <ChatPanel touch={touch} />}
       {status === 'online' && <ActionProgress />}
       {status === 'online' && <ActionFeedbackLine />}

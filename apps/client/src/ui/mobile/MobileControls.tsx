@@ -8,6 +8,7 @@ const BUTTONS: readonly { button: TouchButton; label: string }[] = [
   { button: 'use', label: 'ui.mobile.use' },
   { button: 'action', label: 'ui.mobile.action' },
   { button: 'inventory', label: 'ui.mobile.inventory' },
+  { button: 'craft', label: 'ui.mobile.craft' },
 ];
 
 /** Opens the chat on the tab that has unread lines, when the current one has none. */

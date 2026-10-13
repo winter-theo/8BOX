@@ -8,7 +8,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
   station à portée, action Poser, protocole (`craft`, `craft` en retour, `itemBroken`), i18n, tests
 - [x] Serveur : module `crafting` (station, ingrédients, place, durée, annulation), module `building` (Poser),
   usure et casse des outils (module `inventory`), tests
-- [ ] Client : fenêtre de fabrication (C, bouton sur téléphone), barre de progression, outil brisé, barre
+- [x] Client : fenêtre de fabrication (C, bouton sur téléphone), barre de progression, outil brisé, barre
   d'usure, sprites des nouveaux objets, tests
 
 ## À valider par l'humain

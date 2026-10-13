@@ -14,10 +14,12 @@ import {
   TypedEmitter,
   tileCode,
   tileIndex,
+  VIEW,
 } from '@8box/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearActions, useActionsStore } from '../store/actions';
 import { useChatStore } from '../store/chat';
+import { clearCrafting, useCraftingStore } from '../store/crafting';
 import { useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
 import type { ClientEvents } from './events';
@@ -757,6 +759,41 @@ describe('GameClient actions', () => {
     ]);
   });
 
+  it('tells why the item in hand cannot be used, when nothing can be done with it', () => {
+    online();
+    oakInFront();
+    bus.emit('action.use', {});
+    expect(actions().feedback?.message).toEqual({ kind: 'refused', reason: 'safeZone' });
+  });
+
+  it('places the item in hand on the free tile in front', () => {
+    online(true); // An admin: the spawn is in the safe zone.
+    const chunk = new Chunk(0, 16, 16);
+    chunk.slot('ground').fill(tileCode(content, 'base:grass'));
+    lastSocket().receive(encodeChunk(chunk, content));
+    lastSocket().receive({
+      t: 'inventory',
+      slots: [{ item: 'base:workbench', count: 1 }, ...Array(9).fill(null)],
+      equipment: {},
+      purse: 0,
+      selected: 0,
+    });
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 2,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
+      entities: [],
+    });
+    clock = 1000;
+
+    bus.emit('action.use', {});
+
+    expect(sentActions()).toEqual([
+      { t: 'action', id: 'place', target: { kind: 'tile', x: 512, y: 513 } },
+    ]);
+  });
+
   it('lets an admin break things in the safe zone with the item in hand', () => {
     online(true);
     oakInFront();
@@ -811,5 +848,122 @@ describe('GameClient actions', () => {
     lastSocket().receive({ t: 'action', id: 'rest', outcome: 'started', durationMs: 500 });
     lastSocket().drop();
     expect(actions()).toEqual({ menu: null, progress: null, feedback: null });
+  });
+});
+
+describe('GameClient crafting', () => {
+  function online() {
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    lastSocket().open();
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
+      tick: 1,
+    });
+    return client;
+  }
+
+  const crafting = () => useCraftingStore.getState();
+  const actions = () => useActionsStore.getState();
+
+  beforeEach(() => {
+    useInventoryStore.setState({ inventory: null, open: false });
+    clearActions();
+    clearCrafting();
+  });
+
+  it('opens the crafting window (C, Craft button), which closes the inventory, and back', () => {
+    online();
+    useInventoryStore.setState({ open: true });
+
+    bus.emit('crafting.toggle', {});
+    expect(crafting().open).toBe(true);
+    expect(useInventoryStore.getState().open).toBe(false);
+
+    bus.emit('inventory.toggle', {});
+    expect(crafting().open).toBe(false);
+    expect(useInventoryStore.getState().open).toBe(true);
+
+    bus.emit('input.button', { button: 'craft' });
+    expect(crafting().open).toBe(true);
+  });
+
+  it('asks for crafts and shows their progress, the end and refusals', () => {
+    const client = online();
+    client.craft('base:plank', 3);
+    expect(lastSocket().sent.at(-1)).toEqual({ t: 'craft', recipe: 'base:plank', count: 3 });
+
+    lastSocket().receive({
+      t: 'craft',
+      recipe: 'base:plank',
+      outcome: 'started',
+      durationMs: 500,
+      left: 3,
+    });
+    expect(actions().progress).toMatchObject({ id: 'craft:base:plank', durationMs: 500 });
+    expect(crafting().current).toEqual({ recipe: 'base:plank', left: 3 });
+
+    lastSocket().receive({ t: 'craft', recipe: 'base:plank', outcome: 'done' });
+    expect(actions().progress).toBeNull();
+    expect(crafting().current).toBeNull();
+    expect(actions().feedback?.message).toEqual({ kind: 'craftDone' });
+
+    lastSocket().receive({
+      t: 'craft',
+      recipe: 'base:wooden_axe',
+      outcome: 'refused',
+      reason: 'noStation',
+    });
+    expect(actions().feedback?.message).toEqual({
+      kind: 'craftRefused',
+      reason: 'noStation',
+      station: 'base:workbench',
+    });
+
+    lastSocket().receive({ t: 'craft', recipe: 'base:plank', outcome: 'cancelled' });
+    expect(actions().feedback?.message).toEqual({ kind: 'craftCancelled' });
+  });
+
+  it('tells the player when the tool in hand breaks', () => {
+    online();
+    lastSocket().receive({ t: 'itemBroken', item: 'base:wooden_axe' });
+    expect(actions().feedback?.message).toEqual({ kind: 'broken', item: 'base:wooden_axe' });
+  });
+
+  it('knows the stations within reach of the player', () => {
+    online();
+    const chunk = new Chunk(0, 16, 16);
+    // A workbench at (514, 513): 1.6 tiles from the feet (512.5, 512.5).
+    chunk.slot('object')[tileIndex(2, 1)] = tileCode(content, 'base:workbench');
+    lastSocket().receive(encodeChunk(chunk, content));
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 2,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
+      entities: [],
+    });
+    clock = 1000;
+    vi.advanceTimersByTime(VIEW.uiSyncIntervalMs);
+    expect(crafting().stations).toEqual(['base:workbench']);
+
+    lastSocket().receive({
+      t: 'tileUpdate',
+      layer: 0,
+      x: 514,
+      y: 513,
+      slot: 'object',
+      tile: null,
+    });
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 3,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
+      entities: [],
+    });
+    vi.advanceTimersByTime(VIEW.uiSyncIntervalMs);
+    expect(crafting().stations).toEqual([]);
   });
 });
