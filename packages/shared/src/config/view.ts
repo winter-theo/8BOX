@@ -11,6 +11,12 @@ export const VIEW = {
   roofFadeMs: 250,
   /** Time each of the two walking frames of a character is shown, in ms. */
   walkFrameMs: 150,
+  /** Time the weapon takes to sweep in front of a character who attacks, in ms. */
+  swingMs: 150,
+  /** A hit character blinks while it cannot be hurt (`COMBAT.hitInvulnerabilityMs`): time it stays shown, then hidden, in ms. */
+  hitBlinkIntervalMs: 80,
+  /** Time the damage numbers rise and fade above a hit character, in ms. */
+  damageNumberMs: 700,
   /** Change of the distance between two fingers that zooms one step (1.25 = 25 % wider or narrower). */
   pinchStepRatio: 1.25,
   /** Share of the joystick radius where the thumb moves nothing (no unit). */

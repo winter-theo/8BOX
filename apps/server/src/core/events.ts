@@ -84,6 +84,22 @@ export type ServerEvents = {
     position: Position;
     source: DamageSource;
   };
+  /**
+   * An entity lost health (`damage`): `amount` HP, where it stood. Emitted before `entity.died` when
+   * the blow kills it. The combat module shows it to the players nearby.
+   */
+  'entity.damaged': {
+    entity: EntityId;
+    type: EntityType;
+    amount: number;
+    position: Position;
+    source: DamageSource;
+  };
+  /**
+   * A player killed another player (combat module): `firstHit` is the one of the two who hit the
+   * other first in their fight (the reputation will blame them, P7).
+   */
+  'player.killed': { killer: EntityId; victim: EntityId; firstHit: EntityId };
   /** A dead player came back to life, at their bed or at the spawn. */
   'player.respawned': { entity: EntityId; position: Position };
 };
@@ -91,7 +107,7 @@ export type ServerEvents = {
 /** What hurts an entity (`damage`). */
 export interface DamageSource {
   cause: DamageCause;
-  /** The entity that dealt it, if any (combat, step 22). */
+  /** The entity that dealt it, if any (a hit). */
   by?: EntityId;
 }
 

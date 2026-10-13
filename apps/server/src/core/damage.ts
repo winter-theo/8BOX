@@ -4,9 +4,9 @@ import type { ServerContext } from './module';
 
 /**
  * Takes `amount` HP from an entity that has health: nothing while it is dead or invulnerable
- * (`invulnerableUntilTick`). At 0 HP it dies: it becomes `dead` (with the cause) and `entity.died` is
- * emitted, where it stood. Used by starvation (survival module) and by combat (step 22). Returns the HP
- * taken.
+ * (`invulnerableUntilTick`), and emits `entity.damaged`. At 0 HP it dies: it becomes `dead` (with the
+ * cause) and `entity.died` is emitted, where it stood. Used by starvation (survival module) and by hits
+ * (combat module). Returns the HP taken.
  */
 export function damage(
   ctx: ServerContext,
@@ -32,6 +32,9 @@ export function damage(
   const taken = Math.min(health, amount);
   ctx.entities.set(entity, 'health', health - taken);
   const position = ctx.entities.get(entity, 'position');
+  if (position) {
+    ctx.events.emit('entity.damaged', { entity, type, amount: taken, position, source });
+  }
   if (health - taken === 0) {
     ctx.entities.set(entity, 'dead', source.cause);
     if (position) {

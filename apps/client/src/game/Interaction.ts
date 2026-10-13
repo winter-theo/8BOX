@@ -7,8 +7,10 @@ import {
   baseActions,
   type Content,
   type Facing,
+  hitZone,
   INTERACTION,
   type Inventory,
+  inHitZone,
   listActions,
   spawnSafeZone,
   type TileDef,
@@ -119,6 +121,18 @@ export class Interaction {
   selfOptions(): ActionOption[] {
     const actor = this.actor();
     return actor ? listActions(this.registry, actor, [{ kind: 'self' }], this.content) : [];
+  }
+
+  /** Whether a character (not an item on the ground) stands in the hit zone in front of the player. */
+  someoneInHitZone(): boolean {
+    const player = this.sources.player();
+    if (!player) {
+      return false;
+    }
+    const zone = hitZone(player.x, player.y, player.facing);
+    return this.sources
+      .remotes()
+      .some((remote) => remote.kind !== 'groundItem' && inHitZone(zone, remote.x, remote.y));
   }
 
   /** The player as actions see them; undefined when not in the world. */

@@ -516,8 +516,43 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (21) Rendu : calque d'obscurité à la résolution du monde (halos en dégradé pixelisé), au-dessus des toits, sous les
   barres de PV et le contour de visée. Teintes : bleu nuit `0x0a1030`, orange `0x6a3010` (`LIGHT.nightTint`,
   `LIGHT.twilightTint`). Lueur du joueur : 3 cases, force 0,45, purement visuelle (n'empêche pas les monstres).
+- (22) Zone de coup : depuis les pieds, 1 case vers le regard (`COMBAT.hitRangeTiles`), 0,8 case de large
+  (`COMBAT.hitWidthTiles`) ; touche toute entité dont la boîte (0,6 case) la chevauche, donc parfois plusieurs.
+- (22) PvP refusé quand l'attaquant OU la cible est dans la zone sûre (on ne frappe pas depuis elle) : le coup part
+  (balayage) mais ne blesse pas, sans message.
+- (22) Recul vers le regard de l'attaquant (pas selon les positions), arrêté par les murs ; pas de recul pour une cible
+  tuée.
+- (22) L'épée (450 ms) frappe plus vite que l'invulnérabilité (500 ms) : à cadence maximale sur la même cible, un coup
+  sur deux est absorbé. Valeurs de la fiche gardées.
+- (22) « Utiliser » (Espace, clic gauche, bouton Frapper) : arme en main → frappe toujours ; main vide → frappe si un
+  personnage est devant, sinon fait l'action de la case visée (cueillir, couper…), sinon frappe dans le vide. Avec un
+  outil, de la nourriture ou un bloc en main, on ne frappe pas.
+- (22) L'attaque est l'action `attack` sur soi (registre d'actions), « d'effort » (fatigue comme les coups de récolte) ;
+  elle apparaît aussi dans le menu d'actions de sa propre case. Le délai général entre deux actions (250 ms) s'applique.
+- (22) Le client n'envoie jamais un coup plus vite que l'arme ; un coup refusé « trop tôt » par le serveur (gigue
+  réseau) est perdu sans message.
+- (22) « Qui a frappé en premier » : par paire de joueurs, oublié après 60 s sans coup entre eux
+  (`COMBAT.fightMemoryMs`) ou à la mort ; `player.killed` donne des ids d'entité (non durables).
+- (22) Tout dégât (faim comprise) fait clignoter et affiche « -N » en rouge au-dessus du personnage. Arme balayée :
+  icône de l'objet à 75 % ; main nue : petit carré clair. Balayage 150 ms, chiffres 700 ms (`VIEW`).
+- (22) Cause de mort `hit` : « Tué au combat. ».
 
 ## Historique
+
+### 2026-10-13 — Étape 22 : Combat façon Zelda et PvP ✅
+- Shared : arme en main ou main nue (`heldWeapon`), zone de coup selon le regard (`hitZone`, `inHitZone`), cadence
+  (`attackReady`), PvP refusé en zone sûre (`pvpAllowed`), recul bloqué par les murs (`knockback`, `pushMover`),
+  action `attack`, messages `swing` et `damaged` (protocole 17), cause de mort `hit`, i18n.
+- Serveur : `damage()` émet `entity.damaged` ; module `combat` (coups sur les entités de la zone, délai de l'arme
+  vérifié, recul d'une demi-case, 0,5 s d'invulnérabilité, usure de l'arme qui touche, envoi des balayages et dégâts
+  aux joueurs proches, `player.killed` avec qui a frappé en premier).
+- Client : « Utiliser » frappe avec une arme ou à main nue, balayage dessiné tout de suite (`CombatEffects`),
+  clignotement de la cible, chiffres de dégâts.
+- Tests : zone de coup selon le regard, cadence (shared et serveur), PvP refusé en zone sûre, épée contre main, usure,
+  recul contre un mur, `player.killed`, choix Frapper/Utiliser et affichage côté client.
+- Non vérifié dans un navigateur pendant la session (tests automatisés seulement).
+- Écarts : l'attaque passe par le registre d'actions (action sur soi) plutôt que par un message dédié ;
+  `entity.damaged` est émis par `damage()`, donc aussi pour la faim (clignotement et chiffre aussi).
 
 ### 2026-10-13 — Étape 21 : Jour, nuit et lumière ✅
 - Shared : cycle jour/nuit pur (`sim/time.ts` : `timeOfDay`, `dayPhase`, `daylight`, `clockTime`), lumière
