@@ -260,6 +260,7 @@ body {
   bottom: calc(var(--hotbar-height) + max(16px, env(safe-area-inset-bottom)));
   display: grid;
   grid-template-areas:
+    ". craft"
     "chat inventory"
     "action use";
   gap: 12px;
@@ -298,6 +299,10 @@ body {
 
 .touch-button--inventory {
   grid-area: inventory;
+}
+
+.touch-button--craft {
+  grid-area: craft;
 }
 
 .touch-button--chat {
@@ -902,6 +907,22 @@ html.page-admin #root {
   pointer-events: none;
 }
 
+.item-durability {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  left: 4px;
+  height: 3px;
+  background: rgb(0 0 0 / 70%);
+  pointer-events: none;
+}
+
+.item-durability > span {
+  display: block;
+  height: 100%;
+  background: #8cbf62;
+}
+
 .item-count {
   position: absolute;
   right: 3px;
@@ -1195,4 +1216,182 @@ html.page-admin #root {
   text-overflow: ellipsis;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+/* The crafting window: same frame as the inventory, the recipes on the left, the chosen one on the right. */
+.crafting {
+  position: fixed;
+  z-index: 5;
+  top: calc(50% - 36px);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(560px, calc(100vw - 16px));
+  max-height: calc(100dvh - 88px);
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgb(20 20 28 / 92%);
+  color: #f4f4f4;
+  transform: translate(-50%, -50%);
+}
+
+.crafting-body {
+  display: flex;
+  gap: 12px;
+  min-height: 0;
+}
+
+.craft-groups {
+  display: flex;
+  flex: 1 1 50%;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+}
+
+.craft-group h3,
+.craft-detail h4 {
+  margin: 0 0 4px;
+  color: rgb(255 255 255 / 60%);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.craft-group ul,
+.craft-ingredients {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.craft-recipe {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 32px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 6%);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.craft-recipe--blocked {
+  opacity: 0.45;
+}
+
+.craft-recipe--selected {
+  border-color: #8cbf62;
+  background: rgb(140 191 98 / 18%);
+}
+
+.craft-recipe .item-icon,
+.craft-ingredients .item-icon,
+.craft-detail h3 .item-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.craft-detail {
+  display: flex;
+  flex: 1 1 50%;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.craft-detail h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.craft-detail p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.craft-detail-where {
+  color: rgb(255 255 255 / 60%);
+}
+
+.craft-ingredients li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.craft-missing {
+  color: #e08a80;
+}
+
+.craft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.craft-count {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.craft-count-input {
+  width: 3.5em;
+  text-align: center;
+}
+
+.craft-step,
+.craft-count-input,
+.craft-button {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 45%);
+  color: inherit;
+  font: inherit;
+}
+
+.craft-button {
+  flex: 1;
+  background: #4f8545;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.craft-step:disabled,
+.craft-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.craft-reason {
+  color: #e08a80;
+}
+
+.craft-current {
+  color: #b9da86;
+}
+
+.crafting--touch .craft-recipe,
+.crafting--touch .craft-step,
+.crafting--touch .craft-button {
+  min-height: 48px;
 }

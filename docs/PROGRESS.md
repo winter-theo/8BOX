@@ -418,7 +418,51 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (16) Le butin est tiré avec un générateur à graine (heure de démarrage et graine du monde) : il ne se rejoue pas
   d'un lancement à l'autre. Protocole passé à la version 11.
 
+- (17) Usure : une pile garde ses utilisations restantes (`durability`), absentes tant que l'outil n'a pas servi.
+  Seules les piles usées pareil s'empilent ; un outil lâché au sol garde son usure (pas de remise à neuf). Une barre
+  verte sous la case montre l'usure, et l'info-bulle « Hache en bois (12/60) ».
+- (17) Seuls les coups de récolte usent un outil (adapté ou non). Une arme ne s'use pas encore : au combat (22).
+- (17) Fabrication : `craft { recipe, count }` fait la recette `count` fois (99 au plus, `CRAFTING.maxCount`),
+  l'une après l'autre, chacune avec sa durée et sa barre de progression. Les ingrédients sont pris et l'objet donné
+  à la fin de chaque fabrication ; bouger annule celle en cours (les précédentes restent). Une seule fabrication à
+  la fois ; une fabrication et une action peuvent avoir lieu en même temps.
+- (17) Les ingrédients sont pris dans les cases, de la dernière à la première (la barre d'objets se vide en dernier),
+  jamais dans l'équipement porté. Refus « Inventaire plein » si le résultat ne rentre pas, une fois les ingrédients
+  retirés.
+- (17) Durées de fabrication : planches, bâtons et torches 0,5 s ; murs et sols 1 s ; outils, épée et porte 1,5 s ;
+  établi, lit et sac 2 s.
+- (17) Station : à 3 cases au plus, des pieds au point le plus proche de la case de l'établi (même mesure que la
+  portée des actions). La clé de config est `CRAFTING.stationReachTiles` (la fiche disait `crafting.stationRange`).
+- (17) Poser : la case doit être libre (aucun objet, emplacement visé vide, pas d'eau profonde). Les hautes herbes et
+  les fleurs gênent : il faut les arracher d'abord. Un objet solide ne se pose ni sur soi ni sur un autre personnage
+  (« La place est prise ») ; un sol ou une torche, si. Interdit dans la zone sûre, sauf pour un admin.
+- (17) Le message de la zone sûre devient « Interdit dans la zone sûre » (casser et poser).
+- (17) « Poser ici » a la priorité 5 : la touche E (Action) pose aussi l'objet en main sur une case vide.
+- (17) Objets posés (torche, établi, mur, sol, porte, lit) : ils se cassent avec « Casser » (plus vite à la hache)
+  et rendent l'objet. PV : torche 1, sol 5, établi 10, lit 10, mur 20, porte 20. La porte reste fermée (solide)
+  jusqu'à l'étape 18 ; la torche n'éclaire pas encore (étape 21).
+- (17) Espace, clic gauche ou Frapper sans action possible avec l'objet en main : le client dit maintenant pourquoi
+  (zone sûre, place prise…) au lieu de ne rien faire.
+- (17) Fenêtre de fabrication : touche C (la même en AZERTY), bouton « Fabriquer » sur téléphone (au-dessus de
+  « Sac »). Elle ferme l'inventaire, et inversement. La barre de progression est celle des actions ; la fenêtre dit
+  aussi combien de fabrications il reste. Protocole passé à la version 12.
+
 ## Historique
+
+### 2026-10-13 — Étape 17 : Craft, établi et outils ✅
+- Shared : 12 recettes du tableau « Objets de départ », objets (torche, établi, outils et épée en bois, mur, sol,
+  porte, lit) et cases posables qui rendent l'objet cassé ; usure des piles (`durability`, `wearItem`), `craftOnce`
+  (ingrédients exacts, place), `stationInReach`, action « Poser ici » ; protocole 12 (`craft`, `itemBroken`).
+- Serveur : module `crafting` (station à 3 cases, ingrédients, place, durée par fabrication, annulation en bougeant,
+  `item.crafted`), module `building` (Poser, `tile.placed`), usure et casse des outils dans `inventory`
+  (`tool.used`), nouvel événement `inventory.set`.
+- Client : fenêtre de fabrication (C, bouton « Fabriquer ») par station, grisée sans ingrédients ou loin de l'établi,
+  quantité et détail ; barre de progression, outil brisé, barre d'usure, sprites provisoires.
+- Tests : recettes et consommation exacte, inventaire plein, station, annulation, parcours complet (bûches → établi
+  posé → hache qui coupe en 3 coups au lieu de 6), usure et casse, Poser.
+- Non vérifié dans un navigateur pendant la session (tests automatisés et build seulement).
+- Écarts : la config garde le nom `stationReachTiles` ; les objets posés se cassent déjà et rendent l'objet ; le
+  client explique pourquoi l'objet en main ne sert à rien.
 
 ### 2026-10-13 — Étape 16 : Récolte et zone sûre ✅
 - Shared : contenu de récolte (`harvest.action` et outil conseillé, `pick`, `regrow`, tables de butin `min`/`max`),

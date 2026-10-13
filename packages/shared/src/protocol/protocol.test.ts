@@ -35,6 +35,7 @@ const clientMessages: ClientMessage[] = [
   { t: 'action', id: 'examine', target: { kind: 'tile', x: 511, y: 513 } },
   { t: 'action', id: 'pickUp', target: { kind: 'entity', id: 42 } },
   { t: 'action', id: 'eat', target: { kind: 'self' } },
+  { t: 'craft', recipe: 'base:plank', count: 3 },
 ];
 
 const serverMessages: ServerMessage[] = [
@@ -83,6 +84,9 @@ const serverMessages: ServerMessage[] = [
   { t: 'action', id: 'pickUp', outcome: 'refused', reason: 'outOfReach' },
   { t: 'examined', thing: 'base:apple', count: 3 },
   { t: 'examined', player: 'Bob' },
+  { t: 'craft', recipe: 'base:plank', outcome: 'started', durationMs: 500, left: 3 },
+  { t: 'craft', recipe: 'base:wooden_axe', outcome: 'refused', reason: 'noStation' },
+  { t: 'itemBroken', item: 'base:wooden_axe' },
 ];
 
 describe('codec', () => {
@@ -134,6 +138,9 @@ describe('parseClientMessage', () => {
       encode({ t: 'action', id: 'examine', target: { kind: 'tile', x: -1, y: 2 } }),
     ],
     ['entity id zero', encode({ t: 'action', id: 'pickUp', target: { kind: 'entity', id: 0 } })],
+    ['craft count zero', encode({ t: 'craft', recipe: 'base:plank', count: 0 })],
+    ['craft count too high', encode({ t: 'craft', recipe: 'base:plank', count: 100 })],
+    ['craft without namespace', encode({ t: 'craft', recipe: 'plank', count: 1 })],
   ];
 
   it.each(invalid)('rejects %s without throwing', (_label, data) => {

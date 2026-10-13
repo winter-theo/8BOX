@@ -1,4 +1,4 @@
-import { contentNameKey, type ItemStack, type SlotRef } from '@8box/shared';
+import { contentNameKey, type ItemStack, maxDurability, type SlotRef } from '@8box/shared';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { spriteUrl } from '../../assets/itemIcons';
@@ -15,14 +15,39 @@ export function ItemIcon({ item }: { item: string }) {
   return <img className="item-icon" src={spriteUrl(sprite)} alt="" draggable={false} />;
 }
 
-/** "Oak log × 12": the name of a stack, for tooltips and screen readers. */
+/** Uses left of a worn tool or weapon, and its uses when new; undefined while never used. */
+function wearOf(stack: ItemStack): { left: number; max: number } | undefined {
+  const max = maxDurability(content.items, stack.item);
+  return stack.durability === undefined || max === undefined
+    ? undefined
+    : { left: stack.durability, max };
+}
+
+/** "Oak log × 12", "Wooden axe (12/60)": the name of a stack, for tooltips and screen readers. */
 export function useStackLabel(stack: ItemStack | null): string | undefined {
   const { t } = useTranslation();
   if (!stack) {
     return undefined;
   }
   const name = t(contentNameKey(stack.item));
+  const wear = wearOf(stack);
+  if (wear) {
+    return t('ui.inventory.durability', { name, ...wear });
+  }
   return stack.count > 1 ? t('ui.inventory.stack', { name, count: stack.count }) : name;
+}
+
+/** A bar under a worn tool: the share of its uses left. */
+function DurabilityBar({ stack }: { stack: ItemStack }) {
+  const wear = wearOf(stack);
+  if (!wear) {
+    return null;
+  }
+  return (
+    <span className="item-durability">
+      <span style={{ width: `${(100 * wear.left) / wear.max}%` }} />
+    </span>
+  );
 }
 
 interface ItemSlotProps {
@@ -54,6 +79,7 @@ export function ItemSlot({ place, stack, selected, onTap, hint, emptyLabel }: It
     >
       {stack ? <ItemIcon item={stack.item} /> : hint}
       {stack && stack.count > 1 && <span className="item-count">{stack.count}</span>}
+      {stack && <DurabilityBar stack={stack} />}
     </div>
   );
 }

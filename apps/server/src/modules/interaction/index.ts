@@ -101,7 +101,7 @@ function check(
   if (!subject) {
     return { ok: false, reason: 'gone' };
   }
-  if (!actionApplies(action, subject, ctx.content)) {
+  if (!actionApplies(action, subject, ctx.content, actor)) {
     return { ok: false, reason: 'unavailable' };
   }
   if (!subjectInReach(actor, subject, ctx.config.interaction.reachTiles)) {

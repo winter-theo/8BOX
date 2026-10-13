@@ -6,6 +6,11 @@ export interface ItemStack {
   /** Item id, e.g. `base:oak_log`. */
   item: string;
   count: number;
+  /**
+   * Uses left of a tool or a weapon, from 1 to its `durability`; absent while it was never used (as
+   * new). Only stacks with the same uses left merge.
+   */
+  durability?: number;
 }
 
 /** An inventory slot: a stack, or null when empty. */
@@ -67,6 +72,24 @@ export function capacityOf(items: ItemDefs, equipment: Inventory['equipment']): 
 /** The item in hand, if any. */
 export function heldStack(inventory: Inventory): ItemStack | null {
   return inventory.slots[inventory.selected] ?? null;
+}
+
+/** Uses of a new tool or weapon (`durability` of its definition); undefined for other items. */
+export function maxDurability(items: ItemDefs, item: string): number | undefined {
+  const def = items.get(item);
+  return def?.tool?.durability ?? def?.weapon?.durability;
+}
+
+/** Whether two stacks hold the same kind of item: same id, and as worn. */
+function sameKind(a: ItemStack, b: ItemStack): boolean {
+  return a.item === b.item && a.durability === b.durability;
+}
+
+/** A stack of `count` items like `stack` (same item, as worn). */
+function withCount(stack: ItemStack, count: number): ItemStack {
+  return stack.durability === undefined
+    ? { item: stack.item, count }
+    : { item: stack.item, count, durability: stack.durability };
 }
 
 /** How many of this item the inventory holds: slots, equipment and purse. */
@@ -152,7 +175,7 @@ export function addItems(
     return { inventory: next, left: left - added };
   }
   next.slots.forEach((slot, i) => {
-    if (left > 0 && slot?.item === stack.item && slot.count < limit) {
+    if (left > 0 && slot && sameKind(slot, stack) && slot.count < limit) {
       const added = Math.min(left, limit - slot.count);
       next.slots[i] = { ...slot, count: slot.count + added };
       left -= added;
@@ -161,7 +184,7 @@ export function addItems(
   next.slots.forEach((slot, i) => {
     if (left > 0 && slot === null) {
       const added = Math.min(left, limit);
-      next.slots[i] = { item: stack.item, count: added };
+      next.slots[i] = withCount(stack, added);
       left -= added;
     }
   });
@@ -190,10 +213,10 @@ export function moveItems(
   }
   const target = stackAt(inventory, to);
   const next = clone(inventory);
-  if (target === null || target.item === source.item) {
+  if (target === null || sameKind(target, source)) {
     const room = placeLimit(items, to, source.item) - (target?.count ?? 0);
     const moved = Math.min(moving, room);
-    const result = { item: source.item, count: (target?.count ?? 0) + moved };
+    const result = withCount(source, (target?.count ?? 0) + moved);
     if (moved <= 0 || !accepts(items, to, result)) {
       return undefined;
     }
@@ -224,7 +247,61 @@ export function takeItems(
   const next = clone(inventory);
   setStack(next, from, minus(source, taking));
   const fitted = fitCapacity(next, items);
-  return fitted && { inventory: fitted, taken: { item: source.item, count: taking } };
+  return fitted && { inventory: fitted, taken: withCount(source, taking) };
+}
+
+/** How many of this item the slots hold (not the equipment worn, nor the purse). */
+export function countInSlots(inventory: Inventory, item: string): number {
+  return inventory.slots.reduce((sum, stack) => sum + (stack?.item === item ? stack.count : 0), 0);
+}
+
+/**
+ * Takes `count` items of a kind out of the slots (to craft with them): from the last slot to the
+ * first, so that the hotbar is emptied last. Undefined when the slots hold fewer.
+ */
+export function removeItems(
+  inventory: Inventory,
+  item: string,
+  count: number,
+): Inventory | undefined {
+  if (!Number.isInteger(count) || count <= 0 || countInSlots(inventory, item) < count) {
+    return undefined;
+  }
+  const next = clone(inventory);
+  let left = count;
+  for (let i = next.slots.length - 1; i >= 0 && left > 0; i--) {
+    const stack = next.slots[i];
+    if (stack?.item === item) {
+      const taken = Math.min(left, stack.count);
+      next.slots[i] = minus(stack, taken);
+      left -= taken;
+    }
+  }
+  return next;
+}
+
+/**
+ * One use of the tool or weapon in slot `slot`: one use less, and it breaks (its slot empties) when
+ * none is left. Undefined when the slot holds no such item.
+ */
+export function wearItem(
+  inventory: Inventory,
+  items: ItemDefs,
+  slot: number,
+): { inventory: Inventory; broken: boolean } | undefined {
+  const stack = inventory.slots[slot];
+  const max = stack ? maxDurability(items, stack.item) : undefined;
+  if (!stack || max === undefined) {
+    return undefined;
+  }
+  const left = (stack.durability ?? max) - 1;
+  const next = clone(inventory);
+  if (left > 0) {
+    next.slots[slot] = { ...stack, durability: left };
+    return { inventory: next, broken: false };
+  }
+  next.slots[slot] = minus(stack, 1);
+  return { inventory: next, broken: true };
 }
 
 /** Takes gold out of the purse. */
@@ -253,9 +330,19 @@ export function cleanInventory(
   items: ItemDefs,
 ): { inventory: Inventory; lost: ItemStack[] } {
   const loose: ItemStack[] = [];
+  /** The stack with uses left valid for its item: as new when they are not (or are all left). */
+  const worn = (stack: ItemStack): ItemStack => {
+    const max = maxDurability(items, stack.item);
+    const uses = stack.durability;
+    if (uses === undefined || max === undefined || !Number.isInteger(uses) || uses < 1) {
+      return { item: stack.item, count: stack.count };
+    }
+    return uses >= max ? { item: stack.item, count: stack.count } : withCount(stack, stack.count);
+  };
   const equipment: Inventory['equipment'] = {};
   for (const slot of INVENTORY.equipmentSlots) {
-    const stack = saved.equipment[slot];
+    const stored = saved.equipment[slot];
+    const stack = stored && worn(stored);
     if (stack && accepts(items, slot, stack)) {
       equipment[slot] = stack;
     } else if (stack) {
@@ -263,7 +350,8 @@ export function cleanInventory(
     }
   }
   const capacity = capacityOf(items, equipment);
-  const slots = saved.slots.map((stack, i): Slot => {
+  const slots = saved.slots.map((savedStack, i): Slot => {
+    const stack = savedStack && worn(savedStack);
     if (stack && i < capacity && stack.count > 0 && accepts(items, i, stack)) {
       return stack;
     }

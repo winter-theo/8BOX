@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import type { ActionReason } from '../actions/actions';
 import { CHAT } from '../config/chat';
+import { CRAFTING } from '../config/crafting';
 import { INVENTORY } from '../config/inventory';
 import { PLAYER, type Skin } from '../config/player';
 import { VIEW } from '../config/view';
 import { WORLD } from '../config/world';
 import { contentIdSchema, equipSlotSchema, type TileSlot } from '../content/schemas';
+import type { CraftReason } from '../crafting/crafting';
 import type { Inventory } from '../inventory/inventory';
 import type { NameError } from '../moderation/names';
 import { type Facing, MAX_DIRECTION } from '../sim/movement';
@@ -160,6 +162,16 @@ export const actionSchema = z.strictObject({
   target: actionTargetSchema,
 });
 
+/**
+ * Crafts a recipe `count` times, one after the other. The server checks the station, the ingredients and
+ * the room each time, and answers with `craft` (started, done, cancelled or refused).
+ */
+export const craftSchema = z.strictObject({
+  t: z.literal('craft'),
+  recipe: contentIdSchema,
+  count: z.number().int().min(1).max(CRAFTING.maxCount),
+});
+
 export const clientMessageSchema = z.discriminatedUnion('t', [
   helloSchema,
   setNameSchema,
@@ -174,6 +186,7 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   invDropSchema,
   devGiveSchema,
   actionSchema,
+  craftSchema,
 ]);
 
 export type HelloMessage = z.output<typeof helloSchema>;
@@ -189,6 +202,7 @@ export type InvMoveMessage = z.output<typeof invMoveSchema>;
 export type InvDropMessage = z.output<typeof invDropSchema>;
 export type DevGiveMessage = z.output<typeof devGiveSchema>;
 export type ActionRequestMessage = z.output<typeof actionSchema>;
+export type CraftRequestMessage = z.output<typeof craftSchema>;
 export type ClientMessage = z.output<typeof clientMessageSchema>;
 export type ClientMessageType = ClientMessage['t'];
 
@@ -206,6 +220,7 @@ export const CLIENT_MESSAGE_TYPES = [
   'invDrop',
   'devGive',
   'action',
+  'craft',
 ] as const satisfies readonly ClientMessageType[];
 
 // ─── Server → client: typed, not validated by the client ─────────────────────
@@ -469,6 +484,38 @@ export interface ExaminedMessage {
   player?: string;
 }
 
+/** Where a craft of this player stands. */
+export type CraftOutcome =
+  /** One craft takes `durationMs`: show a progress bar (cancelled if the player moves). */
+  | 'started'
+  /** Every craft asked is done. */
+  | 'done'
+  /** The player moved before the end of a craft. */
+  | 'cancelled'
+  /** The server said no (`reason`), maybe after some crafts were done. */
+  | 'refused';
+
+/** The server's answer to a `craft` of this player, then the start of each next craft, and the end. */
+export interface CraftStateMessage {
+  t: 'craft';
+  /** Recipe id. */
+  recipe: string;
+  outcome: CraftOutcome;
+  /** `started`: how long this craft takes, in ms. */
+  durationMs?: number;
+  /** `started`: crafts left, this one included. */
+  left?: number;
+  /** `refused`: why. */
+  reason?: CraftReason;
+}
+
+/** The tool or weapon in hand of this player broke (no use left). */
+export interface ItemBrokenMessage {
+  t: 'itemBroken';
+  /** Item id. */
+  item: string;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -483,7 +530,9 @@ export type ServerMessage =
   | ChatNoticeMessage
   | InventoryMessage
   | ActionStateMessage
-  | ExaminedMessage;
+  | ExaminedMessage
+  | CraftStateMessage
+  | ItemBrokenMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

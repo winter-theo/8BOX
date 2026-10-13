@@ -8,6 +8,7 @@ import {
   selectSlot,
   takeGold,
   takeItems,
+  wearItem,
 } from '@8box/shared';
 import type { EntityId } from '../../core/entities';
 import type { GameModule } from '../../core/module';
@@ -26,8 +27,9 @@ import {
  * shared rules, so that no item is ever created or lost, and sends the whole inventory back after each
  * change. Dropped items become `groundItem` entities: anyone walking on them picks them up (the player
  * who dropped them after 2 s), or takes them with the "pick up" action, piles of the same item merge,
- * and they disappear after 10 minutes. The inventory is loaded with the character and saved with it
- * (see `characterToSave`).
+ * and they disappear after 10 minutes. Tools wear with each hit (`tool.used`) and break at 0. Other
+ * modules hand over the inventories they compute (`inventory.set`). The inventory is loaded with the
+ * character and saved with it (see `characterToSave`).
  */
 export const inventoryModule: GameModule = {
   id: 'inventory',
@@ -148,6 +150,29 @@ export const inventoryModule: GameModule = {
         }
       }
       update(entity, inventory);
+    });
+
+    // Crafting, placing: an inventory another module computed from the current one.
+    ctx.events.on('inventory.set', ({ entity, inventory }) => {
+      if (ctx.entities.has(entity, 'inventory')) {
+        update(entity, inventory);
+      }
+    });
+
+    // Each hit with a tool wears it by one use; at 0 it breaks, and its owner is told.
+    ctx.events.on('tool.used', ({ entity, item, slot }) => {
+      const inventory = ctx.entities.get(entity, 'inventory');
+      const worn = inventory?.slots[slot]?.item === item && wearItem(inventory, items, slot);
+      if (!worn) {
+        return;
+      }
+      update(entity, worn.inventory);
+      if (worn.broken) {
+        const session = ctx.net.allSessions().find((s) => s.player?.entity === entity);
+        if (session) {
+          ctx.net.send(session, { t: 'itemBroken', item });
+        }
+      }
     });
 
     // The "pick up" action: on purpose, so the wait of the player who dropped the pile does not apply.

@@ -27,6 +27,7 @@ export {
   tileInReach,
 } from './actions/aim';
 export { baseActions, examineAction, pickUpAction } from './actions/base';
+export { boxOverlapsTile, hasRoomFor, heldPlaceable, placeAction } from './actions/building';
 export {
   breakAction,
   cutAction,
@@ -50,6 +51,12 @@ export {
 } from './content/load';
 export { Registry } from './content/registry';
 export * from './content/schemas';
+export {
+  type CraftReason,
+  craftableCount,
+  craftOnce,
+  stationInReach,
+} from './crafting/crafting';
 export { harvestDamage, rollLoot } from './harvest/harvest';
 export {
   contentNameKey,
@@ -64,6 +71,7 @@ export {
   addItems,
   capacityOf,
   cleanInventory,
+  countInSlots,
   countItem,
   emptyInventory,
   heldStack,
@@ -71,8 +79,10 @@ export {
   type ItemDefs,
   type ItemStack,
   isEquipSlot,
+  maxDurability,
   moveItems,
   purseLimit,
+  removeItems,
   type Slot,
   type SlotRef,
   type StoredInventory,
@@ -80,6 +90,7 @@ export {
   stackLimit,
   takeGold,
   takeItems,
+  wearItem,
 } from './inventory/inventory';
 export { checkPlayerName, type NameError } from './moderation/names';
 export * from './protocol/admin';

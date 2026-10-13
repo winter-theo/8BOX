@@ -33,5 +33,15 @@ export function feedbackText(t: TFunction, feedback: ActionFeedback): string {
       return t('ui.actions.cancelled');
     case 'nothing':
       return t('ui.actions.nothing');
+    case 'craftRefused':
+      return t(`ui.crafting.reason.${feedback.reason}`, {
+        station: feedback.station === undefined ? '' : t(contentNameKey(feedback.station)),
+      });
+    case 'craftCancelled':
+      return t('ui.crafting.cancelled');
+    case 'craftDone':
+      return t('ui.crafting.done');
+    case 'broken':
+      return t('ui.actions.broken', { name: t(contentNameKey(feedback.item)) });
   }
 }

@@ -2,6 +2,7 @@ import {
   type ActionTarget,
   type ClientMessage,
   type Content,
+  CRAFTING,
   chunkCoord,
   createMovementWorld,
   decodeServerMessage,
@@ -16,6 +17,7 @@ import {
   type ServerMessage,
   type Skin,
   type SlotRef,
+  stationInReach,
   VIEW,
 } from '@8box/shared';
 import {
@@ -28,13 +30,37 @@ import {
   useActionsStore,
 } from '../store/actions';
 import { clearChat, receiveChatLine, receiveChatNotice } from '../store/chat';
-import { toggleInventoryWindow, useInventoryStore } from '../store/inventory';
+import {
+  clearCrafting,
+  closeCraftingWindow,
+  setStationsInReach,
+  toggleCraftingWindow,
+  useCraftingStore,
+} from '../store/crafting';
+import { closeInventoryWindow, toggleInventoryWindow, useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
 import type { ClientEventBus } from './events';
 import { Interaction } from './Interaction';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
 import { ChunkCache } from './world/ChunkCache';
 import { RemoteEntities, type RemoteView } from './world/RemoteEntities';
+
+/** Id of the progress bar of a craft (the action progress bar shows it). */
+function craftProgressId(recipe: string): string {
+  return `craft:${recipe}`;
+}
+
+/** Opens or closes the inventory window; the crafting window closes (they take the same place). */
+function toggleInventory(): void {
+  closeCraftingWindow();
+  toggleInventoryWindow();
+}
+
+/** Opens or closes the crafting window; the inventory window closes. */
+function toggleCrafting(): void {
+  closeInventoryWindow();
+  toggleCraftingWindow();
+}
 
 export function toWebSocketUrl(serverUrl: string): string {
   const url = new URL('/ws', serverUrl);
@@ -147,10 +173,13 @@ export class GameClient {
     bus.on('hotbar.select', ({ slot }) => this.selectSlot(slot));
     bus.on('hotbar.scroll', ({ delta }) => this.scrollHotbar(delta));
     bus.on('inventory.dropHeld', ({ one }) => this.dropHeld(one));
-    bus.on('inventory.toggle', () => toggleInventoryWindow());
+    bus.on('inventory.toggle', () => toggleInventory());
+    bus.on('crafting.toggle', () => toggleCrafting());
     bus.on('input.button', ({ button }) => {
       if (button === 'inventory') {
-        toggleInventoryWindow();
+        toggleInventory();
+      } else if (button === 'craft') {
+        toggleCrafting();
       } else if (button === 'action') {
         this.mainAction();
       } else {
@@ -229,6 +258,13 @@ export class GameClient {
     }
   }
 
+  /** Crafts a recipe `count` times; the server answers (`craft`) and sends the inventory. */
+  craft(recipe: string, count: number): void {
+    if (this.online) {
+      this.send({ t: 'craft', recipe, count });
+    }
+  }
+
   /** Does an action on a target; the server answers (`action`, and what the action tells). */
   performAction(id: string, target: ActionTarget): void {
     closeActionMenu();
@@ -257,9 +293,16 @@ export class GameClient {
    */
   actWithHeldItem(): void {
     const aim = this.interaction.aimedTile();
-    const option = aim && heldItemAction(this.interaction.optionsAt(aim.x, aim.y));
+    const options = aim ? this.interaction.optionsAt(aim.x, aim.y) : [];
+    const option = heldItemAction(options);
     if (option) {
       this.performAction(option.action.id, option.target);
+      return;
+    }
+    // Nothing to do with the item in hand: tell why the best action is not possible (safe zone…).
+    const check = options.find((candidate) => candidate.action.use === true)?.check;
+    if (check && !check.ok) {
+      showFeedback({ kind: 'refused', reason: check.reason });
     }
   }
 
@@ -471,6 +514,32 @@ export class GameClient {
           showFeedback({ kind: 'cancelled' });
         }
         return;
+      case 'craft': {
+        const progress = craftProgressId(message.recipe);
+        if (message.outcome === 'started') {
+          showProgress(progress, message.durationMs ?? 0);
+          useCraftingStore.setState({
+            current: { recipe: message.recipe, left: message.left ?? 1 },
+          });
+          return;
+        }
+        endProgress(progress);
+        useCraftingStore.setState({ current: null });
+        if (message.outcome === 'refused') {
+          const station = this.options.content.recipes.get(message.recipe)?.station;
+          showFeedback({
+            kind: 'craftRefused',
+            reason: message.reason ?? 'unknownRecipe',
+            ...(station !== undefined && { station }),
+          });
+        } else {
+          showFeedback({ kind: message.outcome === 'done' ? 'craftDone' : 'craftCancelled' });
+        }
+        return;
+      }
+      case 'itemBroken':
+        showFeedback({ kind: 'broken', item: message.item });
+        return;
       case 'examined':
         if (message.player !== undefined) {
           showFeedback({ kind: 'examined', name: { player: message.player } });
@@ -523,6 +592,7 @@ export class GameClient {
     this.requestedSlot = undefined;
     useInventoryStore.setState({ inventory: null, open: false });
     clearActions();
+    clearCrafting();
     this.remotes.clear();
     this.stopPing();
     clearInterval(this.inputTimer);
@@ -587,7 +657,25 @@ export class GameClient {
         loadedChunks: this.chunks.size,
         playerPosition: player ? { x: player.x, y: player.y } : null,
       });
+      setStationsInReach(player ? this.stationsInReach(player) : []);
     }, VIEW.uiSyncIntervalMs);
+  }
+
+  /** The stations the recipes need that are within reach of the player, sorted. */
+  private stationsInReach(feet: { x: number; y: number }): string[] {
+    const stations = new Set<string>();
+    for (const recipe of this.options.content.recipes.all) {
+      if (recipe.station !== undefined) {
+        stations.add(recipe.station);
+      }
+    }
+    return [...stations]
+      .filter((station) =>
+        stationInReach(feet, station, CRAFTING.stationReachTiles, (x, y, slot) =>
+          this.chunks.getTile(this.layer, x, y, slot),
+        ),
+      )
+      .sort();
   }
 
   private send(message: ClientMessage): void {

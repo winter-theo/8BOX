@@ -22,8 +22,9 @@ export function hotbarSlotOfCode(code: string): number | undefined {
   return slot === -1 ? undefined : slot;
 }
 
-/** Inventory window (I), and drop the item in hand (Q, A on AZERTY; with Shift: one item). */
+/** Inventory (I) and crafting (C) windows; drop the item in hand (Q, A on AZERTY; Shift: one item). */
 const TOGGLE_CODE = 'KeyI';
+const CRAFTING_CODE = 'KeyC';
 const DROP_CODE = 'KeyQ';
 /** Shortest time between two hotbar steps of the wheel: a touchpad sends many small scrolls, in ms. */
 const WHEEL_STEP_MS = 60;
@@ -31,8 +32,9 @@ const WHEEL_STEP_MS = 60;
 const WHEEL_EVENT = 'wheel';
 
 /**
- * Keys and wheel of the inventory: pick a hotbar slot (1 to 0, wheel), open the inventory (I), drop
- * the item in hand (Q). Read from the DOM by physical position; ignored while typing.
+ * Keys and wheel of the inventory: pick a hotbar slot (1 to 0, wheel), open the inventory (I) or the
+ * crafting window (C), drop the item in hand (Q). Read from the DOM by physical position; ignored while
+ * typing.
  */
 export class InventoryKeys {
   private lastWheel = Number.NEGATIVE_INFINITY;
@@ -67,6 +69,8 @@ export class InventoryKeys {
       this.bus.emit('hotbar.select', { slot });
     } else if (event.code === TOGGLE_CODE) {
       this.bus.emit('inventory.toggle', {});
+    } else if (event.code === CRAFTING_CODE) {
+      this.bus.emit('crafting.toggle', {});
     } else if (event.code === DROP_CODE) {
       this.bus.emit('inventory.dropHeld', { one: event.shiftKey });
     }

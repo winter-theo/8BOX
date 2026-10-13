@@ -11,5 +11,26 @@
     "sprite": "item.fiber_bag",
     "stack": 1,
     "equip": { "slot": "bag", "extraSlots": 10 }
-  }
+  },
+  { "id": "base:torch", "sprite": "item.torch", "place": "base:torch" },
+  { "id": "base:workbench", "sprite": "item.workbench", "place": "base:workbench" },
+  {
+    "id": "base:wooden_axe",
+    "sprite": "item.wooden_axe",
+    "tool": { "kind": "axe", "power": 2, "durability": 60 }
+  },
+  {
+    "id": "base:wooden_pickaxe",
+    "sprite": "item.wooden_pickaxe",
+    "tool": { "kind": "pickaxe", "power": 2, "durability": 60 }
+  },
+  {
+    "id": "base:wooden_sword",
+    "sprite": "item.wooden_sword",
+    "weapon": { "damage": 3, "cooldownMs": 450, "durability": 60 }
+  },
+  { "id": "base:wooden_wall", "sprite": "item.wooden_wall", "place": "base:wooden_wall" },
+  { "id": "base:wooden_floor", "sprite": "item.wooden_floor", "place": "base:wooden_floor" },
+  { "id": "base:wooden_door", "sprite": "item.wooden_door", "place": "base:wooden_door" },
+  { "id": "base:bed", "sprite": "item.bed", "place": "base:bed" }
 ]
