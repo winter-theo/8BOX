@@ -177,6 +177,6 @@ export function mainAction(options: readonly ActionOption[]): ActionOption | und
  * priority among the actions marked `use`. The steps that bring items to use add them (harvest, craft,
  * build, eat, fight).
  */
-export function useAction(options: readonly ActionOption[]): ActionOption | undefined {
+export function heldItemAction(options: readonly ActionOption[]): ActionOption | undefined {
   return options.find((option) => option.check.ok && option.action.use === true);
 }

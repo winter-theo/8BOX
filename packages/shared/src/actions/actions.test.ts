@@ -8,10 +8,10 @@ import {
   ActionRegistry,
   type ActionSubject,
   type Actor,
+  heldItemAction,
   listActions,
   mainAction,
   tileThing,
-  useAction,
 } from './actions';
 import { baseActions, examineAction, pickUpAction } from './base';
 
@@ -110,7 +110,7 @@ describe('listActions', () => {
   });
 });
 
-describe('mainAction and useAction', () => {
+describe('mainAction and heldItemAction', () => {
   const chop: ActionDef = {
     id: 'chop',
     targets: ['tile'],
@@ -136,11 +136,11 @@ describe('mainAction and useAction', () => {
   });
 
   it('"use the item in hand" only picks actions marked `use`', () => {
-    expect(useAction(listActions(withChop, actor(), [tree, apples], content))).toBeUndefined();
+    expect(heldItemAction(listActions(withChop, actor(), [tree, apples], content))).toBeUndefined();
     const holding = addItems(emptyInventory(), content.items, { item: 'base:stick', count: 1 });
     const options = listActions(withChop, actor(holding.inventory), [tree, apples], content);
-    expect(useAction(options)?.action.id).toBe('chop');
-    expect(useAction(listActions(registry, actor(), [tree, apples], content))).toBeUndefined();
+    expect(heldItemAction(options)?.action.id).toBe('chop');
+    expect(heldItemAction(listActions(registry, actor(), [tree, apples], content))).toBeUndefined();
   });
 });
 

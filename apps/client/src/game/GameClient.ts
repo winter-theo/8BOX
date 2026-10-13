@@ -1,13 +1,16 @@
 import {
+  type ActionTarget,
   type ClientMessage,
   type Content,
   chunkCoord,
   createMovementWorld,
   decodeServerMessage,
   encodeMessage,
+  heldItemAction,
   heldStack,
   INVENTORY,
   type MovementWorld,
+  mainAction,
   NET,
   PROTOCOL_VERSION,
   type ServerMessage,
@@ -15,10 +18,20 @@ import {
   type SlotRef,
   VIEW,
 } from '@8box/shared';
+import {
+  clearActions,
+  closeActionMenu,
+  endProgress,
+  nameOf,
+  showFeedback,
+  showProgress,
+  useActionsStore,
+} from '../store/actions';
 import { clearChat, receiveChatLine, receiveChatNotice } from '../store/chat';
 import { toggleInventoryWindow, useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
 import type { ClientEventBus } from './events';
+import { Interaction } from './Interaction';
 import { LocalPlayerState, type LocalView } from './player/LocalPlayerState';
 import { ChunkCache } from './world/ChunkCache';
 import { RemoteEntities, type RemoteView } from './world/RemoteEntities';
@@ -58,6 +71,8 @@ export interface GameClientOptions {
 export class GameClient {
   /** Chunks received from the server. */
   readonly chunks: ChunkCache;
+  /** The aimed tile and the actions on the tiles. */
+  readonly interaction: Interaction;
   /** The other entities, from the snapshots. */
   private readonly remotes = new RemoteEntities(1000 / NET.tickRateHz);
   private readonly createSocket: (url: string) => WebSocket;
@@ -80,6 +95,8 @@ export class GameClient {
   private local: LocalPlayerState | undefined;
   /** Name of the player of this connection, once welcomed. */
   private name: string | undefined;
+  /** Layer of the player of this connection. */
+  private layer = 0;
   private uiSyncTimer: ReturnType<typeof setTimeout> | undefined;
   /** Hotbar slot last asked for, until the server confirms it (the wheel may ask again before). */
   private requestedSlot: number | undefined;
@@ -88,6 +105,18 @@ export class GameClient {
     this.createSocket = options.createSocket ?? ((url) => new WebSocket(url));
     this.now = options.now ?? (() => performance.now());
     this.chunks = new ChunkCache(options.content, options.bus);
+    this.interaction = new Interaction(
+      {
+        player: () => {
+          const view = this.localView();
+          return view && { layer: this.layer, x: view.x, y: view.y, facing: view.facing };
+        },
+        inventory: () => useInventoryStore.getState().inventory,
+        tile: (layer, x, y, slot) => this.chunks.getTile(layer, x, y, slot),
+        remotes: () => this.remoteViews(),
+      },
+      options.content,
+    );
     const { bus } = options;
     bus.on('view.changed', (view) => {
       this.view = view;
@@ -103,6 +132,9 @@ export class GameClient {
     });
     bus.on('input.direction', ({ dir }) => {
       const starting = this.direction === 0 && dir !== 0;
+      if (starting) {
+        closeActionMenu(); // Walking away: the menu was about where the player stood.
+      }
       this.direction = dir;
       if (starting && this.inputTimer !== undefined) {
         this.restartInputs(); // Answer the key at once rather than on the next interval.
@@ -116,8 +148,16 @@ export class GameClient {
     bus.on('input.button', ({ button }) => {
       if (button === 'inventory') {
         toggleInventoryWindow();
+      } else if (button === 'action') {
+        this.mainAction();
+      } else {
+        this.actWithHeldItem();
       }
     });
+    bus.on('pointer.tile', ({ tile }) => this.interaction.setPointerTile(tile ?? undefined));
+    bus.on('action.main', () => this.mainAction());
+    bus.on('action.use', () => this.actWithHeldItem());
+    bus.on('world.menu', ({ x, y, screen }) => this.openActionMenu(x, y, screen));
     for (const event of ['chunk.loaded', 'chunk.unloaded'] as const) {
       bus.on(event, () => this.syncUiSoon());
     }
@@ -184,6 +224,65 @@ export class GameClient {
     if (inventory && heldStack(inventory)) {
       this.dropItems(inventory.selected, one ? 1 : undefined);
     }
+  }
+
+  /** Does an action on a target; the server answers (`action`, and what the action tells). */
+  performAction(id: string, target: ActionTarget): void {
+    closeActionMenu();
+    if (this.online) {
+      this.send({ t: 'action', id, target });
+    }
+  }
+
+  /** The action key (E, Action button): the main possible action on the aimed tile. */
+  mainAction(): void {
+    const aim = this.interaction.aimedTile();
+    if (!aim) {
+      return;
+    }
+    const option = mainAction(this.interaction.optionsAt(aim.x, aim.y));
+    if (option) {
+      this.performAction(option.action.id, option.target);
+    } else {
+      showFeedback({ kind: 'nothing' });
+    }
+  }
+
+  /**
+   * Uses the item in hand (Space, left click, Use button) on the aimed tile: the single entry point that
+   * picks the action from what is held. Nothing happens while no action is marked `use` (steps 16 on).
+   */
+  actWithHeldItem(): void {
+    const aim = this.interaction.aimedTile();
+    const option = aim && heldItemAction(this.interaction.optionsAt(aim.x, aim.y));
+    if (option) {
+      this.performAction(option.action.id, option.target);
+    }
+  }
+
+  /** Opens the action menu of tile (x, y), at `screen` (CSS pixels), when the player reaches it. */
+  openActionMenu(x: number, y: number, screen: { x: number; y: number }): void {
+    if (!this.online || !this.local) {
+      return;
+    }
+    if (!this.interaction.inReach(x, y)) {
+      closeActionMenu();
+      showFeedback({ kind: 'refused', reason: 'outOfReach' });
+      return;
+    }
+    const entries = this.interaction.optionsAt(x, y).map((option) => ({
+      id: option.action.id,
+      labelKey: option.action.labelKey,
+      name: nameOf(option.subject),
+      target: option.target,
+      reason: option.check.ok ? null : option.check.reason,
+    }));
+    if (entries.length === 0) {
+      closeActionMenu();
+      showFeedback({ kind: 'nothing' });
+      return;
+    }
+    useActionsStore.setState({ menu: { x, y, left: screen.x, top: screen.y, entries } });
   }
 
   /** Dev mode only: gives items to oneself. */
@@ -269,6 +368,7 @@ export class GameClient {
         const { entity, name, skin, position } = message.you;
         this.attempt = 0;
         this.name = name;
+        this.layer = position.layer;
         this.online = true;
         useSessionStore.setState({
           status: 'online',
@@ -350,6 +450,29 @@ export class GameClient {
         useInventoryStore.setState({ inventory });
         return;
       }
+      case 'action':
+        if (message.outcome === 'started') {
+          showProgress(message.id, message.durationMs ?? 0);
+          return;
+        }
+        endProgress(message.id);
+        if (message.outcome === 'refused') {
+          showFeedback({ kind: 'refused', reason: message.reason ?? 'unavailable' });
+        } else if (message.outcome === 'cancelled') {
+          showFeedback({ kind: 'cancelled' });
+        }
+        return;
+      case 'examined':
+        if (message.player !== undefined) {
+          showFeedback({ kind: 'examined', name: { player: message.player } });
+        } else if (message.thing !== undefined) {
+          showFeedback({
+            kind: 'examined',
+            name: { content: message.thing },
+            ...(message.count !== undefined && { count: message.count }),
+          });
+        }
+        return;
     }
   }
 
@@ -390,6 +513,7 @@ export class GameClient {
     this.local = undefined;
     this.requestedSlot = undefined;
     useInventoryStore.setState({ inventory: null, open: false });
+    clearActions();
     this.remotes.clear();
     this.stopPing();
     clearInterval(this.inputTimer);

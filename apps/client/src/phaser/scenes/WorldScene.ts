@@ -5,11 +5,13 @@ import { AssetRegistry } from '../../assets/registry';
 import { gameClient } from '../../game/client';
 import { content } from '../../game/content';
 import { eventBus } from '../../game/events';
+import { ActionInput } from '../ActionInput';
 import { CameraController } from '../CameraController';
 import { DebugCamera } from '../DebugCamera';
 import { InventoryKeys } from '../InventoryKeys';
 import { LongPress } from '../LongPress';
 import { MovementKeys } from '../MovementKeys';
+import { AimHighlight } from '../world/AimHighlight';
 import { atlasFromScene } from '../world/atlasFromScene';
 import { ChatBubbles } from '../world/ChatBubbles';
 import { EntityLayer } from '../world/EntityLayer';
@@ -42,6 +44,7 @@ export class WorldScene extends Phaser.Scene {
     const remotePlayers = new RemotePlayers(entities, labels);
     const groundItems = new GroundItems(this, textures, content);
     const bubbles = new ChatBubbles(this, (entity) => entities.image(entity));
+    const aim = new AimHighlight(this);
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -59,6 +62,7 @@ export class WorldScene extends Phaser.Scene {
     const movementKeys = new MovementKeys((dir) => eventBus.emit('input.direction', { dir }));
     const longPress = new LongPress(this);
     const inventoryKeys = new InventoryKeys(this, eventBus);
+    const actionInput = new ActionInput(this, eventBus);
     // Dev mode: F2 frees the camera from the player (the player stands still meanwhile).
     const debugCamera = import.meta.env.DEV
       ? new DebugCamera(this, camera, (active) => {
@@ -75,6 +79,8 @@ export class WorldScene extends Phaser.Scene {
       remotePlayers.update(remotes, timeMs);
       groundItems.update(remotes);
       const sprite = localPlayer.update(gameClient.localView(), timeMs);
+      actionInput.update();
+      aim.update(gameClient.interaction.aimedTile());
       if (sprite !== playerSprite) {
         playerSprite = sprite;
         if (sprite && !debugCamera?.isActive) {
@@ -128,6 +134,8 @@ export class WorldScene extends Phaser.Scene {
       movementKeys.destroy();
       longPress.destroy();
       inventoryKeys.destroy();
+      actionInput.destroy();
+      aim.destroy();
       debugCamera?.destroy();
       ground.destroy();
       objects.destroy();

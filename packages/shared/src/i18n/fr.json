@@ -247,6 +247,7 @@
       "examinedPlayer": "C'est {{name}}.",
       "nothing": "Rien à faire ici.",
       "progress": "Action en cours",
+      "self": "toi",
       "cancelled": "Action annulée.",
       "reason": {
         "outOfReach": "Trop loin",

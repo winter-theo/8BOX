@@ -14,6 +14,7 @@ import {
   TypedEmitter,
 } from '@8box/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearActions, useActionsStore } from '../store/actions';
 import { useChatStore } from '../store/chat';
 import { useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
@@ -611,5 +612,158 @@ describe('GameClient inventory', () => {
     expect(useInventoryStore.getState().open).toBe(true);
     bus.emit('input.button', { button: 'inventory' });
     expect(useInventoryStore.getState().open).toBe(false);
+  });
+});
+
+describe('GameClient actions', () => {
+  const APPLE_PILE = {
+    id: 9,
+    kind: 'groundItem',
+    x: 512.5,
+    y: 513.4,
+    facing: 'down',
+    anim: 'idle',
+    item: 'base:apple',
+  } as const;
+
+  function online() {
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    lastSocket().open();
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 3, name: 'Ana', skin: 'theo', position: SPAWN },
+      tick: 1,
+    });
+    lastSocket().receive({
+      t: 'inventory',
+      slots: Array(10).fill(null),
+      equipment: {},
+      purse: 0,
+      selected: 0,
+    });
+    return client;
+  }
+
+  /** A snapshot where the player faces down, with a pile of apples on the tile in front. */
+  function applesInFront() {
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 2,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
+      entities: [APPLE_PILE],
+    });
+    clock = 1000;
+  }
+
+  const sentActions = () => lastSocket().sent.filter((message) => message.t === 'action');
+  const actions = () => useActionsStore.getState();
+
+  beforeEach(() => {
+    useInventoryStore.setState({ inventory: null, open: false });
+    clearActions();
+  });
+
+  it('the action key does the main action on the aimed tile, or tells there is nothing', () => {
+    const client = online();
+    bus.emit('action.main', {});
+    expect(sentActions()).toEqual([]);
+    expect(actions().feedback?.message).toEqual({ kind: 'nothing' });
+
+    applesInFront();
+    expect(client.interaction.aimedTile()).toEqual({ x: 512, y: 513 });
+    bus.emit('action.main', {});
+    bus.emit('input.button', { button: 'action' });
+    expect(sentActions()).toEqual([
+      { t: 'action', id: 'pickUp', target: { kind: 'entity', id: 9 } },
+      { t: 'action', id: 'pickUp', target: { kind: 'entity', id: 9 } },
+    ]);
+  });
+
+  it('uses the item in hand only through actions marked `use` (none yet)', () => {
+    online();
+    applesInFront();
+    bus.emit('action.use', {});
+    bus.emit('input.button', { button: 'use' });
+    expect(sentActions()).toEqual([]);
+  });
+
+  it('opens the menu of a tile in reach, greys what cannot be done, and sends the choice', () => {
+    const client = online();
+    applesInFront();
+    bus.emit('world.menu', { x: 512, y: 513, screen: { x: 300, y: 200 } });
+    expect(actions().menu).toEqual({
+      x: 512,
+      y: 513,
+      left: 300,
+      top: 200,
+      entries: [
+        {
+          id: 'pickUp',
+          labelKey: 'ui.actions.pickUp',
+          name: { content: 'base:apple' },
+          target: { kind: 'entity', id: 9 },
+          reason: null,
+        },
+        {
+          id: 'examine',
+          labelKey: 'ui.actions.examine',
+          name: { content: 'base:apple' },
+          target: { kind: 'entity', id: 9 },
+          reason: null,
+        },
+      ],
+    });
+
+    client.performAction('examine', { kind: 'entity', id: 9 });
+    expect(actions().menu).toBeNull();
+    expect(sentActions()).toEqual([
+      { t: 'action', id: 'examine', target: { kind: 'entity', id: 9 } },
+    ]);
+
+    // Out of reach: no menu, the player is told why.
+    bus.emit('world.menu', { x: 520, y: 513, screen: { x: 300, y: 200 } });
+    expect(actions().menu).toBeNull();
+    expect(actions().feedback?.message).toEqual({ kind: 'refused', reason: 'outOfReach' });
+  });
+
+  it('closes the menu when the player starts walking', () => {
+    online();
+    applesInFront();
+    bus.emit('world.menu', { x: 512, y: 513, screen: { x: 300, y: 200 } });
+    expect(actions().menu).not.toBeNull();
+    bus.emit('input.direction', { dir: 3 });
+    expect(actions().menu).toBeNull();
+  });
+
+  it('shows the progress of an action that takes time, what was examined and refusals', () => {
+    online();
+    lastSocket().receive({ t: 'action', id: 'chop', outcome: 'started', durationMs: 1500 });
+    expect(actions().progress).toMatchObject({ id: 'chop', durationMs: 1500 });
+    lastSocket().receive({ t: 'action', id: 'chop', outcome: 'cancelled' });
+    expect(actions().progress).toBeNull();
+    expect(actions().feedback?.message).toEqual({ kind: 'cancelled' });
+
+    lastSocket().receive({ t: 'examined', thing: 'base:apple', count: 3 });
+    expect(actions().feedback?.message).toEqual({
+      kind: 'examined',
+      name: { content: 'base:apple' },
+      count: 3,
+    });
+    lastSocket().receive({ t: 'examined', player: 'Bob' });
+    expect(actions().feedback?.message).toEqual({ kind: 'examined', name: { player: 'Bob' } });
+
+    lastSocket().receive({
+      t: 'action',
+      id: 'pickUp',
+      outcome: 'refused',
+      reason: 'inventoryFull',
+    });
+    expect(actions().feedback?.message).toEqual({ kind: 'refused', reason: 'inventoryFull' });
+
+    lastSocket().receive({ t: 'action', id: 'rest', outcome: 'started', durationMs: 500 });
+    lastSocket().drop();
+    expect(actions()).toEqual({ menu: null, progress: null, feedback: null });
   });
 });

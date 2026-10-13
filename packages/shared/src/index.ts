@@ -10,11 +10,11 @@ export {
   type ActionTargetKind,
   type Actor,
   actionApplies,
+  heldItemAction,
   listActions,
   mainAction,
   targetOf,
   tileThing,
-  useAction,
 } from './actions/actions';
 export {
   aimedTile,
