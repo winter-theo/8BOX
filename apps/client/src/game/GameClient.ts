@@ -1,6 +1,7 @@
 import {
   type ActionTarget,
   attackAction,
+  attackReady,
   type ClientMessage,
   type Content,
   CRAFTING,
@@ -10,6 +11,7 @@ import {
   encodeMessage,
   heldItemAction,
   heldStack,
+  heldWeapon,
   INVENTORY,
   type MovementWorld,
   mainAction,
@@ -138,6 +140,8 @@ export class GameClient {
   private clockTimer: ReturnType<typeof setInterval> | undefined;
   /** Hotbar slot last asked for, until the server confirms it (the wheel may ask again before). */
   private requestedSlot: number | undefined;
+  /** When the player of this client last hit (`now`), to never ask faster than the weapon allows. */
+  private lastAttackAt: number | undefined;
 
   constructor(private readonly options: GameClientOptions) {
     this.createSocket = options.createSocket ?? ((url) => new WebSocket(url));
@@ -310,11 +314,46 @@ export class GameClient {
   }
 
   /**
+   * Hits in front with the weapon in hand, or bare-handed: the swing is drawn at once, the server finds
+   * what it hits. Never asked faster than the cooldown of the weapon.
+   */
+  attack(): void {
+    const view = this.localView();
+    const inventory = useInventoryStore.getState().inventory;
+    const weapon = inventory && heldWeapon(inventory, this.options.content);
+    const now = this.now();
+    if (
+      !this.online ||
+      !view ||
+      !weapon ||
+      useSurvivalStore.getState().dead !== null ||
+      !attackReady(this.lastAttackAt, now, weapon.cooldownMs)
+    ) {
+      return;
+    }
+    this.lastAttackAt = now;
+    closeActionMenu();
+    this.options.bus.emit('combat.swing', {
+      entity: view.entity,
+      facing: view.facing,
+      ...(weapon.item !== undefined && { item: weapon.item }),
+    });
+    this.send({ t: 'action', id: attackAction.id, target: { kind: 'self' } });
+  }
+
+  /**
    * Uses the item in hand (Space, left click, Use button): the single entry point that picks the action
-   * from what is held. Food is eaten (an action on oneself) when the stomach has room; otherwise the
-   * item is used on the aimed tile.
+   * from what is held. A weapon hits; so does an empty hand when someone stands in front. Food is eaten
+   * (an action on oneself) when the stomach has room; otherwise the item is used on the aimed tile, and
+   * an empty hand with nothing to do there hits the air.
    */
   actWithHeldItem(): void {
+    const inventory = useInventoryStore.getState().inventory;
+    const weapon = inventory ? heldWeapon(inventory, this.options.content) : undefined;
+    if (weapon && (weapon.item !== undefined || this.interaction.someoneInHitZone())) {
+      this.attack();
+      return;
+    }
     const aim = this.interaction.aimedTile();
     const options = [
       ...this.interaction.selfOptions(),
@@ -329,6 +368,8 @@ export class GameClient {
     const check = options.find((candidate) => candidate.action.use === true)?.check;
     if (check && !check.ok) {
       showFeedback({ kind: 'refused', reason: check.reason });
+    } else if (weapon) {
+      this.attack();
     }
   }
 
@@ -546,7 +587,26 @@ export class GameClient {
         useInventoryStore.setState({ inventory });
         return;
       }
+      case 'swing': {
+        const { entity, facing, item } = message;
+        this.options.bus.emit('combat.swing', {
+          entity,
+          facing,
+          ...(item !== undefined && { item }),
+        });
+        return;
+      }
+      case 'damaged':
+        this.options.bus.emit('combat.damaged', { entity: message.entity, amount: message.amount });
+        return;
       case 'action':
+        if (
+          message.id === attackAction.id &&
+          (message.outcome !== 'refused' || message.reason === 'tooSoon')
+        ) {
+          // A hit is drawn at once; one a little early for the server (network jitter) is just lost.
+          return;
+        }
         if (message.outcome === 'started') {
           showProgress(message.id, message.durationMs ?? 0);
           return;

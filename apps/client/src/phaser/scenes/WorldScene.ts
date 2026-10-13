@@ -14,6 +14,7 @@ import { MovementKeys } from '../MovementKeys';
 import { AimHighlight } from '../world/AimHighlight';
 import { atlasFromScene } from '../world/atlasFromScene';
 import { ChatBubbles } from '../world/ChatBubbles';
+import { CombatEffects } from '../world/CombatEffects';
 import { DamageBars } from '../world/DamageBars';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundItems } from '../world/GroundItems';
@@ -54,6 +55,7 @@ export class WorldScene extends Phaser.Scene {
     const bubbles = new ChatBubbles(this, (entity) => entities.image(entity));
     const aim = new AimHighlight(this);
     const damageBars = new DamageBars(this);
+    const combat = new CombatEffects(this, textures, content, (entity) => entities.image(entity));
     let playerSprite: Phaser.GameObjects.Image | undefined;
     const showChunk = (chunk: Chunk) => {
       ground.show(chunk);
@@ -91,6 +93,8 @@ export class WorldScene extends Phaser.Scene {
       groundItems.update(remotes);
       const view = gameClient.localView();
       const sprite = localPlayer.update(view, timeMs);
+      // Swings, blinking characters and damage numbers, over the characters just moved.
+      combat.update(performance.now());
       // The roof of the room where the player stands fades out.
       roofs.update(gameClient.localRoom(view), deltaMs);
       // Day and night: the darkness, the halos of the lights and the glow around the player.
@@ -146,6 +150,12 @@ export class WorldScene extends Phaser.Scene {
         light.hide(layer, cx, cy);
       }),
       eventBus.on('chat.said', ({ entity, text }) => bubbles.say(entity, text)),
+      eventBus.on('combat.swing', ({ entity, facing, item }) =>
+        combat.swing(entity, facing, item, performance.now()),
+      ),
+      eventBus.on('combat.damaged', ({ entity, amount }) =>
+        combat.damaged(entity, amount, performance.now()),
+      ),
     ];
 
     let cleaned = false;
@@ -165,6 +175,7 @@ export class WorldScene extends Phaser.Scene {
       actionInput.destroy();
       aim.destroy();
       damageBars.destroy();
+      combat.destroy();
       debugCamera?.destroy();
       ground.destroy();
       objects.destroy();

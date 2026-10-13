@@ -1,4 +1,4 @@
-import { type Chunk, type TileSlot, TypedEmitter } from '@8box/shared';
+import { type Chunk, type Facing, type TileSlot, TypedEmitter } from '@8box/shared';
 
 /**
  * Events between the game layer, Phaser and React: they never import each other's components, they
@@ -39,6 +39,13 @@ export type ClientEvents = {
   'debugCamera.moved': { at: { x: number; y: number } | null };
   /** Game → Phaser: a player nearby said something: a bubble above the head of `entity`. */
   'chat.said': { entity: number; text: string };
+  /**
+   * Game → Phaser: a character swung what it holds toward `facing` (the player of this client at once,
+   * the others when the server says so); `item` is the weapon, none bare-handed.
+   */
+  'combat.swing': { entity: number; facing: Facing; item?: string };
+  /** Game → Phaser: a character lost `amount` HP: it blinks and shows the amount. */
+  'combat.damaged': { entity: number; amount: number };
   /** Keyboard → game: put the item of hotbar slot `slot` (0 to 9) in hand. */
   'hotbar.select': { slot: number };
   /** Mouse wheel → game: next (`delta` > 0) or previous hotbar slot. */

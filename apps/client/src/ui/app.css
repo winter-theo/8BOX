@@ -841,6 +841,31 @@ html.page-admin #root {
   display: none;
 }
 
+.damage-numbers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.damage-number {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  color: #ff5a4a;
+  font:
+    700 14px / 1 system-ui,
+    sans-serif;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 1px #000;
+}
+
+.damage-number[hidden] {
+  display: none;
+}
+
 .chat-bubbles {
   position: absolute;
   inset: 0;

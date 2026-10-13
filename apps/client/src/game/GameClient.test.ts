@@ -708,7 +708,50 @@ describe('GameClient actions', () => {
     applesInFront();
     bus.emit('action.use', {});
     bus.emit('input.button', { button: 'use' });
-    expect(sentActions()).toEqual([]);
+    // Nothing to use on the tile: the empty hand hits the air, once (the second is too soon).
+    expect(sentActions()).toEqual([{ t: 'action', id: 'attack', target: { kind: 'self' } }]);
+  });
+
+  it('hits with a weapon, or bare-handed someone in front: drawn at once, never too fast', () => {
+    online();
+    const swings: ClientEvents['combat.swing'][] = [];
+    const damaged: ClientEvents['combat.damaged'][] = [];
+    bus.on('combat.swing', (swing) => swings.push(swing));
+    bus.on('combat.damaged', (event) => damaged.push(event));
+    const bob = { id: 7, kind: 'player', x: 512.5, y: 513.2, facing: 'up', anim: 'idle' } as const;
+    lastSocket().receive({
+      t: 'snapshot',
+      tick: 2,
+      ackSeq: -1,
+      you: { x: SPAWN.x, y: SPAWN.y, facing: 'down' },
+      entities: [APPLE_PILE, { ...bob, name: 'Bob' }],
+    });
+    clock = 1000;
+    bus.emit('action.use', {}); // Bob stands in front: the empty hand hits him, not the apples.
+    clock = 1400;
+    bus.emit('action.use', {}); // Too soon bare-handed (500 ms).
+    lastSocket().receive({
+      t: 'inventory',
+      slots: [{ item: 'base:wooden_sword', count: 1 }, ...Array(9).fill(null)],
+      equipment: {},
+      purse: 0,
+      selected: 0,
+    });
+    clock = 1500;
+    bus.emit('input.button', { button: 'use' });
+    const attack = { t: 'action', id: 'attack', target: { kind: 'self' } };
+    expect(sentActions()).toEqual([attack, attack]);
+    expect(swings).toEqual([
+      { entity: 3, facing: 'down' },
+      { entity: 3, facing: 'down', item: 'base:wooden_sword' },
+    ]);
+    // What the server tells: others swing, characters get hurt; a hit refused as too soon says nothing.
+    lastSocket().receive({ t: 'swing', entity: 7, facing: 'up' });
+    lastSocket().receive({ t: 'damaged', entity: 3, amount: 1 });
+    lastSocket().receive({ t: 'action', id: 'attack', outcome: 'refused', reason: 'tooSoon' });
+    expect(swings.at(-1)).toEqual({ entity: 7, facing: 'up' });
+    expect(damaged).toEqual([{ entity: 3, amount: 1 }]);
+    expect(actions().feedback).toBeFalsy();
   });
 
   it('eats the food in hand with Use, unless full', () => {
