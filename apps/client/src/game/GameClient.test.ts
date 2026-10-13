@@ -19,6 +19,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearActions, useActionsStore } from '../store/actions';
 import { useChatStore } from '../store/chat';
+import { useClockStore } from '../store/clock';
 import { clearCrafting, useCraftingStore } from '../store/crafting';
 import { useInventoryStore } from '../store/inventory';
 import { useSessionStore } from '../store/session';
@@ -747,6 +748,23 @@ describe('GameClient actions', () => {
 
     lastSocket().drop();
     expect(useSurvivalStore.getState()).toEqual({ health: null, hunger: null, dead: null });
+  });
+
+  it('runs the world clock the server sends and shows it on the HUD, until offline', () => {
+    const client = online();
+    expect(client.worldTime()).toBeUndefined();
+    lastSocket().receive({ t: 'time', worldTimeMs: 1000, scale: 60 });
+    expect(client.worldTime()).toBe(1000);
+    expect(useClockStore.getState().clock).toEqual({ hours: 6, minutes: 0, daytime: true });
+
+    clock += 1000;
+    vi.advanceTimersByTime(VIEW.uiSyncIntervalMs);
+    expect(client.worldTime()).toBe(61_000);
+    expect(useClockStore.getState().clock).toEqual({ hours: 6, minutes: 24, daytime: true });
+
+    lastSocket().drop();
+    expect(client.worldTime()).toBeUndefined();
+    expect(useClockStore.getState().clock).toBeNull();
   });
 
   it('opens the menu of a tile in reach, greys what cannot be done, and sends the choice', () => {

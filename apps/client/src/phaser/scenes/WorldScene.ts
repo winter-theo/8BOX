@@ -18,6 +18,7 @@ import { DamageBars } from '../world/DamageBars';
 import { EntityLayer } from '../world/EntityLayer';
 import { GroundItems } from '../world/GroundItems';
 import { GroundLayer } from '../world/GroundLayer';
+import { LightLayer } from '../world/LightLayer';
 import { LocalPlayer } from '../world/LocalPlayer';
 import { NameLabels } from '../world/NameLabels';
 import { ObjectLayer } from '../world/ObjectLayer';
@@ -27,7 +28,7 @@ import { SpriteTextures } from '../world/SpriteTextures';
 
 /**
  * The game world: ground and objects of the streamed chunks, entities sorted with them, the roofs of the
- * rooms over them, and the camera.
+ * rooms over them, the darkness of the night over everything, and the camera.
  */
 export class WorldScene extends Phaser.Scene {
   /** What runs every frame; set by `create`. */
@@ -44,6 +45,7 @@ export class WorldScene extends Phaser.Scene {
     const textures = new SpriteTextures(this.textures, registry);
     const objects = new ObjectLayer(this, textures, content, gameClient.chunks);
     const roofs = new RoofLayer(this, textures, VIEW.roofFadeMs);
+    const light = new LightLayer(this, content);
     const entities = new EntityLayer(this, textures);
     const localPlayer = new LocalPlayer(entities);
     const labels = new NameLabels(this);
@@ -57,6 +59,7 @@ export class WorldScene extends Phaser.Scene {
       ground.show(chunk);
       objects.show(chunk);
       roofs.show(chunk);
+      light.show(chunk);
     };
     const emitView = () => {
       eventBus.emit('view.changed', {
@@ -90,6 +93,8 @@ export class WorldScene extends Phaser.Scene {
       const sprite = localPlayer.update(view, timeMs);
       // The roof of the room where the player stands fades out.
       roofs.update(gameClient.localRoom(view), deltaMs);
+      // Day and night: the darkness, the halos of the lights and the glow around the player.
+      light.update(gameClient.worldTime(), view);
       actionInput.update();
       aim.update(gameClient.interaction.aimedTile());
       if (sprite !== playerSprite) {
@@ -121,6 +126,7 @@ export class WorldScene extends Phaser.Scene {
         damageBars.clearTile(chunk.layer, x, y);
         if (slot === 'object') {
           objects.updateTile(chunk, x, y);
+          light.updateTile(chunk, x, y);
         } else {
           ground.updateTile(chunk.layer, x, y);
         }
@@ -137,6 +143,7 @@ export class WorldScene extends Phaser.Scene {
         ground.hide(layer, cx, cy);
         objects.hide(layer, cx, cy);
         roofs.hide(layer, cx, cy);
+        light.hide(layer, cx, cy);
       }),
       eventBus.on('chat.said', ({ entity, text }) => bubbles.say(entity, text)),
     ];
@@ -162,6 +169,7 @@ export class WorldScene extends Phaser.Scene {
       ground.destroy();
       objects.destroy();
       roofs.destroy();
+      light.destroy();
       entities.destroy();
       groundItems.destroy();
       labels.destroy();

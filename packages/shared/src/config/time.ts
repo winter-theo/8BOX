@@ -13,6 +13,8 @@ export const TIME = {
   seasonLengthDays: 7,
   /** Interval between two sendings of the world clock to the clients, in ms (they run it meanwhile). */
   syncIntervalMs: 10 * SECOND_MS,
+  /** Time over which a client blends its running clock into a newly received one, in ms (no jump). */
+  syncSmoothingMs: SECOND_MS,
   /** Hour shown by the HUD clock at the start of the daytime (dawn), on a 24-hour clock. */
   dawnClockHour: 6,
 } as const;

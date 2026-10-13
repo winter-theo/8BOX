@@ -8,7 +8,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
   (protocole 16), i18n, tests
 - [x] Serveur : horloge du monde (`ctx.clock`), `TIME_SCALE` (dev), module `time` (avance, envoi toutes les 10 s et
   à l'arrivée, sauvegarde dans `world_state`), tests
-- [ ] Client : horloge extrapolée entre deux envois, calque d'obscurité (halos des torches, lueur du joueur, teintes),
+- [x] Client : horloge extrapolée entre deux envois, calque d'obscurité (halos des torches, lueur du joueur, teintes),
   horloge du HUD (soleil, lune), tests
 - [ ] Clôture
 
