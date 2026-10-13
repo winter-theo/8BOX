@@ -3,15 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 12 — Onglet admin v1 (branche `step/12-admin-v1`)
-- [x] Table `admin_audit` (migration) et stockage admin (base + mémoire pour les tests)
-- [x] Service admin et API HTTP `/admin/*` : garde (jeton Clerk + rôle admin), demandes en attente, joueurs,
-      journal ; approuver, refuser, bannir, débannir, expulser ; chaque action dans l'audit
-- [x] Effets immédiats côté réseau : bannissement, refus et expulsion déconnectent avec le bon écran ; un joueur
-      approuvé qui attend entre en jeu (raison de refus `kicked`, protocole 6)
-- [x] Client : page `/admin` (tableaux, rafraîchissement toutes les 30 s, téléphone), lien dans le menu avec le
-      badge « N en attente », textes FR et EN
-- [ ] Tests (garde 403, approbation et bannissement avec audit, effets en direct) et vérification
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -281,7 +273,54 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (11) Ton email est dans `ADMIN_EMAILS` (`apps/server/.env`) : ton compte Google entre donc directement, en admin.
   Pour voir l'écran d'attente, utilise un autre compte Google, ou retire ton email le temps du test.
 
+- (12) API admin (`/admin/*`, en-tête `Authorization: Bearer <jeton Clerk>`) :
+  - `GET /admin/me` (nombre de demandes, pour le badge), `GET /admin/players`, `GET /admin/audit` ;
+  - `POST /admin/players/:id/<approve|deny|ban|unban|kick>` (`ban` demande `{ reason }`, 1 à 200 caractères) ;
+  - 401 sans jeton valide, 403 pour un compte qui n'est pas admin (ou un admin banni).
+- (12) Règles des actions :
+  - un admin ne peut agir ni sur lui-même, ni sur un autre admin ;
+  - approuver : depuis « en attente » ou « refusé » ; refuser : depuis « en attente » ;
+  - bannir : tout statut sauf « banni » ; débannir : redonne « approuvé » (même à un joueur jamais approuvé) ;
+  - expulser : le joueur connecté (en jeu, en attente ou en train de choisir son pseudo) est déconnecté et peut revenir.
+- (12) Une demande en attente apparaît même avant le choix du pseudo (« pseudo pas encore choisi »). L'approuver
+  laisse le joueur entrer dès qu'il a choisi son pseudo.
+- (12) « En ligne » = connecté (en jeu ou en attente). « Dernière connexion » = dernière sauvegarde du personnage
+  (toutes les 60 s et au départ) : « jamais » pour un joueur qui n'a jamais joué.
+- (12) Listes complètes des joueurs, et les 100 dernières actions du journal (`ADMIN.auditListSize`), sans pagination.
+- (12) Pas de limite de débit HTTP sur `/admin/*` (réservé aux admins, chaque appel vérifie le jeton). À revoir à la
+  mise en ligne (25).
+- (12) CORS écrit à la main pour `/admin/*` (origines de `ALLOWED_ORIGINS`), sans `@fastify/cors`.
+- (12) `/admin` est une route du client (sans routeur) : l'hébergement de production devra servir `index.html` pour
+  `/admin` (étape 25). Le lien « Admin » ouvre la page dans le même onglet (on quitte le jeu ; « Retour au jeu »
+  le rouvre).
+- (12) Un joueur non admin reçoit un 403 sur `/admin/me` au chargement (le lien reste caché) : le navigateur l'affiche
+  dans sa console.
+- (12) Mode dev : l'API accepte aussi `Authorization: Dev <pseudo>` (jamais en production) ; la page `/admin` prend
+  le dernier pseudo de dev du navigateur à son ouverture. Pour avoir un admin de dev :
+  `update players set role = 'admin' where name = '<pseudo>';`. J'ai créé dans ta base locale `DevAdmin` (admin)
+  et `Newbie` (joueur), avec leurs lignes de journal.
+- (12) Protocole 6 : refus `kicked`. L'écran d'attente dit maintenant de garder la page ouverte.
+- (12) Corrigé au passage (étape 11) : le bandeau de connexion affichait la clé brute `ui.connection.account` sur les
+  écrans de compte ; il est caché sur ces écrans. Les écrans « refusé » et « banni » n'ont toujours pas de bouton :
+  il faut recharger la page.
+
 ## Historique
+
+### 2026-10-12 — Étape 12 : Onglet admin v1 ✅
+- Serveur : table `admin_audit` (migration), service `Admin` et API `/admin/*` protégée (jeton Clerk + rôle
+  admin) : demandes en attente, joueurs (statut, en ligne, dernière connexion), journal ; approuver, refuser,
+  bannir avec raison, débannir, expulser. Chaque action est écrite dans le journal, dans la même transaction.
+- Effets immédiats (`NetServer`) : banni ou refusé → écran correspondant puis déconnexion ; expulsé → écran
+  « expulsé » ; approuvé en attente → entre en jeu sans recharger. Protocole 6.
+- Client : page `/admin` (trois tableaux, cartes sur téléphone, rafraîchie toutes les 30 s et après chaque action),
+  lien « Admin » avec badge du nombre de demandes, visible des seuls admins ; textes FR et EN.
+- Tests : garde (401, 403, mode dev, CORS), actions et journal, refus (statut, soi-même, autre admin, raison),
+  effets en direct sur de vraies sessions (attente → jeu, refus, bannissement, expulsion), client `AdminApi`.
+- Vérifié dans le navigateur avec des pseudos de dev : approbation en direct, bannissement et expulsion en direct,
+  journal, page refusée à un non-admin, mise en page téléphone (375 px, sans défilement horizontal).
+  Le parcours avec un deuxième compte Google reste à faire par toi.
+- Écarts par rapport à la fiche : en-tête `Dev <pseudo>` en mode dev pour tester sans Google ; « en ligne » compte
+  aussi les joueurs en attente ; correction du bandeau de connexion (étape 11).
 
 ### 2026-10-12 — Étape 11 : Connexion Google, pseudo et liste blanche ✅
 - Protocole 5 : `hello { token }`, `setName`, `status` (`needsName`, `pending`, `denied`, `banned`), refus
