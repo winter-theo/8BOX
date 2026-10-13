@@ -6,6 +6,7 @@ import {
   loadContent,
   TypedEmitter,
   tileCode,
+  tileIndex,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
 import type { ClientEvents } from '../events';
@@ -18,6 +19,7 @@ function setup() {
   const log: string[] = [];
   bus.on('chunk.loaded', ({ chunk }) => log.push(`loaded ${chunk.cx},${chunk.cy}`));
   bus.on('chunk.unloaded', ({ cx, cy }) => log.push(`unloaded ${cx},${cy}`));
+  bus.on('tile.meta', ({ chunk, x, y }) => log.push(`meta ${chunk.cx},${chunk.cy} ${x},${y}`));
   bus.on('tile.changed', ({ chunk, x, y, slot }) =>
     log.push(`changed ${chunk.cx},${chunk.cy} ${x},${y} ${slot}`),
   );
@@ -70,6 +72,24 @@ describe('ChunkCache', () => {
     expect(log).toEqual(['loaded 0,0', 'changed 0,0 5,6 floor', 'changed 0,0 5,6 floor']);
   });
 
+  it('keeps the state of tiles (doors), cleared when their object changes', () => {
+    const { cache, log } = setup();
+    const chunk = new Chunk(LAYER.surface, 0, 0);
+    chunk.object[tileIndex(5, 6)] = tileCode(content, 'base:wooden_door');
+    chunk.meta.set(tileIndex(5, 6), { open: true });
+    cache.load(encodeChunk(chunk, content));
+    expect(cache.getMeta(0, 5, 6)).toEqual({ open: true });
+
+    cache.applyTileMeta({ t: 'tileMeta', layer: 0, x: 5, y: 6, meta: null });
+    expect(cache.getMeta(0, 5, 6)).toBeUndefined();
+    cache.applyTileMeta({ t: 'tileMeta', layer: 0, x: 5, y: 6, meta: { open: true } });
+    expect(cache.getMeta(0, 5, 6)).toEqual({ open: true });
+    cache.applyTileUpdate({ t: 'tileUpdate', layer: 0, x: 5, y: 6, slot: 'floor', tile: null });
+    expect(cache.getMeta(0, 5, 6)).toEqual({ open: true });
+    cache.applyTileUpdate({ t: 'tileUpdate', layer: 0, x: 5, y: 6, slot: 'object', tile: null });
+    expect(cache.getMeta(0, 5, 6)).toBeUndefined();
+    expect(log.slice(1, 3)).toEqual(['meta 0,0 5,6', 'meta 0,0 5,6']);
+  });
   it('unloads one chunk or all of them', () => {
     const { cache, log } = setup();
     cache.load(grassChunk(0, 0));

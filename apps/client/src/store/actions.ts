@@ -36,6 +36,8 @@ export type ActionFeedback =
   | { kind: 'craftRefused'; reason: CraftReason; station?: string }
   | { kind: 'craftCancelled' }
   | { kind: 'craftDone' }
+  /** The bed slept in is now the respawn point. */
+  | { kind: 'respawnSet' }
   /** The tool or weapon in hand broke. */
   | { kind: 'broken'; item: string };
 

@@ -17,6 +17,7 @@ import {
   type ServerMessage,
   type Skin,
   type SlotRef,
+  sleepAction,
   stationInReach,
   VIEW,
 } from '@8box/shared';
@@ -141,6 +142,7 @@ export class GameClient {
         },
         inventory: () => useInventoryStore.getState().inventory,
         tile: (layer, x, y, slot) => this.chunks.getTile(layer, x, y, slot),
+        meta: (layer, x, y) => this.chunks.getMeta(layer, x, y),
         remotes: () => this.remoteViews(),
         admin: () => this.admin,
       },
@@ -480,6 +482,9 @@ export class GameClient {
       case 'tileUpdate':
         this.chunks.applyTileUpdate(message);
         return;
+      case 'tileMeta':
+        this.chunks.applyTileMeta(message);
+        return;
       case 'tileDamage': {
         const { t: _type, ...damage } = message;
         this.options.bus.emit('tile.damaged', damage);
@@ -512,6 +517,8 @@ export class GameClient {
           showFeedback({ kind: 'refused', reason: message.reason ?? 'unavailable' });
         } else if (message.outcome === 'cancelled') {
           showFeedback({ kind: 'cancelled' });
+        } else if (message.id === sleepAction.id) {
+          showFeedback({ kind: 'respawnSet' });
         }
         return;
       case 'craft': {
@@ -637,6 +644,7 @@ export class GameClient {
     return createMovementWorld(
       (x, y, slot) => this.chunks.getTile(layer, x, y, slot),
       (x, y) => this.chunks.get(layer, chunkCoord(x), chunkCoord(y)) !== undefined,
+      (x, y) => this.chunks.getMeta(layer, x, y),
     );
   }
 

@@ -12,6 +12,7 @@ import {
   listActions,
   spawnSafeZone,
   type TileDef,
+  type TileMeta,
   type TilePoint,
   type TileSlot,
   tileInReach,
@@ -31,6 +32,8 @@ export interface InteractionSources {
   inventory(): Inventory | null;
   /** A tile of the chunks received (undefined when empty or not loaded). */
   tile(layer: number, x: number, y: number, slot: TileSlot): TileDef | undefined;
+  /** The state of a tile of the chunks received (an open door); undefined when none. */
+  meta(layer: number, x: number, y: number): TileMeta | undefined;
   /** The other entities, where they are drawn. */
   remotes(): readonly RemoteView[];
   /** Whether the player is an admin (may break things in the safe zone), as `welcome` said. */
@@ -81,7 +84,8 @@ export class Interaction {
         tiles[slot] = tile.id;
       }
     }
-    const subjects: ActionSubject[] = [{ kind: 'tile', x, y, tiles }];
+    const meta = this.sources.meta(player.layer, x, y);
+    const subjects: ActionSubject[] = [{ kind: 'tile', x, y, tiles, ...(meta && { meta }) }];
     if (Math.floor(player.x) === x && Math.floor(player.y) === y) {
       subjects.push({ kind: 'self' });
     }

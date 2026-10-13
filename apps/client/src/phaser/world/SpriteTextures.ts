@@ -21,6 +21,11 @@ export class SpriteTextures {
     private readonly registry: AssetRegistry,
   ) {}
 
+  /** Whether the atlas or a placeholder has this sprite (variants that may be missing: walls…). */
+  has(id: string): boolean {
+    return this.registry.fromAtlas(id) || this.registry.optional(id) !== undefined;
+  }
+
   /** Texture of a sprite; `variant` is any whole number (a tile hash…). */
   frame(id: string, variant = 0): TextureFrame {
     if (this.registry.fromAtlas(id)) {
