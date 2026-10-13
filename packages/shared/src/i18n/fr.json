@@ -273,6 +273,10 @@
       "broken": "Objet brisé : {{name}}.",
       "eat": "Manger"
     },
+    "clock": {
+      "day": "Jour, {{time}}",
+      "night": "Nuit, {{time}}"
+    },
     "vitals": {
       "health": "Vie : {{value}} / {{max}}",
       "hunger": "Faim : {{value}} / {{max}}"

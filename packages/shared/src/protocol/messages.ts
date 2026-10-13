@@ -551,6 +551,18 @@ export interface VitalsMessage {
   dead?: DamageCause;
 }
 
+/**
+ * The world clock, sent on arrival and every `TIME.syncIntervalMs`: the client runs it meanwhile, at
+ * `scale` times real time.
+ */
+export interface TimeMessage {
+  t: 'time';
+  /** World time, in ms since the world was created (`timeOfDay` gives the time within the day). */
+  worldTimeMs: number;
+  /** World ms per real ms: 1, or more in dev (`TIME_SCALE`). */
+  scale: number;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | StatusMessage
@@ -569,7 +581,8 @@ export type ServerMessage =
   | ExaminedMessage
   | CraftStateMessage
   | ItemBrokenMessage
-  | VitalsMessage;
+  | VitalsMessage
+  | TimeMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

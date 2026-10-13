@@ -30,6 +30,11 @@ describe('tileDefSchema', () => {
     });
   });
 
+  it('rejects a light radius above the largest one', () => {
+    const light = { radiusTiles: LIGHT.maxRadiusTiles + 1 };
+    expect(tileDefSchema.safeParse({ ...tile, light }).success).toBe(false);
+  });
+
   it('rejects unknown keys, bad ids and bad slots', () => {
     expect(tileDefSchema.safeParse({ ...tile, sollid: true }).success).toBe(false);
     expect(tileDefSchema.safeParse({ ...tile, id: 'oak_tree' }).success).toBe(false);
