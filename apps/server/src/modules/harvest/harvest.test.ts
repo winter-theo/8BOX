@@ -315,3 +315,34 @@ describe('harvest module', () => {
     expect(ctx.world.getTile(0, 40, 40, 'object')?.id).toBe('base:berry_bush');
   });
 });
+
+describe('harvest module: monsters hitting walls', () => {
+  it('takes the HP of a wall hit by a monster, and breaks it without loot', () => {
+    const { ctx, tick } = createTestContext({ modules: [playersModule, harvestModule] });
+    const x = 10;
+    const y = 10;
+    ctx.world.setTile(0, x, y, 'object', 'base:wooden_wall');
+    const monster = ctx.entities.create('monster', {
+      position: { layer: 0, x: x + 0.5, y: y + 1.5 },
+      monster: { creature: 'base:slime' },
+    });
+    const broken: ServerEvents['tile.broken'][] = [];
+    const given: ServerEvents['items.give'][] = [];
+    ctx.events.on('tile.broken', (event) => broken.push(event));
+    ctx.events.on('items.give', (event) => given.push(event));
+
+    const hit = () =>
+      ctx.events.emit('tile.hit', { layer: 0, x, y, slot: 'object', amount: 8, by: monster });
+    hit();
+    hit();
+    tick();
+    expect(ctx.world.getTile(0, x, y, 'object')?.id).toBe('base:wooden_wall');
+    hit(); // 24 HP taken from 20.
+
+    expect(ctx.world.getTile(0, x, y, 'object')).toBeUndefined();
+    expect(broken).toEqual([
+      { layer: 0, x, y, slot: 'object', tile: 'base:wooden_wall', by: monster },
+    ]);
+    expect(given).toEqual([]);
+  });
+});

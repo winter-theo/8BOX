@@ -336,3 +336,29 @@ describe('inventory module', () => {
     expect(back.inventory()?.purse).toBe(77);
   });
 });
+
+describe('inventory module: loot of monsters', () => {
+  it('puts the items asked for on the ground where the monster died', () => {
+    const { ctx } = createTestContext({ modules: [playersModule, inventoryModule] });
+    const position = { layer: 0, x: 20.5, y: 20.5 };
+
+    ctx.events.emit('items.drop', {
+      position,
+      items: [
+        { item: 'base:gold', count: 3 },
+        { item: 'base:slime_gel', count: 1 },
+      ],
+    });
+
+    const piles = ctx.entities
+      .query('groundItem')
+      .map((id) => ({
+        ...ctx.entities.get(id, 'groundItem'),
+        at: ctx.entities.get(id, 'position'),
+      }));
+    expect(piles).toEqual([
+      expect.objectContaining({ item: 'base:gold', count: 3, at: position }),
+      expect.objectContaining({ item: 'base:slime_gel', count: 1, at: position }),
+    ]);
+  });
+});

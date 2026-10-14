@@ -2,6 +2,7 @@ import {
   CLIENT_MESSAGE_TYPES,
   type ClientMessage,
   type ClientMessageType,
+  chunkCoord,
   encodeMessage,
   type GameConfig,
   type HelloMessage,
@@ -156,6 +157,27 @@ export class NetServer {
   send(session: Session, message: ServerMessage): void {
     if (session.state !== 'closed') {
       session.transport.send(encodeMessage(message));
+    }
+  }
+
+  /**
+   * Sends a message to the players in the world who receive the chunk of `position` (in tiles), except
+   * the one whose player entity is `exceptEntity`.
+   */
+  sendNear(
+    position: { layer: number; x: number; y: number },
+    message: ServerMessage,
+    exceptEntity?: number,
+  ): void {
+    const ref = { layer: position.layer, cx: chunkCoord(position.x), cy: chunkCoord(position.y) };
+    for (const session of this.sessions.values()) {
+      if (
+        session.state === 'playing' &&
+        session.player?.entity !== exceptEntity &&
+        session.chunks?.has(ref)
+      ) {
+        this.send(session, message);
+      }
     }
   }
 

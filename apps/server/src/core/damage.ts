@@ -1,3 +1,4 @@
+import { createMovementWorld, type Facing, knockback, type LayerId, pushMover } from '@8box/shared';
 import type { EntityId } from './entities';
 import type { DamageSource } from './events';
 import type { ServerContext } from './module';
@@ -41,5 +42,41 @@ export function damage(
       ctx.events.emit('entity.died', { entity, type, position, source });
     }
   }
+  return taken;
+}
+
+/**
+ * A hit: `damage`, then, when the target took some and lives, `hitInvulnerabilityMs` without damage and
+ * a push of `knockbackTiles` toward `facing` (the facing of the attacker), stopped by the solid tiles.
+ * Used by the hits of the players (combat module) and of the monsters (ai module). Returns the HP taken.
+ */
+export function hitEntity(
+  ctx: ServerContext,
+  target: EntityId,
+  amount: number,
+  source: DamageSource,
+  facing: Facing,
+): number {
+  const taken = damage(ctx, target, amount, source);
+  const position = ctx.entities.get(target, 'position');
+  if (taken === 0 || !position || ctx.entities.has(target, 'dead')) {
+    return taken;
+  }
+  const { combat } = ctx.config;
+  const tick = ctx.scheduler.currentTick;
+  ctx.entities.set(
+    target,
+    'invulnerableUntilTick',
+    tick + ctx.scheduler.ticksFor(combat.hitInvulnerabilityMs),
+  );
+  const layer = position.layer as LayerId;
+  const world = createMovementWorld(
+    (x, y, slot) => ctx.world.getTile(layer, x, y, slot),
+    (x, y) => ctx.world.isInside(x, y),
+    (x, y) => ctx.world.getMeta(layer, x, y),
+  );
+  const push = knockback(facing, combat);
+  const moved = pushMover({ ...position, facing }, push.dx, push.dy, world);
+  ctx.entities.set(target, 'position', { layer: position.layer, x: moved.x, y: moved.y });
   return taken;
 }

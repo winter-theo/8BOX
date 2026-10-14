@@ -34,7 +34,7 @@ export type ServerEvents = {
   'tile.changed': TileChange;
   /** The state of a tile changed (`World.setMeta`): a door opened or closed. */
   'tile.meta': TileMetaChange;
-  /** A player broke a tile (its slot is already empty): cut, uprooted or broken. */
+  /** A player broke a tile (its slot is already empty): cut, uprooted or broken; or a monster did. */
   'tile.broken': {
     layer: LayerId;
     x: number;
@@ -42,7 +42,7 @@ export type ServerEvents = {
     slot: TileSlot;
     /** The tile id that was there. */
     tile: string;
-    /** The player who broke it. */
+    /** The player who broke it, or the monster (`tile.hit`). */
     by: EntityId;
   };
   /**
@@ -60,6 +60,24 @@ export type ServerEvents = {
    * by one use, and it breaks at 0.
    */
   'tool.used': { entity: EntityId; item: string; slot: number };
+  /**
+   * Request: put items on the ground at `position` (the loot of a monster). Handled by the inventory
+   * module.
+   */
+  'items.drop': { position: Position; items: readonly ItemStack[] };
+  /**
+   * Request: a monster hits the tile in slot `slot` of (x, y) (a wall or a door in its way) and takes
+   * `amount` of its HP, like the hits of the players. Handled by the harvest module: at 0 the tile is
+   * broken (`tile.broken`), without loot.
+   */
+  'tile.hit': {
+    layer: LayerId;
+    x: number;
+    y: number;
+    slot: TileSlot;
+    amount: number;
+    by: EntityId;
+  };
   /** A player crafted a recipe once (its ingredients are taken, what it gives is in the inventory). */
   'item.crafted': { entity: EntityId; recipe: string };
   /** A player placed the item in hand: tile `tile` is now in slot `slot` of (x, y). */
