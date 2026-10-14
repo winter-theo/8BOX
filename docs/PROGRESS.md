@@ -3,7 +3,16 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 24 : Commandes admin et mode admin (branche `step/24-commandes-admin`)
+- [ ] Registre de commandes (`ctx.commands`) : analyse des arguments, pseudos complétés (préfixe unique),
+  permissions, `/aide` ; `/msg`, `/r`, `/signaler` passent par le registre ; tests.
+- [ ] `ctx.admin` dans le contexte du jeu ; journal d'audit des commandes (action `command`, cible facultative).
+- [ ] Commandes `/tp`, `/tphere`, `/give`, `/heal`, `/time`, `/who`, `/annonce`, `/save`, `/spawnmob` (dev) ;
+  tests de `/tp` et `/give`.
+- [ ] Sanctions en jeu : `/kick`, `/ban`, `/unban`, `/mute`, `/unmute`.
+- [ ] Mode admin `/admin` : invisible, traverse les murs, invulnérable, ignoré des monstres ; badge.
+- [ ] Client : avis traduits (aide, qui est en ligne, annonces), onglet admin (commandes du journal).
+- [ ] Retrait du debug provisoire : `devGive` et son panneau, route `POST /dev/tile`.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
