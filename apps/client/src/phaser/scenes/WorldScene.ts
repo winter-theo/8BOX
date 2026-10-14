@@ -21,6 +21,7 @@ import { GroundItems } from '../world/GroundItems';
 import { GroundLayer } from '../world/GroundLayer';
 import { LightLayer } from '../world/LightLayer';
 import { LocalPlayer } from '../world/LocalPlayer';
+import { Monsters } from '../world/Monsters';
 import { NameLabels } from '../world/NameLabels';
 import { ObjectLayer } from '../world/ObjectLayer';
 import { RemotePlayers } from '../world/RemotePlayers';
@@ -52,6 +53,7 @@ export class WorldScene extends Phaser.Scene {
     const labels = new NameLabels(this);
     const remotePlayers = new RemotePlayers(entities, labels);
     const groundItems = new GroundItems(this, textures, content);
+    const monsters = new Monsters(entities, content);
     const bubbles = new ChatBubbles(this, (entity) => entities.image(entity));
     const aim = new AimHighlight(this);
     const damageBars = new DamageBars(this);
@@ -91,6 +93,7 @@ export class WorldScene extends Phaser.Scene {
       const remotes = gameClient.remoteViews();
       remotePlayers.update(remotes, timeMs);
       groundItems.update(remotes);
+      monsters.update(remotes, timeMs);
       const view = gameClient.localView();
       const sprite = localPlayer.update(view, timeMs);
       // Swings, blinking characters and damage numbers, over the characters just moved.

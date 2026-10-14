@@ -13,6 +13,10 @@ export const VIEW = {
   walkFrameMs: 150,
   /** Time the weapon takes to sweep in front of a character who attacks, in ms. */
   swingMs: 150,
+  /** Height of the hops of a creature that moves by hops (slime), in source pixels. */
+  creatureHopPx: 2,
+  /** Height of the bob of a walking creature, in source pixels. */
+  creatureBobPx: 1,
   /** A hit character blinks while it cannot be hurt (`COMBAT.hitInvulnerabilityMs`): time it stays shown, then hidden, in ms. */
   hitBlinkIntervalMs: 80,
   /** Time the damage numbers rise and fade above a hit character, in ms. */
