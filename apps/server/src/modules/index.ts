@@ -1,4 +1,5 @@
 import type { GameModule } from '../core/module';
+import { aiModule } from './ai';
 import { buildingModule } from './building';
 import { chatModule } from './chat';
 import { chunksModule } from './chunks';
@@ -35,5 +36,6 @@ export const MODULES: readonly GameModule[] = [
   survivalModule,
   combatModule,
   spawningModule,
+  aiModule,
   debugModule,
 ];
