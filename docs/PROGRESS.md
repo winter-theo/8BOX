@@ -12,7 +12,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] Serveur : module `spawning` (apparition, plafonds, aube, éloignement, mort et butin).
 - [x] Serveur : module `ai` (errance, repérage, poursuite A*, attaque, abandon, murs).
 - [x] Client : dessin des monstres et des nouveaux objets (sprites provisoires).
-- [ ] Tests et mesure du tick (20 bots + monstres).
+- [x] Tests et mesure du tick (20 bots + monstres).
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._

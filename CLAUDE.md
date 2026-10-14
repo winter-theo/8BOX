@@ -30,7 +30,8 @@ RimWorld et The Escapists (bâtiments), Zelda vu de dessus (combat).
 
 ## Commandes
 <!-- L'étape 00 crée ces scripts ; la mettre à jour ici si elle s'en écarte. -->
-- `pnpm dev` : serveur + client en mode développement.
+- `pnpm dev` : serveur + client en mode développement. `pnpm dev:fast-time` : pareil avec un jour par minute
+  (`TIME_SCALE=60`, pour tester la nuit et les monstres).
 - `pnpm check` : typecheck + lint + tests. Doit passer avant chaque commit.
 - `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm format`.
 - Base de données (Docker Desktop doit tourner) : `pnpm db:up` démarre PostgreSQL, `pnpm db:down` l'arrête,
