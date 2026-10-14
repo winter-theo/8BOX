@@ -30,7 +30,7 @@ Une ligne = une session Claude Code : `/etape <id>`, puis `/clear` avant la suiv
 | 20 | [Vie, faim, mort et réapparition](steps/20-survie-mort.md) | 18 | ✅ |
 | 21 | [Jour, nuit et lumière](steps/21-jour-nuit-lumiere.md) | 18 | ✅ |
 | 22 | [Combat façon Zelda et PvP](steps/22-combat-pvp.md) | 20 | ✅ |
-| 23 | [Monstres de nuit](steps/23-monstres.md) | 21, 22 | ⬜ |
+| 23 | [Monstres de nuit](steps/23-monstres.md) | 21, 22 | 🟡 |
 | 24 | [Commandes admin et mode admin](steps/24-commandes-admin.md) | 13, 23 | ⬜ |
 | 25 | [Test en ligne gratuit](steps/25-test-en-ligne.md) | 24 | ⬜ |
 | 26 | [Mise en production](steps/26-production.md) | 25 | ⬜ |

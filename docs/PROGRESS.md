@@ -3,10 +3,16 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+Étape 23 — Monstres de nuit (branche `step/23-monstres`).
 
-Pause le 2026-10-13 (limite d'usage hebdomadaire à 95 %, remise à zéro le 2026-10-14 vers 16 h UTC) :
-les étapes 15 à 22 ont été faites à la suite. Reprendre par `/etape 23`, puis `/etape 24`.
+- [ ] Contenu et protocole : schéma des créatures, Gluant et Rôdeur, gelée et croc, butin, eau, config `MONSTERS`,
+      `creature` dans les instantanés, cause de mort `monster`, i18n.
+- [ ] Shared : A* sur la grille et décision de frapper un mur.
+- [ ] Serveur : coup partagé dans le cœur (`hitEntity`), événements `items.drop` et `tile.hit`.
+- [ ] Serveur : module `spawning` (apparition, plafonds, aube, éloignement, mort et butin).
+- [ ] Serveur : module `ai` (errance, repérage, poursuite A*, attaque, abandon, murs).
+- [ ] Client : dessin des monstres et des nouveaux objets (sprites provisoires).
+- [ ] Tests et mesure du tick (20 bots + monstres).
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
