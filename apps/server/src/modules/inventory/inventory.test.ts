@@ -350,12 +350,10 @@ describe('inventory module: loot of monsters', () => {
       ],
     });
 
-    const piles = ctx.entities
-      .query('groundItem')
-      .map((id) => ({
-        ...ctx.entities.get(id, 'groundItem'),
-        at: ctx.entities.get(id, 'position'),
-      }));
+    const piles = ctx.entities.query('groundItem').map((id) => ({
+      ...ctx.entities.get(id, 'groundItem'),
+      at: ctx.entities.get(id, 'position'),
+    }));
     expect(piles).toEqual([
       expect.objectContaining({ item: 'base:gold', count: 3, at: position }),
       expect.objectContaining({ item: 'base:slime_gel', count: 1, at: position }),
