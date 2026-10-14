@@ -9,7 +9,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
       `creature` dans les instantanés, cause de mort `monster`, i18n.
 - [x] Shared : A* sur la grille et décision de frapper un mur.
 - [x] Serveur : coup partagé dans le cœur (`hitEntity`), événements `items.drop` et `tile.hit`.
-- [ ] Serveur : module `spawning` (apparition, plafonds, aube, éloignement, mort et butin).
+- [x] Serveur : module `spawning` (apparition, plafonds, aube, éloignement, mort et butin).
 - [ ] Serveur : module `ai` (errance, repérage, poursuite A*, attaque, abandon, murs).
 - [ ] Client : dessin des monstres et des nouveaux objets (sprites provisoires).
 - [ ] Tests et mesure du tick (20 bots + monstres).

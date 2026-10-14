@@ -13,6 +13,7 @@ import { persistenceModule } from './persistence';
 import { playersModule } from './players';
 import { skinsModule } from './skins';
 import { snapshotsModule } from './snapshots';
+import { spawningModule } from './spawning';
 import { survivalModule } from './survival';
 import { timeModule } from './time';
 
@@ -33,5 +34,6 @@ export const MODULES: readonly GameModule[] = [
   buildingModule,
   survivalModule,
   combatModule,
+  spawningModule,
   debugModule,
 ];
