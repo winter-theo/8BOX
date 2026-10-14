@@ -1,3 +1,4 @@
+import type { TilePoint } from '../actions/aim';
 import type { MovementWorld } from './movement';
 
 /**
@@ -9,12 +10,6 @@ export type PathTile = 'open' | 'wall' | 'blocked';
 /** The tiles as a path search sees them. Coordinates are whole tile coordinates. */
 export interface PathGrid {
   tileAt(x: number, y: number): PathTile;
-}
-
-/** A tile, by its whole coordinates. */
-export interface TilePoint {
-  x: number;
-  y: number;
 }
 
 export interface PathOptions {

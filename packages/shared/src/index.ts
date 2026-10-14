@@ -155,7 +155,6 @@ export {
   type PathGrid,
   type PathOptions,
   type PathTile,
-  type TilePoint,
   wallAhead,
 } from './sim/pathfinding';
 export {

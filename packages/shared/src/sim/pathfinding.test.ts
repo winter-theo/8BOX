@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import type { TilePoint } from '../actions/aim';
 import type { MovementWorld } from './movement';
-import {
-  createPathGrid,
-  findPath,
-  type PathGrid,
-  type PathTile,
-  type TilePoint,
-  wallAhead,
-} from './pathfinding';
+import { createPathGrid, findPath, type PathGrid, type PathTile, wallAhead } from './pathfinding';
 
 /** A grid drawn with rows: `.` open, `W` wall, `#` blocked; outside the rows is blocked. */
 function gridOf(rows: readonly string[]): PathGrid {
@@ -136,7 +130,15 @@ describe('wallAhead', () => {
     expect(wallAhead([{ x: 2, y: 0 }], grid)).toBeUndefined();
     expect(wallAhead([], grid)).toBeUndefined();
     // A wall further on the path is hit only once the walker reaches it.
-    expect(wallAhead([{ x: 0, y: 0 }, { x: 1, y: 0 }], grid)).toBeUndefined();
+    expect(
+      wallAhead(
+        [
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+        ],
+        grid,
+      ),
+    ).toBeUndefined();
   });
 });
 
