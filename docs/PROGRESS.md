@@ -3,16 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-Étape 23 — Monstres de nuit (branche `step/23-monstres`).
-
-- [x] Contenu et protocole : schéma des créatures, Gluant et Rôdeur, gelée et croc, butin, eau, config `MONSTERS`,
-      `creature` dans les instantanés, cause de mort `monster`, i18n.
-- [x] Shared : A* sur la grille et décision de frapper un mur.
-- [x] Serveur : coup partagé dans le cœur (`hitEntity`), événements `items.drop` et `tile.hit`.
-- [x] Serveur : module `spawning` (apparition, plafonds, aube, éloignement, mort et butin).
-- [x] Serveur : module `ai` (errance, repérage, poursuite A*, attaque, abandon, murs).
-- [x] Client : dessin des monstres et des nouveaux objets (sprites provisoires).
-- [x] Tests et mesure du tick (20 bots + monstres).
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -545,8 +536,58 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (22) Tout dégât (faim comprise) fait clignoter et affiche « -N » en rouge au-dessus du personnage. Arme balayée :
   icône de l'objet à 75 % ; main nue : petit carré clair. Balayage 150 ms, chiffres 700 ms (`VIEW`).
 - (22) Cause de mort `hit` : « Tué au combat. ».
+- (23) Monstres (`creatures.json`, ids provisoires `base:slime` et `base:prowler`) :
+  - Gluant : 6 PV, 2 dégâts, un coup par seconde ; 2 cases/s pendant ses sauts de 400 ms, suivis de 200 ms de
+    pause (environ 1,3 case/s en moyenne).
+  - Rôdeur : 10 PV, 3 dégâts, un coup toutes les 0,8 s, 4 cases/s (le joueur, à 5 cases/s, peut le semer).
+  - Butin toujours donné : 1 à 3 or et une gelée, ou 2 à 5 or et un croc. Deux Gluants pour un Rôdeur
+    (`nightSpawnWeight`).
+- (23) Apparition :
+  - seulement la nuit (crépuscule compris), une fois l'ambiance sous le seuil d'éclairage (fin du crépuscule) ;
+  - une tentative par joueur toutes les 3 s, 8 cases tirées dans l'anneau (`spawnIntervalMs`,
+    `spawnTriesPerPlayer`) ;
+  - à 18 cases au moins de TOUS les joueurs ; pas autour d'un joueur mort ; surface seulement ;
+  - en plus de la lumière, de la zone sûre et de l'eau (nouveau champ `water` des cases), jamais sur un sol construit
+    ni dans une pièce : l'intérieur d'une base reste sûr ;
+  - le plafond de 6 compte les monstres apparus pour ce joueur ; quand il part, ils ne comptent plus et finissent par
+    disparaître (règle des 64 cases).
+- (23) Aube : au début du jour, 80 % des monstres sont tirés au sort, et chacun disparaît à un moment des 3 minutes
+  d'aube (temps du monde).
+- (23) IA : regard toutes les 250 ms ; abandon à 16 cases (`giveUpDistanceTiles`) ; A* dans un carré de 33 × 33 cases,
+  refait au plus toutes les 500 ms ; à moins de 1,5 case, le monstre va droit sur sa cible ; portée de coup 0,8 case
+  (pieds à pieds). Un coup de monstre fait reculer et rend invulnérable comme un coup de joueur, avec un balayage.
+- (23) Les monstres n'entrent jamais dans la zone sûre (un mur pour eux) : ils ne poursuivent pas et ne frappent pas un
+  joueur qui s'y trouve.
+- (23) Murs : un chemin qui traverse un mur ou une porte fermée coûte 24 cases de marche (`wallPathCost`) : le monstre
+  contourne quand le détour est plus court, sinon il frappe. Seuls les murs et les portes (pas l'établi ni le lit).
+  Dégâts au mur = dégâts du monstre ; PV rendus après 30 s comme pour les joueurs ; un mur cassé par un monstre ne
+  donne rien.
+- (23) Pas de collision entre entités : les monstres se chevauchent entre eux et avec les joueurs.
+- (23) Examiner un monstre ne renvoie rien pour l'instant. Cause de mort `monster` : « Tué par un monstre. ».
+- (23) Sprites provisoires `creature.slime` et `creature.prowler` (tournés vers la droite) ; le Gluant saute de 2 px,
+  les autres se balancent de 1 px en marchant (`VIEW.creatureHopPx`, `VIEW.creatureBobPx`). Icônes gelée et croc.
+- (23) `pnpm dev:fast-time` : un jour par minute (`TIME_SCALE=60` dans `apps/server/.env.fast-time`, commité).
+- (23) Le panneau du navigateur intégré affichait 3 FPS (7448 objets) pendant le test : sans doute l'environnement
+  (rendu logiciel), à vérifier sur une vraie machine.
 
 ## Historique
+
+### 2026-10-13 — Étape 23 : Monstres de nuit ✅
+- Contenu : Gluant et Rôdeur complets (sauts, délai d'attaque, poids d'apparition, butin), gelée et croc, eau marquée
+  `water`, config `MONSTERS` complétée ; protocole 18 (`creature` dans les instantanés, cause de mort `monster`).
+- Shared : A* sur la grille (carré borné, pas de coin coupé, murs traversables à un coût) et `wallAhead`.
+- Serveur : modules `spawning` (anneau autour des joueurs la nuit, plafonds, aube, éloignement, butin des morts) et
+  `ai` (errance, repérage, poursuite, coups, murs cassés seulement pour atteindre une cible, abandon) ; coup partagé
+  `hitEntity`, `safeZoneOf` et `net.sendNear` dans le cœur ; événements `items.drop` et `tile.hit`.
+- Client : monstres dessinés (sprites provisoires, sauts du Gluant), objets nouveaux.
+- Tests : règles d'apparition (lumière, zone sûre, eau, sol, pièce, plafonds), A* (chemin, obstacle, cible
+  inaccessible, murs), décision de frapper un mur (seulement en poursuite, porte d'une pièce occupée, base vide jamais),
+  aube, éloignement, butin.
+- Mesure : `pnpm dev:fast-time` + 20 bots : jusqu'à 109 monstres, tick moyen 1,0 à 3,3 ms (une pointe isolée à 30 ms),
+  sans erreur ; l'aube en retire bien environ 80 %. Vu un Gluant dans le navigateur, sans combat filmé (les bots
+  restent surtout dans la forêt de la zone sûre, d'où moins de 120 monstres).
+- Écarts : le cap « par joueur » compte les monstres apparus pour lui ; pas d'apparition sur un sol construit ni dans
+  une pièce (ajout) ; la zone sûre est interdite aux monstres ; refactor du module de combat (aides passées au cœur).
 
 ### 2026-10-13 — Étape 22 : Combat façon Zelda et PvP ✅
 - Shared : arme en main ou main nue (`heldWeapon`), zone de coup selon le regard (`hitZone`, `inHitZone`), cadence
