@@ -150,6 +150,15 @@ export {
   stepMovement,
 } from './sim/movement';
 export {
+  createPathGrid,
+  findPath,
+  type PathGrid,
+  type PathOptions,
+  type PathTile,
+  type TilePoint,
+  wallAhead,
+} from './sim/pathfinding';
+export {
   clockTime,
   type DayCycle,
   type DayPhase,
