@@ -33,6 +33,8 @@ export const tileDefSchema = z.strictObject({
   solid: z.boolean(),
   /** Speed multiplier of whoever walks on it (shallow water: 0.5); absent means 1. */
   speedFactor: z.number().positive().max(1).optional(),
+  /** Water (ground): no monster appears on it. */
+  water: z.boolean().optional(),
   /** Drawn taller than a tile and depth-sorted with entities (trees, walls). */
   tall: z.boolean(),
   /** Hit points; 0 means it cannot be broken. */
@@ -178,17 +180,31 @@ export const lootTableSchema = z.strictObject({
   drops: z.array(lootDropSchema),
 });
 
-/** Draft: completed with monsters (step 23). */
+/** A creature of the world: night monsters (later animals). */
 export const creatureDefSchema = z.strictObject({
   id: contentIdSchema,
   sprite: spriteIdSchema,
   /** Hit points. */
   hp: positiveInt,
-  /** Movement speed, in tiles per second. */
+  /** Movement speed while it moves, in tiles per second. */
   speedTilesPerSecond: z.number().positive(),
-  /** Damage per hit, in HP. */
+  /** Moves by hops (slime): `moveMs` moving, then `restMs` still, again and again. */
+  hop: z
+    .strictObject({
+      /** Time it moves, in ms. */
+      moveMs: positiveInt,
+      /** Time it then stays still, in ms. */
+      restMs: positiveInt,
+    })
+    .optional(),
+  /** Damage per hit, to a character or to a wall in its way, in HP. */
   damage: z.number().int().min(0),
+  /** Time between two hits, in ms. */
+  attackCooldownMs: positiveInt,
   hostile: z.boolean(),
+  /** Relative chance to be the one that appears at night; absent: it never appears at night. */
+  nightSpawnWeight: z.number().positive().optional(),
+  /** Loot table id rolled where it dies. */
   loot: contentIdSchema.optional(),
 });
 

@@ -153,6 +153,13 @@ export const inventoryModule: GameModule = {
       update(entity, inventory);
     });
 
+    // The loot of a monster, where it died.
+    ctx.events.on('items.drop', ({ position, items: stacks }) => {
+      for (const stack of stacks) {
+        spawnGroundItem(ctx, position, stack);
+      }
+    });
+
     // Death: a share of the gold carried falls where the player died, for anyone to take.
     ctx.events.on('entity.died', ({ entity, position }) => {
       const inventory = ctx.entities.get(entity, 'inventory');

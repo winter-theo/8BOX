@@ -22,9 +22,11 @@ function fakeCanvases() {
 }
 
 describe('placeholders', () => {
-  it('exist for every tile and item of the base content', () => {
+  it('exist for every tile, item and creature of the base content', () => {
     const content = loadContent(baseContent);
-    const sprites = [...content.tiles.all, ...content.items.all].map((entry) => entry.sprite);
+    const sprites = [...content.tiles.all, ...content.items.all, ...content.creatures.all].map(
+      (entry) => entry.sprite,
+    );
     expect(sprites.filter((sprite) => placeholderFor(sprite) === undefined)).toEqual([]);
   });
 

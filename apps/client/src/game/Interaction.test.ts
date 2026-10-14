@@ -19,6 +19,7 @@ function remote(
     name: undefined,
     skin: undefined,
     item: undefined,
+    creature: undefined,
     facing: 'down',
     moving: false,
     ...view,

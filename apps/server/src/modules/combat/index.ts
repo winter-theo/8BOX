@@ -1,23 +1,8 @@
-import {
-  attackReady,
-  chunkCoord,
-  createMovementWorld,
-  type Facing,
-  heldWeapon,
-  hitZone,
-  inHitZone,
-  knockback,
-  LAYER,
-  type LayerId,
-  PLAYER,
-  pushMover,
-  pvpAllowed,
-  type SafeZone,
-  type ServerMessage,
-} from '@8box/shared';
-import { damage } from '../../core/damage';
-import type { EntityId, Position } from '../../core/entities';
-import type { GameModule, ServerContext } from '../../core/module';
+import { attackReady, heldWeapon, hitZone, inHitZone, PLAYER, pvpAllowed } from '@8box/shared';
+import { hitEntity } from '../../core/damage';
+import type { EntityId } from '../../core/entities';
+import type { GameModule } from '../../core/module';
+import { safeZoneOf } from '../../core/safeZone';
 
 /** A fight between two players: who hit first, and when either last hit the other. */
 interface Fight {
@@ -28,33 +13,6 @@ interface Fight {
 /** Key of the fight between two entities, whatever the order. */
 function fightKey(a: EntityId, b: EntityId): string {
   return a < b ? `${a}:${b}` : `${b}:${a}`;
-}
-
-/** The safe zone around the spawn of the world. */
-function safeZoneOf(ctx: ServerContext): SafeZone {
-  const { spawn } = ctx.world;
-  return {
-    layer: LAYER.surface,
-    x: spawn.x,
-    y: spawn.y,
-    radiusTiles: ctx.config.world.safeZoneRadiusTiles,
-  };
-}
-
-/** Sends a message to the players who follow the chunk of `position`, except `except`. */
-function sendNear(
-  ctx: ServerContext,
-  position: Position,
-  message: ServerMessage,
-  except?: EntityId,
-): void {
-  const ref = { layer: position.layer, cx: chunkCoord(position.x), cy: chunkCoord(position.y) };
-  for (const session of ctx.net.allSessions()) {
-    const entity = session.player?.entity;
-    if (session.state === 'playing' && entity !== except && session.chunks?.has(ref)) {
-      ctx.net.send(session, message);
-    }
-  }
 }
 
 /**
@@ -75,7 +33,6 @@ export const combatModule: GameModule = {
     const lastHit = new Map<EntityId, number>();
     const fights = new Map<string, Fight>();
     const fightTicks = ctx.scheduler.ticksFor(combat.fightMemoryMs);
-    const invulnerabilityTicks = ctx.scheduler.ticksFor(combat.hitInvulnerabilityMs);
 
     /** Remembers that `attacker` hit `target`: a new fight when they had not fought lately. */
     const rememberFight = (attacker: EntityId, target: EntityId, tick: number) => {
@@ -86,19 +43,6 @@ export const combatModule: GameModule = {
       } else {
         fight.lastTick = tick;
       }
-    };
-
-    /** Pushes a hit entity toward `facing`, stopped by the solid tiles. */
-    const pushBack = (entity: EntityId, position: Position, facing: Facing) => {
-      const layer = position.layer as LayerId;
-      const world = createMovementWorld(
-        (x, y, slot) => ctx.world.getTile(layer, x, y, slot),
-        (x, y) => ctx.world.isInside(x, y),
-        (x, y) => ctx.world.getMeta(layer, x, y),
-      );
-      const push = knockback(facing, combat);
-      const moved = pushMover({ ...position, facing }, push.dx, push.dy, world);
-      ctx.entities.set(entity, 'position', { layer: position.layer, x: moved.x, y: moved.y });
     };
 
     ctx.actions.register('attack', ({ entity }) => {
@@ -114,8 +58,7 @@ export const combatModule: GameModule = {
         return 'tooSoon';
       }
       lastHit.set(entity, tick);
-      sendNear(
-        ctx,
+      ctx.net.sendNear(
         position,
         { t: 'swing', entity, facing, ...(weapon.item !== undefined && { item: weapon.item }) },
         entity,
@@ -142,13 +85,8 @@ export const combatModule: GameModule = {
           }
           rememberFight(entity, target, tick);
         }
-        if (damage(ctx, target, weapon.damage, { cause: 'hit', by: entity }) === 0) {
-          continue;
-        }
-        landed = true;
-        if (!ctx.entities.has(target, 'dead')) {
-          ctx.entities.set(target, 'invulnerableUntilTick', tick + invulnerabilityTicks);
-          pushBack(target, at, facing);
+        if (hitEntity(ctx, target, weapon.damage, { cause: 'hit', by: entity }, facing) > 0) {
+          landed = true;
         }
       }
       if (landed && weapon.item !== undefined) {
@@ -158,7 +96,7 @@ export const combatModule: GameModule = {
     });
 
     ctx.events.on('entity.damaged', ({ entity, amount, position }) => {
-      sendNear(ctx, position, { t: 'damaged', entity, amount });
+      ctx.net.sendNear(position, { t: 'damaged', entity, amount });
     });
 
     ctx.events.on('entity.died', ({ entity, type, source }) => {

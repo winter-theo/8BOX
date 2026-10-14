@@ -7,6 +7,7 @@ import {
   type Inventory,
   type ItemStack,
   type Skin,
+  type TilePoint,
 } from '@8box/shared';
 import type { EventBus } from './events';
 import { type ChunkRef, type Position, SpatialIndex } from './spatial';
@@ -49,6 +50,30 @@ export interface Components {
   dead: DamageCause;
   /** Tick until which damage is ignored (after respawning). */
   invulnerableUntilTick: number;
+  /** A monster (step 23): which creature it is (`content.creatures`). Monsters are never saved. */
+  monster: { creature: string };
+  /** What a monster is doing (ai module, which changes it in place). */
+  ai: AiState;
+}
+
+/** What a monster is doing: wandering, or chasing a player. */
+export interface AiState {
+  mode: 'wander' | 'chase';
+  /** Wandering: the step it walks, in tiles per tile walked (0, 0 while it rests). */
+  wanderDx: number;
+  wanderDy: number;
+  /** Wandering: tick when its walk or its rest ends. */
+  wanderUntilTick: number;
+  /** Wandering: tick when it last looked around for a player. */
+  lookTick: number;
+  /** Chasing: the player it chases. */
+  target?: EntityId;
+  /** Chasing: the tiles to walk through toward its target (a wall in the way is hit, then crossed). */
+  path: TilePoint[];
+  /** Chasing: tick of the last path search. */
+  pathTick: number;
+  /** Tick of its last hit (a character or a wall in its way). */
+  lastHitTick?: number;
 }
 
 /** A tile of the world: the bed where a player character comes back (`spawnPoint`). */

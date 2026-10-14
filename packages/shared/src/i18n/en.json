@@ -286,6 +286,7 @@
       "title": "You died",
       "starvation": "Starved to death.",
       "hit": "Killed in a fight.",
+      "monster": "Killed by a monster.",
       "respawn": "Respawn"
     },
     "crafting": {
@@ -354,7 +355,11 @@
       "wooden_wall": { "name": "Wooden wall" },
       "wooden_floor": { "name": "Wooden floor" },
       "wooden_door": { "name": "Wooden door" },
-      "bed": { "name": "Bed" }
+      "bed": { "name": "Bed" },
+      "slime_gel": { "name": "Slime gel" },
+      "fang": { "name": "Fang" },
+      "slime": { "name": "Slime" },
+      "prowler": { "name": "Prowler" }
     }
   }
 }

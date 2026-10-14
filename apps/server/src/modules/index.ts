@@ -1,4 +1,5 @@
 import type { GameModule } from '../core/module';
+import { aiModule } from './ai';
 import { buildingModule } from './building';
 import { chatModule } from './chat';
 import { chunksModule } from './chunks';
@@ -13,6 +14,7 @@ import { persistenceModule } from './persistence';
 import { playersModule } from './players';
 import { skinsModule } from './skins';
 import { snapshotsModule } from './snapshots';
+import { spawningModule } from './spawning';
 import { survivalModule } from './survival';
 import { timeModule } from './time';
 
@@ -33,5 +35,7 @@ export const MODULES: readonly GameModule[] = [
   buildingModule,
   survivalModule,
   combatModule,
+  spawningModule,
+  aiModule,
   debugModule,
 ];

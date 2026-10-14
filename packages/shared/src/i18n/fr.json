@@ -286,6 +286,7 @@
       "title": "Vous êtes mort",
       "starvation": "Mort de faim.",
       "hit": "Tué au combat.",
+      "monster": "Tué par un monstre.",
       "respawn": "Réapparaître"
     },
     "crafting": {
@@ -354,7 +355,11 @@
       "wooden_wall": { "name": "Mur en bois" },
       "wooden_floor": { "name": "Sol en bois" },
       "wooden_door": { "name": "Porte en bois" },
-      "bed": { "name": "Lit" }
+      "bed": { "name": "Lit" },
+      "slime_gel": { "name": "Gelée" },
+      "fang": { "name": "Croc" },
+      "slime": { "name": "Gluant" },
+      "prowler": { "name": "Rôdeur" }
     }
   }
 }

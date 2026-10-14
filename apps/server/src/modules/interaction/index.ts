@@ -6,9 +6,7 @@ import {
   type ActionTarget,
   type Actor,
   actionApplies,
-  LAYER,
   type LayerId,
-  type SafeZone,
   subjectInReach,
   type TileSlot,
   tileSlotSchema,
@@ -16,6 +14,7 @@ import {
 } from '@8box/shared';
 import type { EntityId, Position } from '../../core/entities';
 import type { GameModule, ServerContext } from '../../core/module';
+import { safeZoneOf } from '../../core/safeZone';
 import type { Session } from '../../net/session';
 
 /** An action that takes time, waiting for its end. */
@@ -117,17 +116,6 @@ function check(
     safeZone: safeZoneOf(ctx),
   });
   return result.ok ? { ok: true, subject } : result;
-}
-
-/** The safe zone around the spawn of the world. */
-function safeZoneOf(ctx: ServerContext): SafeZone {
-  const { spawn } = ctx.world;
-  return {
-    layer: LAYER.surface,
-    x: spawn.x,
-    y: spawn.y,
-    radiusTiles: ctx.config.world.safeZoneRadiusTiles,
-  };
 }
 
 /** What "examine" tells: the name of a tile or of the items of a pile (and how many), or a player. */

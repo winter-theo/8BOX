@@ -16,6 +16,8 @@ export interface RemoteView {
   skin: Skin | undefined;
   /** Items on the ground: the item id. */
   item: string | undefined;
+  /** Monsters: the creature id. */
+  creature: string | undefined;
   /** Feet position, in tiles. */
   x: number;
   y: number;
@@ -38,6 +40,7 @@ interface Remote {
   name: string | undefined;
   skin: Skin | undefined;
   item: string | undefined;
+  creature: string | undefined;
   samples: Sample[];
 }
 
@@ -91,6 +94,7 @@ export class RemoteEntities {
           name: state.name,
           skin: state.skin,
           item: state.item,
+          creature: state.creature,
           samples: [],
         };
         this.entities.set(state.id, remote);
@@ -124,6 +128,7 @@ export class RemoteEntities {
           name: remote.name,
           skin: remote.skin,
           item: remote.item,
+          creature: remote.creature,
           x: sample.x,
           y: sample.y,
           facing: sample.facing,

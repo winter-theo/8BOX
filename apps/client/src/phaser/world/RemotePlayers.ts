@@ -7,7 +7,7 @@ import type { NameLabels } from './NameLabels';
 /**
  * Draws the other players where the interpolation puts them, in their skin, walking or standing, turned
  * to their side, with their name above their head.
- * Other kinds of entities get drawn by the steps that bring them.
+ * Monsters are drawn by `Monsters`, items on the ground by `GroundItems`.
  */
 export class RemotePlayers {
   /** Shown players and the side each one looks to. */

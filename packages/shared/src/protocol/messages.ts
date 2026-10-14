@@ -391,6 +391,8 @@ export interface EntityState {
    * they never move, so they are not sent again until `gone`.
    */
   item?: string;
+  /** Creature id (monsters), only in the first snapshot where the entity appears for this client. */
+  creature?: string;
 }
 
 /** Sent every tick: the player of this session and the entities in its chunks. */
@@ -537,8 +539,8 @@ export interface ItemBrokenMessage {
   item: string;
 }
 
-/** What can kill a character (`vitals.dead`): hunger, or the hits of another character. */
-export type DamageCause = 'starvation' | 'hit';
+/** What can kill a character (`vitals.dead`): hunger, the hits of another character, or a monster. */
+export type DamageCause = 'starvation' | 'hit' | 'monster';
 
 /** Health and hunger of this player, sent when they change; `dead` until they respawn. */
 export interface VitalsMessage {

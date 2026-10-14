@@ -36,6 +36,10 @@ function entityState(ctx: ServerContext, id: EntityId, known: Known): EntityStat
   if (item !== undefined) {
     state.item = item;
   }
+  const creature = ctx.entities.get(id, 'monster')?.creature;
+  if (!known.has(id) && creature !== undefined) {
+    state.creature = creature;
+  }
   return state;
 }
 
@@ -43,7 +47,8 @@ function entityState(ctx: ServerContext, id: EntityId, known: Known): EntityStat
  * Every tick, each client gets a `snapshot`: its own player (position, facing, last input applied) and
  * the entities in the chunks it receives, never the others. An entity's name comes the first time the
  * client sees it, its skin then and whenever it changes (its own skin too), and `gone` lists the
- * entities that left its view. Items on the ground come once, with their item id.
+ * entities that left its view. Items on the ground come once, with their item id; a monster comes with
+ * its creature id the first time.
  */
 export const snapshotsModule: GameModule = {
   id: 'snapshots',

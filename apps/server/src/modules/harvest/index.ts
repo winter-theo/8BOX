@@ -10,6 +10,7 @@ import {
   type LayerId,
   rollLoot,
   type TileDef,
+  type TileSlot,
   tileCode,
   tileTarget,
 } from '@8box/shared';
@@ -90,7 +91,8 @@ function regrowSavedTiles(
  * At 0 the tile goes away (`tile.broken`), and its loot goes to the player who broke it (`items.give`):
  * only that hit breaks it, so two players hitting the same tree get a single loot. "Pick" gives the
  * loot of a berry bush and turns it into a picked bush, which grows back (`regrow` of the tile). The
- * safe zone is checked by `canPerform` (interaction module).
+ * safe zone is checked by `canPerform` (interaction module). A monster that hits a wall or a door in
+ * its way (`tile.hit`) takes its HP the same way, and breaks it without loot.
  */
 export const harvestModule: GameModule = {
   id: 'harvest',
@@ -127,6 +129,42 @@ export const harvestModule: GameModule = {
       );
     };
 
+    /**
+     * Takes `amount` HP from tile `tile` in slot `slot` of (x, y): the clients are sent the HP left, and
+     * at 0 the tile is broken (`tile.broken`, by `by`). Returns whether it broke.
+     */
+    const wear = (
+      layer: LayerId,
+      x: number,
+      y: number,
+      slot: TileSlot,
+      tile: TileDef,
+      amount: number,
+      by: EntityId,
+    ): boolean => {
+      const key = keyOf(layer, x, y);
+      const previous = damaged.get(key);
+      const hp = (previous?.tile === tile.id ? previous.hp : tile.hp) - amount;
+      if (hp > 0) {
+        const damage: Damage = {
+          layer,
+          x,
+          y,
+          tile: tile.id,
+          hp,
+          maxHp: tile.hp,
+          lastHitTick: ctx.scheduler.currentTick,
+        };
+        damaged.set(key, damage);
+        sendDamage(ctx, damage);
+        return false;
+      }
+      damaged.delete(key);
+      ctx.world.setTile(layer, x, y, slot, null);
+      ctx.events.emit('tile.broken', { layer, x, y, slot, tile: tile.id, by });
+      return true;
+    };
+
     const hit: PerformAction = ({ entity, subject }) => {
       const position = ctx.entities.get(entity, 'position');
       const inventory = ctx.entities.get(entity, 'inventory');
@@ -142,28 +180,9 @@ export const harvestModule: GameModule = {
       if (held && heldDef?.tool) {
         ctx.events.emit('tool.used', { entity, item: held.item, slot: inventory.selected });
       }
-      const key = keyOf(layer, x, y);
-      const previous = damaged.get(key);
-      const hp =
-        (previous?.tile === tile.id ? previous.hp : tile.hp) - harvestDamage(tile, heldDef);
-      if (hp > 0) {
-        const damage: Damage = {
-          layer,
-          x,
-          y,
-          tile: tile.id,
-          hp,
-          maxHp: tile.hp,
-          lastHitTick: ctx.scheduler.currentTick,
-        };
-        damaged.set(key, damage);
-        sendDamage(ctx, damage);
-        return undefined;
+      if (wear(layer, x, y, slot, tile, harvestDamage(tile, heldDef), entity)) {
+        giveLoot(entity, tile.loot);
       }
-      damaged.delete(key);
-      ctx.world.setTile(layer, x, y, slot, null);
-      ctx.events.emit('tile.broken', { layer, x, y, slot, tile: tile.id, by: entity });
-      giveLoot(entity, tile.loot);
       return undefined;
     };
     for (const id of harvestActionSchema.options) {
@@ -180,6 +199,14 @@ export const harvestModule: GameModule = {
       ctx.world.setTile(position.layer as LayerId, subject.x, subject.y, target.slot, pick.becomes);
       giveLoot(entity, pick.loot);
       return undefined;
+    });
+
+    // A monster hits a wall or a door in its way: no loot when it breaks.
+    ctx.events.on('tile.hit', ({ layer, x, y, slot, amount, by }) => {
+      const tile = ctx.world.getTile(layer, x, y, slot);
+      if (tile && tile.hp > 0 && amount > 0) {
+        wear(layer, x, y, slot, tile, amount, by);
+      }
     });
 
     // A tile that changes is no longer the one being broken; a growing tile starts growing.

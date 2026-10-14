@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env.development --env-file-if-exists=.env src/main.ts | pino-pretty --translateTime SYS:HH:MM:ss --ignore pid,hostname",
+    "dev:fast-time": "tsx watch --env-file-if-exists=.env.development --env-file-if-exists=.env.fast-time --env-file-if-exists=.env src/main.ts | pino-pretty --translateTime SYS:HH:MM:ss --ignore pid,hostname",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
