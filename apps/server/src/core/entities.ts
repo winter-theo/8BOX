@@ -49,6 +49,8 @@ export interface Components {
   dead: DamageCause;
   /** Tick until which damage is ignored (after respawning). */
   invulnerableUntilTick: number;
+  /** A monster (step 23): which creature it is (`content.creatures`). Monsters are never saved. */
+  monster: { creature: string };
 }
 
 /** A tile of the world: the bed where a player character comes back (`spawnPoint`). */

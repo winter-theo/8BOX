@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "id": "base:slime",
+    "sprite": "creature.slime",
+    "hp": 6,
+    "speedTilesPerSecond": 2,
+    "hop": { "moveMs": 400, "restMs": 200 },
+    "damage": 2,
+    "attackCooldownMs": 1000,
+    "hostile": true,
+    "nightSpawnWeight": 2,
+    "loot": "base:slime"
+  },
+  {
+    "id": "base:prowler",
+    "sprite": "creature.prowler",
+    "hp": 10,
+    "speedTilesPerSecond": 4,
+    "damage": 3,
+    "attackCooldownMs": 800,
+    "hostile": true,
+    "nightSpawnWeight": 1,
+    "loot": "base:prowler"
+  }
+]

@@ -8,10 +8,10 @@ describe('base content', () => {
 
     expect(contentSizes(content)).toEqual({
       tiles: 16,
-      items: 17,
+      items: 19,
       recipes: 12,
-      loot: 9,
-      creatures: 0,
+      loot: 11,
+      creatures: 2,
     });
   });
 
@@ -81,5 +81,25 @@ describe('base content', () => {
     }
     expect(content.tiles.require('base:wooden_wall').hp).toBe(20);
     expect(content.tiles.require('base:wooden_floor').slot).toBe('floor');
+  });
+
+  it('has the night monsters, their gold and items, and water where they never appear', () => {
+    const content = loadContent(baseContent);
+
+    const slime = content.creatures.require('base:slime');
+    const prowler = content.creatures.require('base:prowler');
+    expect([slime.hp, slime.damage, slime.speedTilesPerSecond]).toEqual([6, 2, 2]);
+    expect(slime.hop).toBeDefined();
+    expect([prowler.hp, prowler.damage, prowler.speedTilesPerSecond]).toEqual([10, 3, 4]);
+    expect(content.loot.require('base:slime').drops).toEqual([
+      { item: 'base:gold', min: 1, max: 3, chance: 1 },
+      { item: 'base:slime_gel', min: 1, chance: 1 },
+    ]);
+    expect(content.loot.require('base:prowler').drops).toEqual([
+      { item: 'base:gold', min: 2, max: 5, chance: 1 },
+      { item: 'base:fang', min: 1, chance: 1 },
+    ]);
+    expect(content.tiles.require('base:shallow_water').water).toBe(true);
+    expect(content.tiles.require('base:deep_water').water).toBe(true);
   });
 });

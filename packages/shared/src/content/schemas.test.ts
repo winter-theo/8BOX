@@ -70,6 +70,11 @@ describe('tileDefSchema', () => {
     expect(tileDefSchema.safeParse({ ...tile, speedFactor: 0 }).success).toBe(false);
     expect(tileDefSchema.safeParse({ ...tile, speedFactor: 1.5 }).success).toBe(false);
   });
+
+  it('accepts the water flag', () => {
+    expect(tileDefSchema.parse({ ...tile, water: true }).water).toBe(true);
+    expect(tileDefSchema.safeParse({ ...tile, water: 1 }).success).toBe(false);
+  });
 });
 
 describe('itemDefSchema', () => {
@@ -132,7 +137,7 @@ describe('recipeDefSchema', () => {
   });
 });
 
-describe('lootTableSchema and creatureDefSchema (drafts)', () => {
+describe('lootTableSchema and creatureDefSchema', () => {
   it('defaults the count and chance of a drop', () => {
     const table = lootTableSchema.parse({ id: 'base:oak_tree', drops: [{ item: 'base:oak_log' }] });
     expect(table.drops).toEqual([{ item: 'base:oak_log', min: 1, chance: 1 }]);
@@ -147,15 +152,39 @@ describe('lootTableSchema and creatureDefSchema (drafts)', () => {
     expect(lootTableSchema.safeParse(sure).success).toBe(false);
   });
 
-  it('accepts a creature', () => {
+  it('accepts a creature, with or without hops, night spawning and loot', () => {
     const creature = {
       id: 'base:slime',
-      sprite: 'mob.slime',
+      sprite: 'creature.slime',
       hp: 6,
       speedTilesPerSecond: 2,
       damage: 2,
+      attackCooldownMs: 1000,
       hostile: true,
     };
     expect(creatureDefSchema.parse(creature)).toEqual(creature);
+    const full = {
+      ...creature,
+      hop: { moveMs: 400, restMs: 200 },
+      nightSpawnWeight: 2,
+      loot: 'base:slime',
+    };
+    expect(creatureDefSchema.parse(full)).toEqual(full);
+  });
+
+  it('rejects a creature without attack cooldown, or with a bad hop or spawn weight', () => {
+    const creature = {
+      id: 'base:slime',
+      sprite: 'creature.slime',
+      hp: 6,
+      speedTilesPerSecond: 2,
+      damage: 2,
+      attackCooldownMs: 1000,
+      hostile: true,
+    };
+    const { attackCooldownMs: _, ...noCooldown } = creature;
+    expect(creatureDefSchema.safeParse(noCooldown).success).toBe(false);
+    expect(creatureDefSchema.safeParse({ ...creature, hop: { moveMs: 400 } }).success).toBe(false);
+    expect(creatureDefSchema.safeParse({ ...creature, nightSpawnWeight: 0 }).success).toBe(false);
   });
 });

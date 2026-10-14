@@ -196,4 +196,30 @@ describe('snapshots module', () => {
     tick();
     expect(lastSnapshot(ana)?.gone).toEqual([pile]);
   });
+
+  it('sends a monster every tick, with its creature id the first time', async () => {
+    const { ctx, join, tick } = setup();
+    const ana = await join('Ana');
+    const monster = ctx.entities.create('monster', {
+      position: { layer: LAYER.surface, x: world.spawn.x + 2, y: world.spawn.y },
+      monster: { creature: 'base:slime' },
+    });
+
+    tick();
+    expect(lastSnapshot(ana)?.entities).toEqual([
+      {
+        id: monster,
+        kind: 'monster',
+        x: world.spawn.x + 2,
+        y: world.spawn.y,
+        facing: 'down',
+        anim: 'idle',
+        creature: 'base:slime',
+      },
+    ]);
+    tick();
+    expect(lastSnapshot(ana)?.entities).toEqual([
+      expect.not.objectContaining({ creature: expect.anything() }),
+    ]);
+  });
 });

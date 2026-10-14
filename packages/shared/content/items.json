@@ -32,5 +32,7 @@
   { "id": "base:wooden_wall", "sprite": "item.wooden_wall", "place": "base:wooden_wall" },
   { "id": "base:wooden_floor", "sprite": "item.wooden_floor", "place": "base:wooden_floor" },
   { "id": "base:wooden_door", "sprite": "item.wooden_door", "place": "base:wooden_door" },
-  { "id": "base:bed", "sprite": "item.bed", "place": "base:bed" }
+  { "id": "base:bed", "sprite": "item.bed", "place": "base:bed" },
+  { "id": "base:slime_gel", "sprite": "item.slime_gel" },
+  { "id": "base:fang", "sprite": "item.fang" }
 ]
