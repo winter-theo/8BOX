@@ -90,6 +90,14 @@ export function createMovementWorld(
   };
 }
 
+/**
+ * Movement view for a character that walks through walls (admin mode): only the tiles `isKnown` rejects
+ * (outside the map, not loaded) stop it, and every tile has the normal speed.
+ */
+export function ghostMovementWorld(isKnown: (x: number, y: number) => boolean): MovementWorld {
+  return { isSolid: (x, y) => !isKnown(x, y), speedFactor: () => 1 };
+}
+
 /** Margin that keeps a box flush against a tile edge from counting as inside the tile. */
 const EDGE_EPSILON = 1e-6;
 
@@ -168,6 +176,26 @@ export function stepMovement(
   const x = sweep(state.x, state.y, dx * distance, half, (a, b) => world.isSolid(a, b));
   const y = sweep(state.y, x, dy * distance, half, (a, b) => world.isSolid(b, a));
   return { x, y, facing };
+}
+
+/** Whether the square box of a character with its feet at (x, y) touches no solid tile (a teleport). */
+export function boxIsFree(
+  world: MovementWorld,
+  x: number,
+  y: number,
+  hitboxSizeTiles: number = PLAYER.hitboxSizeTiles,
+): boolean {
+  const half = hitboxSizeTiles / 2;
+  const [x0, x1] = tilesCovered(x - half, x + half);
+  const [y0, y1] = tilesCovered(y - half, y + half);
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      if (world.isSolid(tx, ty)) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 /**

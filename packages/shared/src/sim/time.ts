@@ -48,6 +48,25 @@ export function daylight(worldTimeMs: number, cycle: DayCycle = TIME): number {
     : Math.max(0, 1 - (time - cycle.daytimeMs) / cycle.twilightMs);
 }
 
+/**
+ * The first world time from `worldTimeMs` on when the HUD clock reads `minuteOfDay` (minutes since
+ * midnight): the clock only goes forward (`/time`).
+ */
+export function nextClockTime(
+  worldTimeMs: number,
+  minuteOfDay: number,
+  cycle: DayCycle = TIME,
+  dawnHour: number = TIME.dawnClockHour,
+): number {
+  const minutesPerDay = 24 * 60;
+  const sinceDawn =
+    (((minuteOfDay - dawnHour * 60) % minutesPerDay) + minutesPerDay) % minutesPerDay;
+  // Rounded up: the clock (rounded down) reads that minute, not the one before.
+  const target = Math.ceil((sinceDawn * cycle.dayLengthMs) / minutesPerDay);
+  const wait = (target - timeOfDay(worldTimeMs, cycle) + cycle.dayLengthMs) % cycle.dayLengthMs;
+  return worldTimeMs + wait;
+}
+
 /** Hours (0 to 23) and minutes (0 to 59) of the HUD clock: a 24-hour day, `dawnHour` at dawn. */
 export function clockTime(
   worldTimeMs: number,

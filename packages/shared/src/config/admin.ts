@@ -19,4 +19,14 @@ export const ADMIN = {
   timeDayHour: 8,
   /** Hour of the HUD clock `/time nuit` sets, on a 24-hour clock. */
   timeNightHour: 22,
+  /** Most items `/give` gives at once (a full purse of gold), in items. */
+  giveMaxCount: 1_000_000,
+  /** Most monsters `/spawnmob` makes appear at once, in monsters. */
+  spawnMobMaxCount: 20,
+  /** `/spawnmob`: monsters appear this far from the admin at least, in tiles. */
+  spawnMobMinDistanceTiles: 2,
+  /** `/spawnmob`: monsters appear this far from the admin at most, in tiles. */
+  spawnMobMaxDistanceTiles: 6,
+  /** `/spawnmob`: random tiles tried per monster before giving it up, in tries. */
+  spawnMobTriesPerMonster: 20,
 } as const;

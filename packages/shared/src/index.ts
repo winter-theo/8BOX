@@ -136,11 +136,13 @@ export {
   sourcesLight,
 } from './sim/light';
 export {
+  boxIsFree,
   createMovementWorld,
   DIRECTIONS,
   directionOf,
   type Facing,
   facingAfter,
+  ghostMovementWorld,
   MAX_DIRECTION,
   type MovementConfig,
   type MovementInput,
@@ -164,6 +166,7 @@ export {
   daylight,
   dayPhase,
   isDaytime,
+  nextClockTime,
   timeOfDay,
 } from './sim/time';
 export {

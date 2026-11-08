@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TIME } from '../config/time';
 import { MINUTE_MS } from '../config/units';
-import { clockTime, daylight, dayPhase, isDaytime, timeOfDay } from './time';
+import { clockTime, daylight, dayPhase, isDaytime, nextClockTime, timeOfDay } from './time';
 
 const { dayLengthMs, daytimeMs, twilightMs } = TIME;
 
@@ -53,5 +53,19 @@ describe('day/night cycle', () => {
     expect(clockTime(daytimeMs)).toEqual({ hours: 18, minutes: 0 });
     expect(clockTime(dayLengthMs * 0.75)).toEqual({ hours: 0, minutes: 0 });
     expect(clockTime(dayLengthMs - 1)).toEqual({ hours: 5, minutes: 59 });
+  });
+});
+
+describe('setting the clock', () => {
+  it('goes forward to the next time the HUD clock reads a minute', () => {
+    const start = 3 * dayLengthMs + 10 * MINUTE_MS; // 10:00 on day 3 (dawn at 6:00).
+    const at = (minute: number) => nextClockTime(start, minute);
+    expect(clockTime(start)).toEqual({ hours: 10, minutes: 0 });
+    expect(clockTime(at(22 * 60))).toEqual({ hours: 22, minutes: 0 });
+    expect(at(22 * 60)).toBe(start + 30 * MINUTE_MS); // 12 hours later: half a cycle.
+    expect(clockTime(at(8 * 60 + 7))).toEqual({ hours: 8, minutes: 7 });
+    expect(at(8 * 60)).toBeGreaterThan(start); // Tomorrow morning, never back.
+    expect(at(10 * 60)).toBe(start); // Already that time.
+    expect(clockTime(at(5 * 60 + 59))).toEqual({ hours: 5, minutes: 59 });
   });
 });

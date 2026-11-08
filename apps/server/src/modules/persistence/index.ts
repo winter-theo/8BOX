@@ -29,7 +29,7 @@ export function saveEverything(ctx: ServerContext): void {
 /**
  * Saves the world as it changes: the modified chunks and the world clock every 30 s, the characters
  * every 60 s (and when their player leaves, see the players module). Only queues: the database writes
- * happen outside ticks.
+ * happen outside ticks. `/save` saves everything at once; the admin is told once it is written.
  */
 export const persistenceModule: GameModule = {
   id: 'persistence',
@@ -41,5 +41,22 @@ export const persistenceModule: GameModule = {
       'save modified chunks and clock',
     );
     ctx.scheduler.every(characterSaveIntervalMs, () => saveCharacters(ctx), 'save characters');
+
+    ctx.commands.add({
+      id: 'save',
+      names: ['save'],
+      permission: 'admin',
+      forms: [[]],
+      run: ({ reply }) => {
+        saveEverything(ctx);
+        ctx.persistence.flush().then(
+          () => reply({ notice: 'done', command: 'save' }),
+          (error: unknown) => {
+            ctx.log.error({ err: error }, '/save failed');
+            reply({ notice: 'refused', command: 'save', reason: 'failed' });
+          },
+        );
+      },
+    });
   },
 };

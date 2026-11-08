@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { PLAYER } from '../config/player';
 import {
+  boxIsFree,
   DIRECTIONS,
   directionOf,
   facingAfter,
+  ghostMovementWorld,
   type MovementWorld,
   type MoverState,
   stepMovement,
@@ -152,5 +154,35 @@ describe('facing', () => {
     const wall = grid(Array.from({ length: 20 }, () => '...........#........'));
     const flush = { x: 11 - HALF, y: 10.5, facing: 'down' as const };
     expect(stepMovement(flush, dir(1, 0), DT, wall)).toEqual({ ...flush, facing: 'right' });
+  });
+});
+
+describe('admin mode and teleports', () => {
+  const walled = grid(['.....', '.###.', '.#~#.', '.###.', '.....']);
+
+  it('walks a ghost through walls, at the normal speed, but not out of the map', () => {
+    const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < 5 && y < 5;
+    const ghost = ghostMovementWorld(inside);
+    let state: MoverState = { x: 0.5, y: 2.5, facing: 'right' };
+    const steps = Math.ceil(1 / (DT * SPEED)); // Into the wall at (1, 2).
+    for (let i = 0; i < steps; i++) {
+      state = stepMovement(state, dir(1, 0), DT, ghost);
+    }
+    expect(state.x).toBeCloseTo(0.5 + steps * DT * SPEED);
+    expect(walled.isSolid(Math.floor(state.x), 2)).toBe(true);
+    for (let i = 0; i < 100; i++) {
+      state = stepMovement(state, dir(1, 0), DT, ghost);
+    }
+    expect(state.x).toBeCloseTo(5 - HALF);
+  });
+
+  it('tells whether a character fits at a point', () => {
+    expect(boxIsFree(walled, 0.5, 0.5)).toBe(true);
+    expect(boxIsFree(walled, 0.5, 1.5)).toBe(true);
+    expect(boxIsFree(walled, 2.5, 2.5)).toBe(true); // Shallow water, walled in: it fits.
+    expect(boxIsFree(walled, 1.5, 1.5)).toBe(false);
+    expect(boxIsFree(walled, 1 - HALF / 2, 1.5)).toBe(false); // Half of the box in the wall.
+    expect(boxIsFree(walled, 1 - HALF, 1.5)).toBe(true); // Flush against it.
+    expect(boxIsFree(walled, -1, 0.5)).toBe(false); // Outside the map.
   });
 });
