@@ -9,6 +9,9 @@ import {
   type ServerMessage,
 } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
+import { Accounts } from '../../accounts/Accounts';
+import { MemoryAccountStore } from '../../accounts/account';
+import { MemoryAdminStore } from '../../admin/store';
 import { executeCommand } from '../../core/commands';
 import { connectFakeClient, createTestContext, type FakeClient, settle } from '../../core/testing';
 import { chatModule } from '../chat';
@@ -25,8 +28,11 @@ const LOG = 'base:oak_log';
 
 function setup(devAuth = true) {
   let clock = 0;
+  const store = new MemoryAccountStore();
   const test = createTestContext({
     devAuth,
+    accounts: new Accounts(store, undefined, []),
+    adminStore: new MemoryAdminStore(store),
     modules: [
       playersModule,
       timeModule,
@@ -50,7 +56,7 @@ function setup(devAuth = true) {
     if (!account) {
       throw new Error(`${name} could not join`);
     }
-    client.session.account = { ...account, role };
+    client.session.account = await store.update(account.playerId, { role });
     const entity = client.session.player?.entity ?? -1;
     return {
       client,
@@ -329,5 +335,89 @@ describe('admin commands', () => {
 
     const prod = setup(false);
     expect(prod.ctx.commands.find('spawnmob', 'admin')).toBeUndefined();
+  });
+});
+
+describe('sanctions', () => {
+  it('/kick sends a player out, with the reason in the audit log', async () => {
+    const { ctx, join } = setup();
+    const ana = await join('Ana', 'admin');
+    const bob = await join('Bob');
+    notices(ana.client);
+
+    ana.type('/kick bo spam au spawn');
+    await settle();
+    ana.type('/kick Ana');
+    await settle();
+
+    expect(bob.client.received).toContainEqual({ t: 'rejected', reason: 'kicked' });
+    expect(bob.client.closed).toBeDefined();
+    expect(notices(ana.client)).toEqual([
+      { notice: 'done', command: 'kick', name: 'Bob' },
+      { notice: 'self' },
+    ]);
+    const audit = await ctx.admin.audit();
+    expect(audit.map(({ action, targetName, reason }) => ({ action, targetName, reason }))).toEqual(
+      [{ action: 'kick', targetName: 'Bob', reason: 'spam au spawn' }],
+    );
+  });
+
+  it('/ban and /unban work on players who are not in the game', async () => {
+    const { ctx, join } = setup();
+    const ana = await join('Ana', 'admin');
+    const bob = await join('Bob');
+    notices(ana.client);
+
+    ana.type('/ban bob triche');
+    await settle();
+    expect(bob.client.received).toContainEqual({ t: 'status', state: 'banned', reason: 'triche' });
+    expect(bob.client.closed).toBeDefined();
+    ana.type('/ban Bob');
+    await settle();
+    ana.type('/unban BOB');
+    await settle();
+    ana.type('/unban Bob');
+    await settle();
+    ana.type('/ban Zoe');
+    await settle();
+
+    expect(notices(ana.client)).toEqual([
+      { notice: 'done', command: 'ban', name: 'Bob' },
+      { notice: 'refused', command: 'ban', reason: 'wrongStatus', name: 'Bob' },
+      { notice: 'done', command: 'unban', name: 'Bob' },
+      { notice: 'refused', command: 'unban', reason: 'wrongStatus', name: 'Bob' },
+      { notice: 'unknownPlayer', name: 'Zoe' },
+    ]);
+    const audit = await ctx.admin.audit();
+    expect(audit.map(({ action, reason }) => ({ action, reason }))).toEqual([
+      { action: 'unban', reason: null },
+      { action: 'ban', reason: 'triche' },
+    ]);
+  });
+
+  it('/mute takes the chat away for a while, /unmute gives it back', async () => {
+    const { join } = setup();
+    const ana = await join('Ana', 'admin');
+    const bob = await join('Bob');
+    const cleo = await join('Cleo', 'admin');
+    notices(ana.client);
+
+    ana.type('/mute Bob 0');
+    ana.type('/mute Bob 15');
+    await settle();
+    ana.type('/mute Cleo 5');
+    await settle();
+    bob.client.send({ t: 'chat', text: 'coucou' });
+    expect(notices(bob.client)).toEqual([{ notice: 'muted', until: expect.any(Number) as number }]);
+    ana.type('/unmute bob');
+    await settle();
+
+    expect(notices(ana.client)).toEqual([
+      { notice: 'usage', command: 'mute' },
+      { notice: 'done', command: 'mute', name: 'Bob', values: { minutes: 15 } },
+      { notice: 'refused', command: 'mute', reason: 'targetIsAdmin', name: 'Cleo' },
+      { notice: 'done', command: 'unmute', name: 'Bob' },
+    ]);
+    expect(notices(cleo.client)).toEqual([]);
   });
 });

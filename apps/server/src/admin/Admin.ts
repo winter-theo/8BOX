@@ -70,9 +70,10 @@ export class Admin {
     this.now = options.now ?? Date.now;
   }
 
-  /** The id of the player of a name (whatever its case), for the commands of the chat. */
-  async playerIdOf(name: string): Promise<number | undefined> {
-    return (await this.options.store.findPlayerByName(name))?.playerId;
+  /** The player of a name (whatever its case), for the commands of the chat. */
+  async playerNamed(name: string): Promise<{ playerId: number; name: string } | undefined> {
+    const record = await this.options.store.findPlayerByName(name);
+    return record && { playerId: record.playerId, name: record.name ?? name };
   }
 
   /** Writes an admin command of the chat (`line`, as typed) to the audit log. */
