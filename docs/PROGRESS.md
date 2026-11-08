@@ -3,7 +3,13 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-_Aucune étape en cours._
+### Étape 25 : Test en ligne gratuit
+- [ ] Mode tout-en-un : `SERVE_CLIENT=1`, le serveur sert le client compilé (même adresse).
+- [ ] `Dockerfile` multi-étapes, `docker-compose.test.yml` (serveur + base), `pnpm test:online`.
+- [ ] Test de fumée : le serveur démarre, `/health` répond, un bot se connecte et bouge.
+- [ ] Écran « Serveur indisponible » avec nouvelle tentative automatique.
+- [ ] `docs/GUIDE.md` §Faire tester des amis pas à pas (cloudflared, `ALLOWED_ORIGINS`, lien).
+- [ ] Essai de bout en bout : conteneurs, redémarrage sans perte ; retours des premiers tests.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
