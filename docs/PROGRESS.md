@@ -3,13 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 25 : Test en ligne gratuit
-- [x] Mode tout-en-un : `SERVE_CLIENT=1`, le serveur sert le client compilé (même adresse).
-- [x] `Dockerfile` multi-étapes, `docker-compose.test.yml` (serveur + base), `pnpm test:online`.
-- [x] Test de fumée : le serveur démarre, `/health` répond, un bot se connecte et bouge.
-- [x] Écran « Serveur indisponible » avec nouvelle tentative automatique.
-- [ ] `docs/GUIDE.md` §Faire tester des amis pas à pas (cloudflared, `ALLOWED_ORIGINS`, lien).
-- [ ] Essai de bout en bout : conteneurs, redémarrage sans perte ; retours des premiers tests.
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -606,8 +600,48 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (24) Pour tester les commandes admin en mode dev sans Google, il faut passer un pseudo de dev en admin à la main
   (`update players set role = 'admin' where name = '…'`, puis se reconnecter). Un réglage `DEV_ADMIN_NAMES` serait
   plus simple : à décider.
+- (25) À faire par toi : le premier vrai essai (`pnpm test:online`, tunnel, un ami en 4G). Docker Hub n'est pas
+  accessible depuis la session où l'étape a été codée : l'image a été construite et testée sur une image de base
+  équivalente faite à la main, et la base `postgres:18` de la pile n'a pas pu être lancée. Noter ici les retours de
+  ce premier essai.
+- (25) Mode d'exécution en production : le serveur tourne avec tsx (`node --import tsx src/main.ts`), sans étape de
+  compilation ; `tsx` passe dans les dépendances du serveur. Node est le processus principal du conteneur : il reçoit
+  SIGTERM et sauvegarde avant de quitter (`stop_grace_period` de 30 s).
+- (25) Test en ligne : `NODE_ENV=production` (`DEV_AUTH` et `TIME_SCALE` ignorés, clés Clerk obligatoires), port 8080
+  du PC (127.0.0.1 seulement), monde séparé de celui de `pnpm dev` (projet `8box-online`, volume
+  `8box-online_db-data`), réglages dans `.env.online` (`.env.online.example`). Base sans port ouvert sur le PC.
+- (25) `SERVE_CLIENT=1` : les fichiers du client sont lus en mémoire au démarrage (le serveur refuse de démarrer sans
+  `index.html`). Les textes de 1 Ko et plus sont envoyés compressés (gzip) ; `/assets/` est en cache un an, le reste
+  en `no-cache` ; un chemin sans extension (`/`, `/admin`) reçoit `index.html`. Pas de nouvelle dépendance.
+- (25) Un client compilé sans `VITE_SERVER_URL` parle à l'adresse d'où il a été chargé. L'adresse du tunnel doit être
+  dans `ALLOWED_ORIGINS` : le WebSocket et Clerk (`authorizedParties`) la vérifient.
+- (25) Une variable d'environnement vide compte comme absente (`WORLD_SEED=` venant de Docker).
+- (25) L'écran « Serveur indisponible » remplace le bandeau « Hors ligne · reconnexion… » : il s'affiche dès la perte
+  de connexion, avec le compte à rebours de la prochaine tentative et un bouton « Réessayer maintenant ».
+- (25) Paquet client : 2,0 Mo, environ 550 Ko compressé. Le découpage du code est remis à plus tard (26 ou après).
+- (25) Chaque requête HTTP (fichiers du client compris) est journalisée au niveau `info` : bavard avec
+  `SERVE_CLIENT=1`. À revoir si le journal devient pénible.
 
 ## Historique
+
+### 2026-11-08 — Étape 25 : Test en ligne gratuit ✅
+- Serveur : `SERVE_CLIENT=1` sert le client compilé sur la même adresse (fichiers en mémoire, gzip, cache des
+  `assets/`) ; une variable d'environnement vide compte comme absente ; à l'arrêt, les connexions sont fermées avant
+  la dernière sauvegarde (les joueurs qui partaient étaient écrits après la fermeture de la base).
+- Docker : `Dockerfile` multi-étapes (dépendances, client compilé avec la clé Clerk, dépendances de production,
+  image finale sous l'utilisateur `node` avec bilan de santé) ; `docker-compose.test.yml` (serveur + PostgreSQL 18) ;
+  `pnpm test:online`, `test:online:stop`, `test:online:logs` ; `.env.online.example`.
+- Client : sans `VITE_SERVER_URL`, un client compilé parle à sa propre adresse ; écran « Serveur indisponible » avec
+  compte à rebours et « Réessayer maintenant » (`GameClient.retryNow`, `retryAt` dans le store), en français et en
+  anglais.
+- `docs/GUIDE.md` §Faire tester des amis : installation de `cloudflared`, tunnel, `ALLOWED_ORIGINS`, partage du lien,
+  approbation des amis, arrêt, dépannage.
+- Tests : test de fumée (tout le serveur sur un vrai port : `/health`, la page, un robot qui se connecte et marche),
+  service des fichiers du client, variables vides, nouvelle tentative du client. Essais à la main : image construite
+  et lancée en production (santé, page, arrêt propre, monde rechargé), arrêt puis redémarrage du conteneur avec un
+  joueur connecté (position retrouvée), écran « Serveur indisponible » puis reconnexion seule au retour du serveur.
+- Écarts : l'essai en 4G par le tunnel et les retours des amis restent à faire (« À valider ») ; correctif de l'ordre
+  d'arrêt, hors fiche mais lié au critère « redémarrer ne perd rien ».
 
 ### 2026-11-08 — Étape 24 : Commandes admin et mode admin ✅
 - Serveur : registre de commandes `ctx.commands` (arguments typés, formes multiples, complétion des pseudos,
