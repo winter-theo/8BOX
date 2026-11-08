@@ -1,0 +1,11 @@
+# Kept out of the image build (Dockerfile): dependencies and builds are made inside, secrets never enter.
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+.git
+.claude
+docs
+ref
+*.png

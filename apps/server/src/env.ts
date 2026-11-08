@@ -70,8 +70,10 @@ const envSchema = z
 
 export type Env = z.infer<typeof envSchema>;
 
+/** Reads the environment. An empty variable counts as unset (`WORLD_SEED=` in a file, or from Docker). */
 export function parseEnv(source: Record<string, string | undefined>): Env {
-  const result = envSchema.safeParse(source);
+  const set = Object.fromEntries(Object.entries(source).filter(([, value]) => value !== ''));
+  const result = envSchema.safeParse(set);
   if (!result.success) {
     throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
   }
