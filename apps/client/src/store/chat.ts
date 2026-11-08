@@ -1,10 +1,4 @@
-import {
-  CHAT,
-  type ChatChannel,
-  type ChatLineMessage,
-  type ChatNotice,
-  type ChatNoticeMessage,
-} from '@8box/shared';
+import { CHAT, type ChatChannel, type ChatLineMessage, type ChatNoticeMessage } from '@8box/shared';
 import { create } from 'zustand';
 
 /** A chat line received from the server (said nearby, or private). */
@@ -23,13 +17,9 @@ export interface ChatLineEntry {
 }
 
 /** What the server told the player about their own line (muted, unknown player…). */
-export interface ChatNoticeEntry {
+export interface ChatNoticeEntry extends Omit<ChatNoticeMessage, 't'> {
   id: number;
   kind: 'notice';
-  notice: ChatNotice;
-  name?: string;
-  /** `muted`: end of the mute, in ms since 1970. */
-  until?: number;
 }
 
 export type ChatEntry = ChatLineEntry | ChatNoticeEntry;

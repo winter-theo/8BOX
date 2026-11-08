@@ -1,7 +1,6 @@
 import Fastify, { type FastifyBaseLogger } from 'fastify';
 import type { TickStats } from './core/loop';
 import { type AdminRoutesOptions, adminRoutes } from './http/admin';
-import { type DevRoutesOptions, devRoutes } from './http/dev';
 import { healthRoutes } from './http/health';
 import type { NetServer } from './net/net';
 import { attachWebSocket } from './net/websocket';
@@ -16,8 +15,6 @@ export interface AppOptions {
   tickStats?: () => TickStats;
   /** The admin API (`/admin/*`); off when omitted. */
   admin?: Omit<AdminRoutesOptions, 'allowedOrigins'>;
-  /** Development routes (`POST /dev/tile`…); never given in production. */
-  dev?: DevRoutesOptions;
 }
 
 /** Builds the HTTP + WebSocket server without listening, so tests can use `inject`. */
@@ -26,9 +23,6 @@ export function buildApp(options: AppOptions = {}) {
   app.register(healthRoutes, { tickStats: options.tickStats });
   if (options.admin) {
     app.register(adminRoutes, { ...options.admin, allowedOrigins: options.allowedOrigins ?? [] });
-  }
-  if (options.dev) {
-    app.register(devRoutes, options.dev);
   }
   attachWebSocket(app, { allowedOrigins: options.allowedOrigins ?? [], net: options.net });
   return app;

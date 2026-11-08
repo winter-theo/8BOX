@@ -4,8 +4,8 @@ import type { DamageSource } from './events';
 import type { ServerContext } from './module';
 
 /**
- * Takes `amount` HP from an entity that has health: nothing while it is dead or invulnerable
- * (`invulnerableUntilTick`), and emits `entity.damaged`. At 0 HP it dies: it becomes `dead` (with the
+ * Takes `amount` HP from an entity that has health: nothing while it is dead, invulnerable
+ * (`invulnerableUntilTick`) or in admin mode, and emits `entity.damaged`. At 0 HP it dies: it becomes `dead` (with the
  * cause) and `entity.died` is emitted, where it stood. Used by starvation (survival module) and by hits
  * (combat module). Returns the HP taken.
  */
@@ -22,7 +22,8 @@ export function damage(
     type === undefined ||
     health <= 0 ||
     amount <= 0 ||
-    ctx.entities.has(entity, 'dead')
+    ctx.entities.has(entity, 'dead') ||
+    ctx.entities.has(entity, 'adminMode')
   ) {
     return 0;
   }

@@ -8,8 +8,20 @@ import type { ChatChannel } from './messages';
 export type PlayerStatus = 'pending' | 'approved' | 'denied' | 'banned';
 export type PlayerRole = 'player' | 'admin';
 
-/** What an admin can do to a player; each one is written to the audit log. */
-export const ADMIN_ACTIONS = ['approve', 'deny', 'ban', 'unban', 'kick', 'mute', 'unmute'] as const;
+/** What an admin can do to a player from the admin tab (`POST /admin/players/:id/<action>`). */
+export const PLAYER_ACTIONS = [
+  'approve',
+  'deny',
+  'ban',
+  'unban',
+  'kick',
+  'mute',
+  'unmute',
+] as const;
+export type PlayerAction = (typeof PLAYER_ACTIONS)[number];
+
+/** What the audit log records: an action on a player, or `command` (a chat command of an admin). */
+export const ADMIN_ACTIONS = [...PLAYER_ACTIONS, 'command'] as const;
 export type AdminAction = (typeof ADMIN_ACTIONS)[number];
 
 /** Body of `POST /admin/players/:id/ban`. */
@@ -50,9 +62,10 @@ export interface AdminAuditEntry {
   action: AdminAction;
   adminId: number;
   adminName: string | null;
-  targetId: number;
+  /** The player acted on; null for a command aimed at nobody (`/time`, `/save`…). */
+  targetId: number | null;
   targetName: string | null;
-  /** Ban reason. */
+  /** Ban or kick reason; for a `command`, the line typed. */
   reason: string | null;
   /** Length of a mute, in minutes. */
   minutes: number | null;

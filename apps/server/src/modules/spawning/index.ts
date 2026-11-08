@@ -1,5 +1,6 @@
 import {
   ambientLight,
+  type CreatureDef,
   createMovementWorld,
   createRng,
   inSafeZone,
@@ -7,6 +8,7 @@ import {
   isLit,
   LAYER,
   rollLoot,
+  type TilePoint,
 } from '@8box/shared';
 import type { EntityId } from '../../core/entities';
 import type { GameModule, ServerContext } from '../../core/module';
@@ -32,6 +34,17 @@ interface Life {
 }
 
 /** The surface as the spawning rules see it, at the current world time. */
+/** A monster of `creature`, standing at the center of a tile of the surface. */
+function createMonster(ctx: ServerContext, creature: CreatureDef, tile: TilePoint): EntityId {
+  return ctx.entities.create('monster', {
+    position: { layer: LAYER.surface, x: tile.x + 0.5, y: tile.y + 0.5 },
+    facing: 'down',
+    anim: 'idle',
+    health: creature.hp,
+    monster: { creature: creature.id },
+  });
+}
+
 function surfaceSpawnWorld(ctx: ServerContext): SpawnWorld {
   const layer = LAYER.surface;
   const tileAt: SpawnWorld['tileAt'] = (x, y, slot) => ctx.world.getTile(layer, x, y, slot);
@@ -151,7 +164,11 @@ export const spawningModule: GameModule = {
       const world = surfaceSpawnWorld(ctx);
       const surface = players.filter((p) => p.layer === LAYER.surface);
       for (const player of surface) {
-        if (ctx.entities.has(player.entity, 'dead')) {
+        // Monsters ignore a player in admin mode: none appears for them.
+        if (
+          ctx.entities.has(player.entity, 'dead') ||
+          ctx.entities.has(player.entity, 'adminMode')
+        ) {
           continue;
         }
         const own = [...lives.values()].filter((life) => life.owner === player.entity).length;
@@ -176,13 +193,7 @@ export const spawningModule: GameModule = {
           if (!creature) {
             break;
           }
-          const entity = ctx.entities.create('monster', {
-            position: { layer: LAYER.surface, x: tile.x + 0.5, y: tile.y + 0.5 },
-            facing: 'down',
-            anim: 'idle',
-            health: creature.hp,
-            monster: { creature: creature.id },
-          });
+          const entity = createMonster(ctx, creature, tile);
           const life = lives.get(entity);
           if (life) {
             life.owner = player.entity;
@@ -205,6 +216,63 @@ export const spawningModule: GameModule = {
       },
       'spawning: round',
     );
+
+    // `/spawnmob <creature> [count]` (dev mode only): monsters around the admin, day or night, on tiles
+    // that do not block and are not water. They live like the others (dawn, distance).
+    if (ctx.net.devAuth) {
+      const { admin } = ctx.config;
+      ctx.commands.add({
+        id: 'spawnmob',
+        names: ['spawnmob'],
+        permission: 'admin',
+        forms: [
+          [
+            { kind: 'creature' },
+            { kind: 'int', min: 1, max: admin.spawnMobMaxCount, optional: true },
+          ],
+        ],
+        run: ({ entity, args, reply }) => {
+          const creature = ctx.content.creatures.get(args.string(0));
+          const position = ctx.entities.get(entity, 'position');
+          if (!creature || !position) {
+            return;
+          }
+          const world = surfaceSpawnWorld(ctx);
+          const wanted = args.optionalInt(1) ?? 1;
+          let spawned = 0;
+          for (let i = 0; position.layer === LAYER.surface && i < wanted; i++) {
+            for (let tries = 0; tries < admin.spawnMobTriesPerMonster; tries++) {
+              const tile = ringTile(
+                rng,
+                position.x,
+                position.y,
+                admin.spawnMobMinDistanceTiles,
+                admin.spawnMobMaxDistanceTiles,
+              );
+              if (
+                world.movement.isSolid(tile.x, tile.y) ||
+                world.tileAt(tile.x, tile.y, 'ground')?.water
+              ) {
+                continue;
+              }
+              createMonster(ctx, creature, tile);
+              spawned++;
+              break;
+            }
+          }
+          reply(
+            spawned === 0
+              ? { notice: 'refused', command: 'spawnmob', reason: 'noRoom' }
+              : {
+                  notice: 'done',
+                  command: 'spawnmob',
+                  thing: creature.id,
+                  values: { count: spawned },
+                },
+          );
+        },
+      });
+    }
 
     // A dead monster has dropped its loot: it goes before the clients are sent the next snapshot.
     ctx.systems.add({

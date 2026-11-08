@@ -1,7 +1,7 @@
 import { CHAT } from '@8box/shared';
 import { describe, expect, it } from 'vitest';
-import { cleanChatText, parseChatLine } from './commands';
 import { createChatFilter } from './filter';
+import { cleanChatText } from './text';
 
 const filter = createChatFilter([...CHAT.filteredWords.fr, ...CHAT.filteredWords.en], '***');
 
@@ -42,34 +42,6 @@ describe('chat filter', () => {
 });
 
 describe('chat lines', () => {
-  it('reads commands, in French and in English', () => {
-    expect(parseChatLine('salut')).toEqual({ kind: 'say', text: 'salut' });
-    expect(parseChatLine('/msg Bob on se voit au lac ?')).toEqual({
-      kind: 'msg',
-      to: 'Bob',
-      text: 'on se voit au lac ?',
-    });
-    expect(parseChatLine('/R ok')).toEqual({ kind: 'reply', text: 'ok' });
-    expect(parseChatLine('/signaler Bob insultes')).toEqual({
-      kind: 'report',
-      name: 'Bob',
-      reason: 'insultes',
-    });
-    expect(parseChatLine('/report Bob spam')).toEqual({
-      kind: 'report',
-      name: 'Bob',
-      reason: 'spam',
-    });
-  });
-
-  it('tells how to use a command used wrongly', () => {
-    expect(parseChatLine('/msg Bob')).toEqual({ kind: 'usage', notice: 'msgUsage' });
-    expect(parseChatLine('/r')).toEqual({ kind: 'usage', notice: 'msgUsage' });
-    expect(parseChatLine('/signaler Bob')).toEqual({ kind: 'usage', notice: 'reportUsage' });
-    expect(parseChatLine('/dance')).toEqual({ kind: 'unknown' });
-    expect(parseChatLine('/')).toEqual({ kind: 'unknown' });
-  });
-
   it('cleans control characters and spaces', () => {
     expect(cleanChatText('  a\nb\t\tc ‮d  ')).toBe('a b c d');
     expect(cleanChatText(' \n ')).toBe('');

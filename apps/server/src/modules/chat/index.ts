@@ -1,9 +1,10 @@
 import type { ChatLineMessage, ChatNoticeMessage, ReportContextLine } from '@8box/shared';
+import { executeCommand, playingSessions } from '../../core/commands';
 import type { GameModule, ServerContext } from '../../core/module';
 import { TokenBucket } from '../../net/rateLimit';
 import type { Session } from '../../net/session';
-import { cleanChatText, parseChatLine } from './commands';
 import { createChatFilter } from './filter';
+import { cleanChatText } from './text';
 
 /** What the chat remembers of a player during the server run. */
 interface ChatPlayer {
@@ -18,7 +19,8 @@ interface ChatPlayer {
 /**
  * Proximity and private chat: lines are cleaned, limited in rate and length, filtered, then sent to
  * the players nearby (same layer, within `CHAT.proximityRadiusTiles`) or to one player at any distance.
- * Muted players cannot talk. `/signaler` records a report with the last lines the reporter saw.
+ * Muted players cannot talk. `/signaler` records a report with the last lines the reporter saw. A line
+ * starting with "/" is a command (`ctx.commands`); `/annonce` tells every player something.
  */
 class Chat {
   private readonly players = new Map<number, ChatPlayer>();
@@ -42,36 +44,29 @@ class Chat {
       this.notify(session, { notice: 'tooFast' });
       return;
     }
-    const line = to === undefined ? parseChatLine(text) : { kind: 'msg' as const, to, text };
-    switch (line.kind) {
-      case 'say':
-        if (this.canSay(session, line.text)) {
-          this.sayNearby(session, line.text);
-        }
-        return;
-      case 'msg':
-        if (this.canSay(session, line.text)) {
-          this.sayTo(session, line.to, line.text);
-        }
-        return;
-      case 'reply': {
-        const replyTo = this.playerOf(playerId).replyTo;
-        if (replyTo === undefined) {
-          this.notify(session, { notice: 'noReplyTarget' });
-        } else if (this.canSay(session, line.text)) {
-          this.sayTo(session, replyTo, line.text);
-        }
-        return;
-      }
-      case 'report':
-        this.report(session, playerId, line.name, line.reason);
-        return;
-      case 'usage':
-        this.notify(session, { notice: line.notice });
-        return;
-      case 'unknown':
-        this.notify(session, { notice: 'unknownCommand' });
-        return;
+    if (to !== undefined) {
+      this.privateLine(session, to, text);
+    } else if (text.startsWith('/')) {
+      executeCommand(this.ctx, session, text);
+    } else if (this.canSay(session, text)) {
+      this.sayNearby(session, text);
+    }
+  }
+
+  /** `/msg`, or a line of the Private tab: to one player in the game. */
+  privateLine(session: Session, to: string, text: string): void {
+    if (this.canSay(session, text)) {
+      this.sayTo(session, to, text);
+    }
+  }
+
+  /** `/r`: to the last player who sent this one a private line. */
+  reply(session: Session, playerId: number, text: string): void {
+    const replyTo = this.playerOf(playerId).replyTo;
+    if (replyTo === undefined) {
+      this.notify(session, { notice: 'noReplyTarget' });
+    } else {
+      this.privateLine(session, replyTo, text);
     }
   }
 
@@ -79,7 +74,7 @@ class Chat {
    * Records a report against a player (in the game or not), with the last lines the reporter saw.
    * Muted players can report too. Written outside the tick; the reporter is told once it is saved.
    */
-  private report(session: Session, reporterId: number, name: string, reason: string): void {
+  report(session: Session, reporterId: number, name: string, reason: string): void {
     if (name.toLowerCase() === session.name?.toLowerCase()) {
       this.notify(session, { notice: 'self' });
       return;
@@ -222,5 +217,54 @@ export const chatModule: GameModule = {
     ctx.net.onMessage('chat', (session, message) =>
       chat.receive(session, message.text, message.to),
     );
+
+    ctx.commands.add({
+      id: 'help',
+      names: ['aide', 'help'],
+      permission: 'player',
+      forms: [[]],
+      run: ({ account, reply }) =>
+        reply({ notice: 'help', list: ctx.commands.available(account.role).map(({ id }) => id) }),
+    });
+    ctx.commands.add({
+      id: 'msg',
+      names: ['msg'],
+      permission: 'player',
+      forms: [[{ kind: 'player' }, { kind: 'text' }]],
+      run: ({ session, args }) =>
+        chat.privateLine(session, args.player(0).name ?? '', args.string(1)),
+    });
+    ctx.commands.add({
+      id: 'reply',
+      names: ['r'],
+      permission: 'player',
+      forms: [[{ kind: 'text' }]],
+      run: ({ session, account, args }) => chat.reply(session, account.playerId, args.string(0)),
+    });
+    ctx.commands.add({
+      id: 'announce',
+      names: ['annonce', 'announce'],
+      permission: 'admin',
+      forms: [[{ kind: 'text' }]],
+      run: ({ name, args }) => {
+        const notice: ChatNoticeMessage = {
+          t: 'chatNotice',
+          notice: 'announcement',
+          name,
+          values: { text: args.string(0) },
+        };
+        for (const session of playingSessions(ctx)) {
+          ctx.net.send(session, notice);
+        }
+      },
+    });
+    ctx.commands.add({
+      id: 'report',
+      names: ['signaler', 'report'],
+      permission: 'player',
+      forms: [[{ kind: 'account' }, { kind: 'text' }]],
+      run: ({ session, account, args }) =>
+        chat.report(session, account.playerId, args.string(0), args.string(1)),
+    });
   },
 };

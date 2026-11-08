@@ -1,6 +1,8 @@
 import { type ActionDef, baseActions, CONFIG, type Content, type GameConfig } from '@8box/shared';
 import { Accounts } from '../accounts/Accounts';
 import { MemoryAccountStore } from '../accounts/account';
+import { Admin } from '../admin/Admin';
+import { type AdminStore, MemoryAdminStore } from '../admin/store';
 import { NetServer } from '../net/net';
 import { Persistence } from '../persistence/Persistence';
 import { MemoryStore } from '../persistence/store';
@@ -9,6 +11,7 @@ import { MemoryReportStore, type ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import { ServerActions } from './actions';
 import { WorldClock } from './clock';
+import { CommandRegistry } from './commands';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
 import { GameLoop, type TickStats } from './loop';
@@ -36,6 +39,8 @@ export interface ContextOptions {
   accounts?: Accounts;
   /** Reports of players (default: kept in memory, over the default accounts). */
   reports?: ReportStore;
+  /** Players and audit log of the admin (default: kept in memory, over the default accounts). */
+  adminStore?: AdminStore;
   /** Definitions of the actions (default: those of the base game; tests add their own). */
   actions?: readonly ActionDef[];
   /** World clock (default: a new world, at real speed). */
@@ -68,7 +73,7 @@ export function createContext({
   clock = new WorldClock(),
   ...stores
 }: ContextOptions): ServerContext {
-  // Kept in memory by default (tests): reports find the players of the default accounts.
+  // Kept in memory by default (tests): reports and the admin find the players of the default accounts.
   const memoryAccounts = new MemoryAccountStore();
   const accounts = stores.accounts ?? new Accounts(memoryAccounts, undefined, []);
   const reports = stores.reports ?? new MemoryReportStore(memoryAccounts);
@@ -78,6 +83,23 @@ export function createContext({
   const scheduler = new Scheduler({
     tickMs: tickMs(config),
     onError: (error, task) => log.error({ err: error, task }, 'scheduled task failed'),
+  });
+  const net = new NetServer({
+    config,
+    log,
+    events,
+    scheduler,
+    accounts,
+    devAuth,
+    ...(now && { now }),
+  });
+  const admin = new Admin({
+    store: stores.adminStore ?? new MemoryAdminStore(memoryAccounts),
+    reports,
+    sessions: net,
+    log: log.child({ scope: 'admin' }),
+    auditListSize: config.admin.auditListSize,
+    reportListSize: config.admin.reportListSize,
   });
   return {
     config,
@@ -89,18 +111,12 @@ export function createContext({
     systems: new SystemRegistry(),
     world,
     clock,
-    net: new NetServer({
-      config,
-      log,
-      events,
-      scheduler,
-      accounts,
-      devAuth,
-      ...(now && { now }),
-    }),
+    net,
     persistence,
     reports,
+    admin,
     actions: new ServerActions(actions),
+    commands: new CommandRegistry(),
   };
 }
 
@@ -120,6 +136,7 @@ export interface GameOptions {
   persistence?: Persistence;
   accounts?: Accounts;
   reports?: ReportStore;
+  adminStore?: AdminStore;
   clock?: WorldClock;
 }
 
@@ -141,6 +158,7 @@ export function createGame({
   persistence,
   accounts,
   reports,
+  adminStore,
   clock,
 }: GameOptions): Game {
   const ctx = createContext({
@@ -152,6 +170,7 @@ export function createGame({
     ...(persistence && { persistence }),
     ...(accounts && { accounts }),
     ...(reports && { reports }),
+    ...(adminStore && { adminStore }),
     ...(clock && { clock }),
   });
   const order = initModules(ctx, modules);

@@ -12,6 +12,7 @@ import {
 } from '@8box/shared';
 import { pino } from 'pino';
 import type { Accounts } from '../accounts/Accounts';
+import type { AdminStore } from '../admin/store';
 import type { Session, Transport } from '../net/session';
 import type { Persistence } from '../persistence/Persistence';
 import type { ReportStore } from '../reports/store';
@@ -43,6 +44,8 @@ export interface TestContextOptions {
   accounts?: Accounts;
   /** Reports. Default: in memory, over the default accounts. */
   reports?: ReportStore;
+  /** Players and audit log of the admin. Default: in memory, over the default accounts. */
+  adminStore?: AdminStore;
   /** Definitions of the actions. Default: those of the base game. */
   actions?: readonly ActionDef[];
   /** World clock. Default: a new world, at real speed. */
@@ -71,6 +74,7 @@ export function createTestContext(options: TestContextOptions = {}): TestContext
     ...(options.persistence && { persistence: options.persistence }),
     ...(options.accounts && { accounts: options.accounts }),
     ...(options.reports && { reports: options.reports }),
+    ...(options.adminStore && { adminStore: options.adminStore }),
     ...(options.actions && { actions: options.actions }),
     ...(options.clock && { clock: options.clock }),
   });

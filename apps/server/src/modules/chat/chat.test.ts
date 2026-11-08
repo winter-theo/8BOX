@@ -109,7 +109,7 @@ describe('chat module', () => {
       { t: 'chatNotice', notice: 'unknownPlayer', name: 'Ghost' },
       { t: 'chatNotice', notice: 'self' },
       { t: 'chatNotice', notice: 'unknownCommand' },
-      { t: 'chatNotice', notice: 'msgUsage' },
+      { t: 'chatNotice', notice: 'usage', command: 'msg' },
     ]);
     expect(lines(ana)).toEqual([]);
   });
@@ -236,7 +236,7 @@ describe('reports', () => {
 
     expect(notices(ana)).toEqual([
       { t: 'chatNotice', notice: 'self' },
-      { t: 'chatNotice', notice: 'reportUsage' },
+      { t: 'chatNotice', notice: 'usage', command: 'report' },
       { t: 'chatNotice', notice: 'unknownPlayer', name: 'Ghost' },
     ]);
     expect(await ctx.reports.list(10)).toEqual([]);

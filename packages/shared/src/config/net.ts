@@ -34,7 +34,6 @@ export const NET = {
     invMove: { max: 20, windowMs: SECOND_MS },
     invDrop: { max: 10, windowMs: SECOND_MS },
     /** Dev mode only. */
-    devGive: { max: 5, windowMs: SECOND_MS },
     /** Actions on the world (the server also keeps `INTERACTION.actionCooldownMs` between two). */
     action: { max: 10, windowMs: SECOND_MS },
     /** Crafting requests (each one may ask for many crafts). */

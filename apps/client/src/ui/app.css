@@ -166,6 +166,19 @@ body {
   image-rendering: pixelated;
 }
 
+.admin-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid #f29b4c;
+  border-radius: 8px;
+  background: rgb(80 30 0 / 80%);
+  color: #ffd2a8;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
 .top-button {
   display: inline-flex;
   align-items: center;
@@ -750,6 +763,8 @@ html.page-admin #root {
 .chat-entry--notice {
   color: #f2c94c;
   font-style: italic;
+  /* Notices of several lines (`/aide`) keep their line breaks. */
+  white-space: pre-line;
 }
 
 .chat-entry--hint {
@@ -1143,17 +1158,13 @@ html.page-admin #root {
   height: 24px;
 }
 
-.purse-drop,
-.dev-give {
+.purse-drop {
   display: flex;
   gap: 4px;
 }
 
 .purse-drop input,
-.purse-drop button,
-.dev-give input,
-.dev-give select,
-.dev-give button {
+.purse-drop button {
   min-height: 32px;
   padding: 0 8px;
   border: 1px solid rgb(255 255 255 / 20%);
@@ -1170,15 +1181,6 @@ html.page-admin #root {
 .app--touch .purse-drop input,
 .app--touch .purse-drop button {
   min-height: 48px;
-}
-
-.dev-give {
-  margin-top: 4px;
-  pointer-events: auto;
-}
-
-.dev-give input[type="number"] {
-  width: 5em;
 }
 
 .drag-ghost {
@@ -1490,4 +1492,10 @@ html.page-admin #root {
 .crafting--touch .craft-step,
 .crafting--touch .craft-button {
   min-height: 48px;
+}
+
+.chat-entry--announcement {
+  color: #f29b4c;
+  font-style: normal;
+  font-weight: bold;
 }

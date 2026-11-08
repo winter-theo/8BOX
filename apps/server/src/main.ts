@@ -9,7 +9,6 @@ import {
 import { pino } from 'pino';
 import { Accounts } from './accounts/Accounts';
 import { clerkIdentity } from './accounts/clerkIdentity';
-import { Admin } from './admin/Admin';
 import { buildApp } from './app';
 import { WorldClock } from './core/clock';
 import { createGame } from './core/game';
@@ -122,6 +121,7 @@ const game = createGame({
   persistence,
   accounts,
   reports,
+  adminStore: pgAdminStore(connection.db),
   clock,
 });
 
@@ -131,19 +131,10 @@ const app = buildApp({
   net: game.ctx.net,
   tickStats: () => game.stats(),
   admin: {
-    admin: new Admin({
-      store: pgAdminStore(connection.db),
-      reports,
-      sessions: game.ctx.net,
-      log: log.child({ scope: 'admin' }),
-      auditListSize: CONFIG.admin.auditListSize,
-      reportListSize: CONFIG.admin.reportListSize,
-    }),
+    admin: game.ctx.admin,
     accounts,
     devAuth,
   },
-  // Development routes only: they change the world without any check.
-  ...(env.NODE_ENV !== 'production' && { dev: { world, content } }),
 });
 
 /** Stops the game, writes what is not saved yet (waiting a little at most), then quits. */

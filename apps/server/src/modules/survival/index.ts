@@ -134,6 +134,30 @@ export const survivalModule: GameModule = {
       }
     });
 
+    // `/heal [player]`: full health and hunger (the admin's own without a name). Not for the dead.
+    ctx.commands.add({
+      id: 'heal',
+      names: ['heal'],
+      permission: 'admin',
+      forms: [[{ kind: 'player', optional: true }]],
+      run: ({ session, args, reply }) => {
+        const target = args.optionalPlayer(0) ?? session;
+        const name = target.name ?? '';
+        const entity = target.player?.entity;
+        if (entity === undefined) {
+          return;
+        }
+        if (ctx.entities.has(entity, 'dead')) {
+          reply({ notice: 'refused', command: 'heal', reason: 'dead', name });
+          return;
+        }
+        ctx.entities.set(entity, 'health', survival.maxHealth);
+        ctx.entities.set(entity, 'hunger', survival.maxHunger);
+        timers.set(entity, { ...NO_TIME });
+        reply({ notice: 'done', command: 'heal', name });
+      },
+    });
+
     ctx.systems.add({
       name: 'survival: hunger and health',
       phase: 'simulate',

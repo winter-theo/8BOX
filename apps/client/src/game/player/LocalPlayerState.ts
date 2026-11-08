@@ -29,7 +29,7 @@ export class LocalPlayerState {
     readonly entity: number,
     start: Point,
     /** The tiles the client knows (unloaded chunks are solid). */
-    private readonly world: MovementWorld,
+    private world: MovementWorld,
     /** Duration of one input, in ms (one server tick). */
     stepMs: number,
     skin: Skin,
@@ -37,6 +37,11 @@ export class LocalPlayerState {
     this.skin = skin;
     this.prediction = new Prediction({ x: start.x, y: start.y, facing: 'down' }, stepMs / 1000);
     this.motion = new SmoothMotion(start, stepMs);
+  }
+
+  /** Moves through another view of the tiles from now on: through walls in admin mode. */
+  setWorld(world: MovementWorld): void {
+    this.world = world;
   }
 
   /** An input was just sent: it moves the player now. */

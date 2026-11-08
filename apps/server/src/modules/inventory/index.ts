@@ -124,16 +124,37 @@ export const inventoryModule: GameModule = {
       spawnGroundItem(ctx, dropPosition(ctx, position, facing), dropped.taken, droppedBy);
     });
 
-    // Dev mode only, until the `/give` command (step 24): what does not fit is not given.
-    ctx.net.onMessage('devGive', (session, { item, count }) => {
-      if (!ctx.net.devAuth) {
-        ctx.log.debug({ session: session.id }, 'devGive ignored outside dev mode');
-        return;
-      }
-      apply(session, 'devGive', (inventory) => {
+    // `/give`: what does not fit is not given (nothing falls on the ground).
+    ctx.commands.add({
+      id: 'give',
+      names: ['give'],
+      permission: 'admin',
+      forms: [
+        [
+          { kind: 'player' },
+          { kind: 'item' },
+          { kind: 'int', min: 1, max: ctx.config.admin.giveMaxCount, optional: true },
+        ],
+      ],
+      run: ({ args, reply }) => {
+        const target = args.player(0);
+        const item = args.string(1);
+        const count = args.optionalInt(2) ?? 1;
+        const name = target.name ?? '';
+        const entity = target.player?.entity;
+        const inventory = entity === undefined ? undefined : ctx.entities.get(entity, 'inventory');
+        if (entity === undefined || !inventory) {
+          return;
+        }
         const added = addItems(inventory, items, { item, count });
-        return added.left < count ? added.inventory : undefined;
-      });
+        const given = count - added.left;
+        if (given === 0) {
+          reply({ notice: 'refused', command: 'give', reason: 'inventoryFull', name });
+          return;
+        }
+        update(entity, added.inventory);
+        reply({ notice: 'done', command: 'give', name, thing: item, values: { count: given } });
+      },
     });
 
     // Loot: what does not fit falls at the player's feet (anyone may take it at once).

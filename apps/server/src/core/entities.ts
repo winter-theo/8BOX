@@ -54,6 +54,11 @@ export interface Components {
   monster: { creature: string };
   /** What a monster is doing (ai module, which changes it in place). */
   ai: AiState;
+  /**
+   * Admin mode (`/admin`, step 24): the other players do not see this player, who walks through walls,
+   * takes no damage and is ignored by monsters. Never saved.
+   */
+  adminMode: true;
 }
 
 /** What a monster is doing: wandering, or chasing a player. */

@@ -95,7 +95,7 @@
         "admin": "Admin",
         "action": "Action",
         "target": "Joueur",
-        "reason": "Raison",
+        "reason": "Détail",
         "reporter": "Signalé par"
       },
       "noName": "(pseudo pas encore choisi)",
@@ -125,7 +125,8 @@
         "unban": "débanni",
         "kick": "expulsé",
         "mute": "rendu muet",
-        "unmute": "parole rendue"
+        "unmute": "parole rendue",
+        "command": "commande"
       },
       "reportStatus": {
         "open": "à traiter",
@@ -162,7 +163,9 @@
         "reportClosed": "Ce signalement est déjà traité : la liste est actualisée.",
         "invalidBody": "La raison doit faire entre 1 et 200 caractères.",
         "network": "Le serveur ne répond pas."
-      }
+      },
+      "modeBadge": "Mode admin",
+      "modeBadgeTitle": "Invisible pour les autres, à travers les murs, invulnérable. /admin pour en sortir."
     },
     "chat": {
       "title": "Chat",
@@ -179,7 +182,7 @@
       "close": "Fermer le chat",
       "from": "de {{name}}",
       "to": "à {{name}}",
-      "emptyProximity": "Les joueurs à moins de {{radius}} cases t'entendent. Commandes : /msg, /r, /signaler.",
+      "emptyProximity": "Les joueurs à moins de {{radius}} cases t'entendent. Écris /aide pour voir les commandes.",
       "emptyPrivate": "Écris /msg pseudo message pour parler à un joueur, où qu'il soit.",
       "notice": {
         "muted": "Un administrateur t'a rendu muet jusqu'à {{time}}.",
@@ -188,12 +191,123 @@
         "unknownPlayer": "{{name}} est introuvable ou n'est pas en jeu.",
         "noReplyTarget": "Personne ne t'a encore écrit en privé.",
         "self": "Tu ne peux pas faire ça avec toi-même.",
-        "unknownCommand": "Commande inconnue. Commandes : /msg, /r, /signaler.",
-        "msgUsage": "Écris /msg pseudo message (ou /r message pour répondre).",
-        "reportUsage": "Écris /signaler pseudo raison.",
+        "unknownCommand": "Commande inconnue. Écris /aide pour voir les commandes.",
         "reported": "Signalement contre {{name}} envoyé. Merci !",
-        "reportFailed": "Le signalement n'a pas pu être envoyé : réessaie plus tard."
-      }
+        "reportFailed": "Le signalement n'a pas pu être envoyé : réessaie plus tard.",
+        "ambiguousPlayer": "Plusieurs joueurs commencent par « {{name}} » : {{list}}.",
+        "usage": "Utilisation : {{usage}}",
+        "help": "Commandes :",
+        "unknownItem": "Aucun objet « {{arg}} ».",
+        "unknownCreature": "Aucune créature « {{arg}} ».",
+        "who": "En ligne ({{count}}) : {{list}}.",
+        "announcement": "Annonce de {{name}} : {{text}}",
+        "adminModeOn": "Mode admin activé : invisible pour les autres, tu traverses les murs, rien ne te blesse et les monstres t'ignorent.",
+        "adminModeOff": "Mode admin désactivé."
+      },
+      "refused": {
+        "targetIsAdmin": "Impossible sur un autre admin.",
+        "inventoryFull": "L'inventaire de {{name}} est plein.",
+        "dead": "{{name}} est mort : attends son retour à la vie.",
+        "outside": "Ce point est hors du monde.",
+        "blocked": "Ce point est bloqué (mur, eau profonde…). En mode admin, tu peux y aller.",
+        "noRoom": "Pas de place libre autour de toi.",
+        "failed": "La commande n'a pas abouti : réessaie plus tard."
+      },
+      "commands": {
+        "help": {
+          "usage": "/aide",
+          "help": "les commandes que tu peux utiliser"
+        },
+        "msg": {
+          "usage": "/msg <joueur> <message>",
+          "help": "message privé à un joueur"
+        },
+        "reply": {
+          "usage": "/r <message>",
+          "help": "répondre au dernier message privé"
+        },
+        "report": {
+          "usage": "/signaler <joueur> <raison>",
+          "help": "signaler un joueur aux admins"
+        },
+        "tp": {
+          "usage": "/tp <joueur> ou /tp <x> <y> [couche]",
+          "help": "se téléporter",
+          "done": "Te voilà en ({{x}}, {{y}})."
+        },
+        "tphere": {
+          "usage": "/tphere <joueur>",
+          "help": "amener un joueur à toi",
+          "done": "{{name}} est venu à toi."
+        },
+        "give": {
+          "usage": "/give <joueur> <objet> [quantité]",
+          "help": "donner des objets (ex. : /give Ana oak_log 10)",
+          "done": "{{name}} reçoit {{count}} × {{thing}}."
+        },
+        "heal": {
+          "usage": "/heal [joueur]",
+          "help": "remettre PV et faim au maximum",
+          "done": "{{name}} est soigné."
+        },
+        "time": {
+          "usage": "/time <hh:mm | jour | nuit>",
+          "help": "régler l'heure",
+          "done": "Il est maintenant {{clock}}."
+        },
+        "who": {
+          "usage": "/who",
+          "help": "les joueurs en ligne"
+        },
+        "announce": {
+          "usage": "/annonce <texte>",
+          "help": "message à tous les joueurs"
+        },
+        "save": {
+          "usage": "/save",
+          "help": "sauvegarder tout de suite",
+          "done": "Monde sauvegardé."
+        },
+        "spawnmob": {
+          "usage": "/spawnmob <créature> [nombre]",
+          "help": "faire apparaître des monstres près de toi (dev)",
+          "done": "Apparition : {{count}} × {{thing}}."
+        },
+        "kick": {
+          "usage": "/kick <joueur> [raison]",
+          "help": "expulser du jeu",
+          "done": "{{name}} est expulsé."
+        },
+        "ban": {
+          "usage": "/ban <joueur> [raison]",
+          "help": "bannir",
+          "done": "{{name}} est banni.",
+          "wrongStatus": "{{name}} est déjà banni."
+        },
+        "unban": {
+          "usage": "/unban <joueur>",
+          "help": "débannir",
+          "done": "{{name}} n'est plus banni.",
+          "wrongStatus": "{{name}} n'est pas banni."
+        },
+        "mute": {
+          "usage": "/mute <joueur> <minutes>",
+          "help": "rendre muet",
+          "done": "{{name}} est muet pendant {{minutes}} min.",
+          "wrongStatus": "{{name}} n'a pas accès au jeu."
+        },
+        "unmute": {
+          "usage": "/unmute <joueur>",
+          "help": "rendre la parole",
+          "done": "{{name}} peut de nouveau parler.",
+          "wrongStatus": "{{name}} n'est pas muet."
+        },
+        "admin": {
+          "usage": "/admin",
+          "help": "mode admin : invisible, traverse les murs, invulnérable"
+        }
+      },
+      "helpLine": "{{usage}} : {{help}}"
     },
     "dev": {
       "chunks_one": "{{count}} chunk chargé",
@@ -203,9 +317,6 @@
       "camera": "caméra libre : {{x}}, {{y}}",
       "controls": "ZQSD ou flèches : marcher · + / - : zoom · F2 : caméra libre (flèches, Maj : lentement)",
       "inventoryControls": "1 à 0 ou molette : objet en main · I : inventaire · C : fabrication · A : lâcher (Maj : un seul)",
-      "give": "Se donner",
-      "giveItem": "Objet",
-      "giveCount": "Nombre",
       "actionControls": "E : action · clic droit : menu d'actions · Espace ou clic : utiliser l'objet en main"
     },
     "inventory": {

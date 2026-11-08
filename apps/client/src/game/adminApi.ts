@@ -1,5 +1,4 @@
 import type {
-  AdminAction,
   AdminAuditResponse,
   AdminError,
   AdminMe,
@@ -7,6 +6,7 @@ import type {
   AdminReportsResponse,
   BanBody,
   MuteBody,
+  PlayerAction,
   ReportAction,
 } from '@8box/shared';
 
@@ -46,7 +46,7 @@ export class AdminApi {
     return this.request('GET', '/admin/reports');
   }
 
-  act(playerId: number, action: Exclude<AdminAction, 'ban' | 'mute'>): Promise<unknown> {
+  act(playerId: number, action: Exclude<PlayerAction, 'ban' | 'mute'>): Promise<unknown> {
     return this.request('POST', `/admin/players/${playerId}/${action}`);
   }
 

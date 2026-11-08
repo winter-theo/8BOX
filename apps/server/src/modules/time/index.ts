@@ -1,3 +1,4 @@
+import { clockTime, nextClockTime } from '@8box/shared';
 import type { GameModule, ServerContext } from '../../core/module';
 import type { Session } from '../../net/session';
 
@@ -15,7 +16,7 @@ function sendClock(ctx: ServerContext, session: Session): void {
 /**
  * Day and night: advances the world clock every tick, whether players are there or not, and sends it
  * to each player when they arrive, then to everyone every `TIME.syncIntervalMs` (the clients run it
- * meanwhile). The persistence module saves it.
+ * meanwhile). The persistence module saves it. `/time` moves it forward to an hour of the day.
  */
 export const timeModule: GameModule = {
   id: 'time',
@@ -42,6 +43,26 @@ export const timeModule: GameModule = {
       },
       'send the world clock',
     );
+
+    ctx.commands.add({
+      id: 'time',
+      names: ['time'],
+      permission: 'admin',
+      forms: [[{ kind: 'clock' }]],
+      run: ({ args, reply }) => {
+        const { time } = ctx.config;
+        ctx.clock.timeMs = nextClockTime(ctx.clock.timeMs, args.int(0), time, time.dawnClockHour);
+        for (const session of ctx.net.allSessions()) {
+          if (session.state === 'playing') {
+            sendClock(ctx, session);
+            synced.add(session);
+          }
+        }
+        const { hours, minutes } = clockTime(ctx.clock.timeMs, time, time.dawnClockHour);
+        const clock = `${hours}:${String(minutes).padStart(2, '0')}`;
+        reply({ notice: 'done', command: 'time', values: { clock } });
+      },
+    });
 
     ctx.systems.add({
       name: 'time: send the clock to new players',

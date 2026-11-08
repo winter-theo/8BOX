@@ -125,13 +125,6 @@ export const invDropSchema = z.strictObject({
   count: itemCountSchema.optional(),
 });
 
-/** Dev mode only, until the `/give` command (step 24): gives items to oneself. */
-export const devGiveSchema = z.strictObject({
-  t: z.literal('devGive'),
-  item: contentIdSchema,
-  count: itemCountSchema,
-});
-
 /** Longest action id accepted, in characters. */
 const ACTION_ID_MAX_LENGTH = 64;
 
@@ -189,7 +182,6 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   invSelectSchema,
   invMoveSchema,
   invDropSchema,
-  devGiveSchema,
   actionSchema,
   craftSchema,
   respawnSchema,
@@ -206,7 +198,6 @@ export type ChatMessage = z.output<typeof chatSchema>;
 export type InvSelectMessage = z.output<typeof invSelectSchema>;
 export type InvMoveMessage = z.output<typeof invMoveSchema>;
 export type InvDropMessage = z.output<typeof invDropSchema>;
-export type DevGiveMessage = z.output<typeof devGiveSchema>;
 export type ActionRequestMessage = z.output<typeof actionSchema>;
 export type CraftRequestMessage = z.output<typeof craftSchema>;
 export type RespawnMessage = z.output<typeof respawnSchema>;
@@ -225,7 +216,6 @@ export const CLIENT_MESSAGE_TYPES = [
   'invSelect',
   'invMove',
   'invDrop',
-  'devGive',
   'action',
   'craft',
   'respawn',
@@ -443,22 +433,58 @@ export type ChatNotice =
   | 'tooFast'
   /** The message is longer than `CHAT.maxMessageLength`. */
   | 'tooLong'
-  /** No player named `name` is in the game (private line) or exists (report). */
+  /** No player named `name` is in the game (private line, command) or exists (report). */
   | 'unknownPlayer'
+  /** Several players in the game have a name starting with `name`: those of `list`. */
+  | 'ambiguousPlayer'
   /** `/r`, but nobody sent a private line to this player yet. */
   | 'noReplyTarget'
-  /** A private line or a report aimed at oneself. */
+  /** A private line, a report or a command aimed at oneself. */
   | 'self'
-  /** A line starting with "/" that is no command. */
+  /** A line starting with "/" that is no command this player may use. */
   | 'unknownCommand'
-  /** `/msg` without a name or a message. */
-  | 'msgUsage'
-  /** `/signaler` without a name or a reason. */
-  | 'reportUsage'
+  /** The command `command` used the wrong way: show how to use it. */
+  | 'usage'
+  /** `/aide`: the commands this player may use (`list`, their ids). */
+  | 'help'
+  /** No item has the id `values.arg`. */
+  | 'unknownItem'
+  /** No creature has the id `values.arg`. */
+  | 'unknownCreature'
   /** The report against `name` is recorded. */
   | 'reported'
   /** The report could not be recorded: try again later. */
-  | 'reportFailed';
+  | 'reportFailed'
+  /** An admin command `command` was done (`ui.chat.commands.<id>.done`, with `name`, `thing`, `values`). */
+  | 'done'
+  /** An admin command `command` could not be done, for `reason`. */
+  | 'refused'
+  /** `/who`: the players in the game (`list`). */
+  | 'who'
+  /** `/annonce`: the admin `name` tells every player `values.text`. */
+  | 'announcement'
+  /** `/admin`: the admin mode of this player is now on, or off. */
+  | 'adminModeOn'
+  | 'adminModeOff';
+
+/** Why an admin command could not be done (`refused`). */
+export type CommandRefusal =
+  /** The target is another admin. */
+  | 'targetIsAdmin'
+  /** The target's status does not allow it (ban someone banned, unmute someone not muted…). */
+  | 'wrongStatus'
+  /** `/give`: nothing fits in the target's inventory. */
+  | 'inventoryFull'
+  /** `/heal`, `/tphere`: the target is dead. */
+  | 'dead'
+  /** `/tp`: the point is outside the world. */
+  | 'outside'
+  /** `/tp`, `/tphere`: the point is in a wall or deep water (fine in admin mode). */
+  | 'blocked'
+  /** `/spawnmob`: no free tile around the admin. */
+  | 'noRoom'
+  /** Something went wrong on the server (a save, the database): try again later. */
+  | 'failed';
 
 export interface ChatNoticeMessage {
   t: 'chatNotice';
@@ -467,6 +493,16 @@ export interface ChatNoticeMessage {
   name?: string;
   /** `muted`: end of the mute, in ms since 1970. */
   until?: number;
+  /** The command the notice is about (its id: `ui.chat.commands.<id>`). */
+  command?: string;
+  /** Content id (an item, a creature) the notice names: shown with its translated name. */
+  thing?: string;
+  /** Names or command ids the notice lists. */
+  list?: string[];
+  /** Other values its text shows (a count, coordinates, a time, a word typed). */
+  values?: Record<string, string | number>;
+  /** `refused`: why. */
+  reason?: CommandRefusal;
 }
 
 /** The whole inventory of this session's player, sent when it joins and after each change. */
@@ -530,6 +566,15 @@ export interface CraftStateMessage {
   left?: number;
   /** `refused`: why. */
   reason?: CraftReason;
+}
+
+/**
+ * The admin mode of this player (`/admin`) turned on or off: the others do not see them, they walk
+ * through walls (the client predicts it with `ghostMovementWorld`) and take no damage.
+ */
+export interface AdminModeMessage {
+  t: 'adminMode';
+  on: boolean;
 }
 
 /** The tool or weapon in hand of this player broke (no use left). */
@@ -606,7 +651,8 @@ export type ServerMessage =
   | VitalsMessage
   | TimeMessage
   | SwingMessage
-  | DamagedMessage;
+  | DamagedMessage
+  | AdminModeMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

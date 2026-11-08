@@ -9,6 +9,7 @@ import {
   createMovementWorld,
   decodeServerMessage,
   encodeMessage,
+  ghostMovementWorld,
   heldItemAction,
   heldStack,
   heldWeapon,
@@ -406,9 +407,6 @@ export class GameClient {
   }
 
   /** Dev mode only: gives items to oneself. */
-  devGive(item: string, count: number): void {
-    this.send({ t: 'devGive', item, count });
-  }
 
   /** Sends a chat line: said nearby, a command (`/msg`…), or a private message to `to`. */
   say(text: string, to?: string): void {
@@ -495,6 +493,7 @@ export class GameClient {
           status: 'online',
           player: { entity, name, skin },
           account: null,
+          adminMode: false,
         });
         if (this.view) {
           this.send({ t: 'viewport', ...this.view });
@@ -643,6 +642,13 @@ export class GameClient {
         }
         return;
       }
+      case 'adminMode':
+        // Through walls in admin mode, like the server moves this player.
+        this.local?.setWorld(
+          message.on ? this.ghostWorld(this.layer) : this.movementWorld(this.layer),
+        );
+        useSessionStore.setState({ adminMode: message.on });
+        return;
       case 'itemBroken':
         showFeedback({ kind: 'broken', item: message.item });
         return;
@@ -753,6 +759,13 @@ export class GameClient {
       (x, y, slot) => this.chunks.getTile(layer, x, y, slot),
       (x, y) => this.chunks.get(layer, chunkCoord(x), chunkCoord(y)) !== undefined,
       (x, y) => this.chunks.getMeta(layer, x, y),
+    );
+  }
+
+  /** Movement view of admin mode: only the tiles not loaded stop the player. */
+  private ghostWorld(layer: number): MovementWorld {
+    return ghostMovementWorld(
+      (x, y) => this.chunks.get(layer, chunkCoord(x), chunkCoord(y)) !== undefined,
     );
   }
 

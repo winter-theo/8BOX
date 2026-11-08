@@ -100,6 +100,25 @@ describe('ai module', () => {
     expect(ctx.entities.get(beside, 'ai')?.mode).toBe('wander');
   });
 
+  it('ignores a player in admin mode, and stops chasing one who turns it on', () => {
+    const { ctx, tick, addPlayer, addMonster } = setup();
+    const admin = addPlayer(55.5, 20.5);
+    ctx.entities.set(admin, 'adminMode', true);
+    const monster = addMonster(50.5, 20.5);
+
+    tick(10);
+    expect(ctx.entities.get(monster, 'ai')?.mode).toBe('wander');
+
+    ctx.entities.delete(admin, 'adminMode');
+    tick(10);
+    expect(ctx.entities.get(monster, 'ai')).toMatchObject({ mode: 'chase', target: admin });
+    ctx.entities.set(admin, 'adminMode', true);
+    tick(200);
+
+    expect(ctx.entities.get(monster, 'ai')?.mode).toBe('wander');
+    expect(ctx.entities.get(admin, 'health')).toBe(20);
+  });
+
   it('gives up when its target gets too far', () => {
     const { ctx, tick, addPlayer, addMonster } = setup();
     const player = addPlayer(55.5, 20.5);

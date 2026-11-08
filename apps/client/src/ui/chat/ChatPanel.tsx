@@ -10,6 +10,7 @@ import {
   unreadCount,
   useChatStore,
 } from '../../store/chat';
+import { noticeText } from './noticeText';
 
 const TABS: readonly ChatChannel[] = ['proximity', 'private'];
 
@@ -31,12 +32,14 @@ function ChatEntryView({
   const { t } = useTranslation();
   if (entry.kind === 'notice') {
     return (
-      <li className="chat-entry chat-entry--notice">
-        {t(`ui.chat.notice.${entry.notice}`, {
-          name: entry.name,
-          time: entry.until === undefined ? '' : formatTime(entry.until),
-          max: CHAT.maxMessageLength,
-        })}
+      <li
+        className={
+          entry.notice === 'announcement'
+            ? 'chat-entry chat-entry--notice chat-entry--announcement'
+            : 'chat-entry chat-entry--notice'
+        }
+      >
+        {noticeText(t, entry, formatTime)}
       </li>
     );
   }
@@ -55,9 +58,9 @@ function ChatEntryView({
 }
 
 /**
- * The chat: lines said nearby and private lines in two tabs, and a line to write (commands `/msg`,
- * `/r`, `/signaler`). On a computer it stays at the bottom left and Enter starts writing; on a phone
- * the chat button opens it. In the Private tab, a plain line answers the last private partner.
+ * The chat: lines said nearby and private lines in two tabs, notices of the server, and a line to
+ * write (`/aide` lists the commands). On a computer it stays at the bottom left and Enter starts
+ * writing; on a phone the chat button opens it. In the Private tab, a plain line answers the last private partner.
  */
 export function ChatPanel({ touch }: { touch: boolean }) {
   const { t } = useTranslation();
@@ -120,7 +123,7 @@ export function ChatPanel({ touch }: { touch: boolean }) {
     if (text !== '') {
       if (tab === 'private' && !text.startsWith('/')) {
         if (partner === null) {
-          receiveChatNotice({ t: 'chatNotice', notice: 'msgUsage' }); // Nobody to answer yet.
+          receiveChatNotice({ t: 'chatNotice', notice: 'usage', command: 'msg' }); // Nobody to answer yet.
           return;
         }
         gameClient.say(text, partner);
