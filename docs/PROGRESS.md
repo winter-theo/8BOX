@@ -3,16 +3,7 @@
 Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
-### Étape 24 : Commandes admin et mode admin (branche `step/24-commandes-admin`)
-- [x] Registre de commandes (`ctx.commands`) : analyse des arguments, pseudos complétés (préfixe unique),
-  permissions, `/aide` ; `/msg`, `/r`, `/signaler` passent par le registre ; tests.
-- [x] `ctx.admin` dans le contexte du jeu ; journal d'audit des commandes (action `command`, cible facultative).
-- [x] Commandes `/tp`, `/tphere`, `/give`, `/heal`, `/time`, `/who`, `/annonce`, `/save`, `/spawnmob` (dev) ;
-  tests de `/tp` et `/give`.
-- [x] Sanctions en jeu : `/kick`, `/ban`, `/unban`, `/mute`, `/unmute`.
-- [x] Mode admin `/admin` : invisible, traverse les murs, invulnérable, ignoré des monstres ; badge.
-- [x] Client : avis traduits (aide, qui est en ligne, annonces), onglet admin (commandes du journal).
-- [x] Retrait du debug provisoire : `devGive` et son panneau, route `POST /dev/tile`.
+_Aucune étape en cours._
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._
@@ -579,7 +570,55 @@ _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés,
 - (23) Le panneau du navigateur intégré affichait 3 FPS (7448 objets) pendant le test : sans doute l'environnement
   (rendu logiciel), à vérifier sur une vraie machine.
 
+- (24) Commandes : un registre `ctx.commands` où chaque module inscrit les siennes (`/tp` dans le déplacement,
+  `/give` dans l'inventaire…). Noms français et anglais acceptés (`/aide` ou `/help`, `/annonce` ou `/announce`,
+  `/signaler` ou `/report`). Un pseudo en jeu se complète par son début s'il est le seul à commencer ainsi (sinon :
+  liste des pseudos possibles) ; `/ban`, `/unban`, `/mute`, `/unmute` visent aussi un joueur hors ligne (pseudo exact,
+  sans complétion). `/aide` liste les commandes des joueurs, puis celles des admins, par ordre alphabétique.
+- (24) Journal d'audit : chaque commande admin y est écrite (action « commande », ligne tapée dans « Détail », joueur
+  visé s'il y en a un) ; les sanctions écrivent leur propre entrée, comme depuis l'onglet admin. La colonne `target_id`
+  devient facultative (migration `0007_command_audit`).
+- (24) `/tp <x> <y> [couche]` vise le centre de la case ; refusé hors du monde ou dans un mur (sauf en mode admin).
+  Seule la surface existe : une autre couche est « hors du monde ». `/tphere` refuse un joueur mort, ou d'amener
+  quelqu'un dans un mur. Rien n'empêche de se téléporter dans la zone sûre ou loin d'elle.
+- (24) `/give` : une quantité de 1 par défaut, 1 000 000 au plus (`ADMIN.giveMaxCount`, une bourse d'or pleine). Ce qui
+  ne rentre pas n'est pas donné (rien ne tombe au sol) ; l'admin voit combien a été donné.
+- (24) `/heal` remet PV et faim au maximum, pas pour un mort (il doit réapparaître). `/time` avance toujours l'horloge
+  (jamais en arrière) jusqu'à l'heure demandée : `jour` = 8 h, `nuit` = 22 h (`ADMIN.timeDayHour`, `timeNightHour`).
+- (24) `/save` sauvegarde tout et répond une fois l'écriture finie. `/spawnmob <créature> [nombre]` (20 au plus) existe en
+  mode dev seulement : les monstres apparaissent à 2 à 6 cases de l'admin, de jour comme de nuit, hors murs et eau.
+- (24) `/kick` et `/ban` : la raison est facultative (elle va dans le journal ; celle du ban s'affiche au joueur banni,
+  coupée à 200 caractères). `/mute <joueur> <minutes>` : de 1 minute à 30 jours. Un admin ne peut sanctionner ni
+  lui-même ni un autre admin.
+- (24) `/annonce` : un avis en orange, en gras, chez tous les joueurs en jeu, avec le nom de l'admin.
+- (24) Mode admin (`/admin`, bascule) : jamais sauvegardé, il s'arrête quand l'admin quitte le jeu. Invisible pour tous
+  les autres (admins compris) ; aucun monstre n'apparaît pour lui ; il garde sa vitesse normale partout (l'eau peu
+  profonde ne le ralentit plus) ; seuls les bords du monde l'arrêtent. Il parle toujours dans le chat de proximité
+  (les autres lisent la ligne, sans bulle). Badge « Mode admin » en haut à droite, pour lui seul.
+- (24) Retirés : le message `devGive` et son formulaire du panneau dev, la route `POST /dev/tile`. La caméra libre et
+  la latence simulée restent réservées au mode dev. Protocole 19.
+- (24) Pour tester les commandes admin en mode dev sans Google, il faut passer un pseudo de dev en admin à la main
+  (`update players set role = 'admin' where name = '…'`, puis se reconnecter). Un réglage `DEV_ADMIN_NAMES` serait
+  plus simple : à décider.
+
 ## Historique
+
+### 2026-11-08 — Étape 24 : Commandes admin et mode admin ✅
+- Serveur : registre de commandes `ctx.commands` (arguments typés, formes multiples, complétion des pseudos,
+  permissions, `/aide`) ; `/msg`, `/r`, `/signaler` y passent ; `ctx.admin` dans le contexte du jeu, commandes admin au
+  journal d'audit ; `/tp`, `/tphere`, `/give`, `/heal`, `/time`, `/who`, `/annonce`, `/save`, `/spawnmob` (dev),
+  `/kick`, `/ban`, `/unban`, `/mute`, `/unmute` ; mode admin (`adminMode`) lu par le déplacement, les instantanés,
+  l'IA, l'apparition des monstres et les dégâts. Nouveau module `admin`.
+- Shared : avis du chat (`done`, `refused`, `who`, `announcement`…), message `adminMode`, `ghostMovementWorld`,
+  `boxIsFree`, `nextClockTime` ; textes de chaque commande (usage, aide, résultat) en français et en anglais.
+- Client : texte des avis (`noticeText`), annonces mises en avant, badge du mode admin, prédiction à travers les murs,
+  commandes dans le journal de l'onglet admin. Debug provisoire retiré (`devGive`, `POST /dev/tile`).
+- Tests : analyse des commandes et des arguments, permissions, effets et échecs de chaque commande (`/tp` et `/give`
+  en détail), sanctions, audit, mode admin (invisible, murs, dégâts, monstres), textes des avis.
+- Essai de bout en bout (serveur + client, deux onglets) : chaque commande répond, « Commande inconnue » pour Bob,
+  annonce reçue par Bob, Ana invisible pour Bob en mode admin, badge chez Ana seule, journal d'audit rempli.
+- Écarts : noms anglais en plus (`/help`, `/announce`, `/report`) ; la raison de `/kick` va au journal ; les bots
+  `pnpm tools:bots` savent attaquer (`--attack [pseudo]`), pour tester le combat.
 
 ### 2026-10-13 — Étape 23 : Monstres de nuit ✅
 - Contenu : Gluant et Rôdeur complets (sauts, délai d'attaque, poids d'apparition, butin), gelée et croc, eau marquée
