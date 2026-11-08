@@ -125,13 +125,6 @@ export const invDropSchema = z.strictObject({
   count: itemCountSchema.optional(),
 });
 
-/** Dev mode only, until the `/give` command (step 24): gives items to oneself. */
-export const devGiveSchema = z.strictObject({
-  t: z.literal('devGive'),
-  item: contentIdSchema,
-  count: itemCountSchema,
-});
-
 /** Longest action id accepted, in characters. */
 const ACTION_ID_MAX_LENGTH = 64;
 
@@ -189,7 +182,6 @@ export const clientMessageSchema = z.discriminatedUnion('t', [
   invSelectSchema,
   invMoveSchema,
   invDropSchema,
-  devGiveSchema,
   actionSchema,
   craftSchema,
   respawnSchema,
@@ -206,7 +198,6 @@ export type ChatMessage = z.output<typeof chatSchema>;
 export type InvSelectMessage = z.output<typeof invSelectSchema>;
 export type InvMoveMessage = z.output<typeof invMoveSchema>;
 export type InvDropMessage = z.output<typeof invDropSchema>;
-export type DevGiveMessage = z.output<typeof devGiveSchema>;
 export type ActionRequestMessage = z.output<typeof actionSchema>;
 export type CraftRequestMessage = z.output<typeof craftSchema>;
 export type RespawnMessage = z.output<typeof respawnSchema>;
@@ -225,7 +216,6 @@ export const CLIENT_MESSAGE_TYPES = [
   'invSelect',
   'invMove',
   'invDrop',
-  'devGive',
   'action',
   'craft',
   'respawn',

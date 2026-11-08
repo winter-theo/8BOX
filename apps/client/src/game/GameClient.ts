@@ -407,9 +407,6 @@ export class GameClient {
   }
 
   /** Dev mode only: gives items to oneself. */
-  devGive(item: string, count: number): void {
-    this.send({ t: 'devGive', item, count });
-  }
 
   /** Sends a chat line: said nearby, a command (`/msg`…), or a private message to `to`. */
   say(text: string, to?: string): void {

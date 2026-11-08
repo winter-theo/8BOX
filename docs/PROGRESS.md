@@ -12,7 +12,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] Sanctions en jeu : `/kick`, `/ban`, `/unban`, `/mute`, `/unmute`.
 - [x] Mode admin `/admin` : invisible, traverse les murs, invulnérable, ignoré des monstres ; badge.
 - [x] Client : avis traduits (aide, qui est en ligne, annonces), onglet admin (commandes du journal).
-- [ ] Retrait du debug provisoire : `devGive` et son panneau, route `POST /dev/tile`.
+- [x] Retrait du debug provisoire : `devGive` et son panneau, route `POST /dev/tile`.
 
 ## À valider par l'humain
 _Questions ou choix par défaut apparus pendant les étapes. Une fois tranchés, les reporter dans `docs/DECISIONS.md`._

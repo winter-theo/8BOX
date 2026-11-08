@@ -124,18 +124,6 @@ export const inventoryModule: GameModule = {
       spawnGroundItem(ctx, dropPosition(ctx, position, facing), dropped.taken, droppedBy);
     });
 
-    // Dev mode only, until the `/give` command (step 24): what does not fit is not given.
-    ctx.net.onMessage('devGive', (session, { item, count }) => {
-      if (!ctx.net.devAuth) {
-        ctx.log.debug({ session: session.id }, 'devGive ignored outside dev mode');
-        return;
-      }
-      apply(session, 'devGive', (inventory) => {
-        const added = addItems(inventory, items, { item, count });
-        return added.left < count ? added.inventory : undefined;
-      });
-    });
-
     // `/give`: what does not fit is not given (nothing falls on the ground).
     ctx.commands.add({
       id: 'give',

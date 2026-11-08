@@ -1,4 +1,5 @@
 import {
+  addItems,
   type ClientMessage,
   CONFIG,
   countItem,
@@ -40,7 +41,12 @@ function setup(options: { devAuth?: boolean; config?: GameConfig } = {}) {
       client,
       entity,
       inventory: () => ctx.entities.get(entity, 'inventory'),
-      give: (item: string, count: number) => client.send({ t: 'devGive', item, count }),
+      /** Items for the test, as another module hands them over (`inventory.set`). */
+      give: (item: string, count: number) => {
+        const inventory = ctx.entities.get(entity, 'inventory') ?? emptyInventory();
+        const added = addItems(inventory, ctx.content.items, { item, count });
+        ctx.events.emit('inventory.set', { entity, inventory: added.inventory });
+      },
     };
   }
 
@@ -90,28 +96,6 @@ describe('inventory module', () => {
 
     expect(ana.client.received.map((message) => message.t)).toEqual(['welcome', 'inventory']);
     expect(ana.client.last()).toMatchObject({ t: 'inventory', purse: 0, selected: 0 });
-  });
-
-  it('gives items in dev mode only', async () => {
-    const dev = setup();
-    const ana = await dev.join('Ana');
-    ana.give(LOG, 30);
-    ana.give(GOLD, 120);
-    expect(ana.inventory()?.slots[0]).toEqual({ item: LOG, count: 30 });
-    expect(ana.inventory()?.purse).toBe(120);
-
-    // Without dev mode nobody can join yet: spawn a session by hand.
-    const { ctx } = setup({ devAuth: false });
-    const bob = connectFakeClient(ctx);
-    const entity = ctx.entities.create('player', {
-      position: { layer: 0, x: 5, y: 5 },
-      player: { name: 'Bob', playerId: 1 },
-    });
-    bob.session.state = 'playing';
-    bob.session.player = { entity, name: 'Bob', skin: 'theo', position: { layer: 0, x: 5, y: 5 } };
-    ctx.events.emit('player.joined', { entity, name: 'Bob' });
-    bob.send({ t: 'devGive', item: LOG, count: 30 });
-    expect(ctx.entities.get(entity, 'inventory')?.slots[0]).toBeNull();
   });
 
   it('selects, moves, splits and swaps, and sends the inventory once per tick', async () => {
