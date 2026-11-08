@@ -1,15 +1,20 @@
 import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../store/session';
 
-/** Connection state, player name and ping, shown while playing or (re)connecting. */
+/** Connection state, player name and ping, shown while playing or connecting. */
 export function ConnectionBanner() {
   const { t } = useTranslation();
   const status = useSessionStore((state) => state.status);
   const pingMs = useSessionStore((state) => state.pingMs);
   const name = useSessionStore((state) => state.player?.name);
 
-  // The account and refusal screens say it all.
-  if (status === 'idle' || status === 'account' || status === 'rejected') {
+  // The account, refusal and "server unavailable" screens say it all.
+  if (
+    status === 'idle' ||
+    status === 'account' ||
+    status === 'rejected' ||
+    status === 'reconnecting'
+  ) {
     return null;
   }
   return (

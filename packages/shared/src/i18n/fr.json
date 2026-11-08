@@ -6,7 +6,6 @@
     "connection": {
       "connecting": "Connexion…",
       "online": "Connecté",
-      "reconnecting": "Hors ligne · reconnexion…",
       "ping": "{{ms}} ms"
     },
     "login": {
@@ -51,6 +50,13 @@
       "unavailable": "Le serveur ne peut pas accueillir de joueur pour le moment.",
       "reload": "Recharger",
       "back": "Retour"
+    },
+    "unavailable": {
+      "title": "Serveur indisponible",
+      "text": "Le serveur ne répond pas : il est peut-être éteint ou en train de redémarrer. Le jeu se reconnecte tout seul dès qu'il revient.",
+      "retryIn": "Nouvelle tentative dans {{seconds}} s",
+      "retrying": "Connexion…",
+      "retryNow": "Réessayer maintenant"
     },
     "admin": {
       "link": "Admin",

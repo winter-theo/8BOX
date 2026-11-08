@@ -242,6 +242,15 @@ export class GameClient {
     this.open();
   }
 
+  /** While reconnecting: tries again at once instead of waiting for the next attempt. */
+  retryNow(): void {
+    if (this.reconnectTimer === undefined) {
+      return; // No attempt waiting: one is under way, or the client is not reconnecting.
+    }
+    clearTimeout(this.reconnectTimer);
+    this.retry();
+  }
+
   /** The name a new player chose (answer to the `needsName` status). */
   setName(name: string): void {
     this.send({ t: 'setName', name });
@@ -417,6 +426,7 @@ export class GameClient {
   disconnect(): void {
     this.stopped = true;
     clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
     const socket = this.socket;
     this.socket = undefined;
     this.goOffline();
@@ -427,6 +437,7 @@ export class GameClient {
       status: 'idle',
       player: null,
       pingMs: null,
+      retryAt: null,
       rejectReason: null,
       account: null,
     });
@@ -693,8 +704,15 @@ export class GameClient {
   private retryLater(): void {
     const delay = Math.min(NET.reconnectDelayMs * 2 ** this.attempt, NET.reconnectMaxDelayMs);
     this.attempt++;
-    useSessionStore.setState({ status: 'reconnecting', player: null });
-    this.reconnectTimer = setTimeout(() => this.open(), delay);
+    useSessionStore.setState({ status: 'reconnecting', player: null, retryAt: Date.now() + delay });
+    this.reconnectTimer = setTimeout(() => this.retry(), delay);
+  }
+
+  /** The next reconnection attempt. */
+  private retry(): void {
+    this.reconnectTimer = undefined;
+    useSessionStore.setState({ retryAt: null });
+    this.open();
   }
 
   /** Connection lost or left: stop pinging and forget the world (the server sends it again). */

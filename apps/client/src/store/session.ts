@@ -35,6 +35,11 @@ interface SessionState {
   status: ConnectionStatus;
   /** Last measured round trip to the server, in ms. */
   pingMs: number | null;
+  /**
+   * While `reconnecting`: when the next attempt starts (`Date.now()` time, in ms); null while an attempt
+   * is under way, and when not reconnecting.
+   */
+  retryAt: number | null;
   player: LocalPlayer | null;
   rejectReason: RejectReason | null;
   account: AccountScreen | null;
@@ -54,6 +59,7 @@ interface SessionState {
 export const useSessionStore = create<SessionState>()(() => ({
   status: 'idle',
   pingMs: null,
+  retryAt: null,
   player: null,
   rejectReason: null,
   account: null,
