@@ -249,3 +249,52 @@ describe('running a command', () => {
     ]);
   });
 });
+
+describe('command audit', () => {
+  it('writes each admin command to the audit log, with the player it names', async () => {
+    const { ctx } = createTestContext({ devAuth: true });
+    ctx.commands.add(command({ id: 'poke', permission: 'admin', forms: [[{ kind: 'player' }]] }));
+    ctx.commands.add(command({ id: 'nap', permission: 'admin', forms: [[]] }));
+    ctx.commands.add(
+      command({ id: 'scold', permission: 'admin', auditsItself: true, forms: [[]] }),
+    );
+    ctx.commands.add(command({ id: 'wave', forms: [[]] }));
+    ctx.events.on('session.authenticated', ({ session }) => {
+      const position = { layer: 0, x: 5, y: 5 };
+      const entity = ctx.entities.create('player', { position });
+      session.player = { entity, name: session.name ?? '', skin: 'cat', position };
+    });
+    const join = async (name: string) => {
+      const client = connectFakeClient(ctx);
+      client.send({ t: 'hello', version: PROTOCOL_VERSION, devName: name });
+      await settle();
+      return client;
+    };
+    const ana = await join('Ana');
+    const bob = await join('Bob');
+    const anaAccount = ana.session.account;
+    if (!anaAccount) {
+      throw new Error('Ana has no account');
+    }
+    ana.session.account = { ...anaAccount, role: 'admin' };
+
+    for (const line of ['/poke bo', '/nap', '/scold', '/wave', '/poke zoe']) {
+      executeCommand(ctx, ana.session, line);
+    }
+    executeCommand(ctx, bob.session, '/nap'); // Unknown to a player: not recorded.
+    await settle();
+
+    const entries = await ctx.admin.audit();
+    expect(
+      entries.map(({ action, adminName, targetName, reason }) => ({
+        action,
+        adminName,
+        targetName,
+        reason,
+      })),
+    ).toEqual([
+      { action: 'command', adminName: 'Ana', targetName: null, reason: '/nap' },
+      { action: 'command', adminName: 'Ana', targetName: 'Bob', reason: '/poke bo' },
+    ]);
+  });
+});

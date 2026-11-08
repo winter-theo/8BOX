@@ -90,10 +90,9 @@ export const adminAudit = pgTable(
       .notNull()
       .references(() => players.id),
     action: text('action', { enum: ADMIN_ACTIONS }).notNull(),
-    targetId: integer('target_id')
-      .notNull()
-      .references(() => players.id),
-    /** Ban reason. */
+    /** Null for a command aimed at nobody (`/time`, `/save`…). */
+    targetId: integer('target_id').references(() => players.id),
+    /** Ban or kick reason; for a `command`, the line typed. */
     reason: text('reason'),
     /** Length of a mute, in minutes. */
     minutes: integer('minutes'),

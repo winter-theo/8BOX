@@ -1,6 +1,5 @@
 import {
   ADMIN,
-  type AdminAction,
   type AdminAuditEntry,
   type AdminPlayer,
   type AdminReport,
@@ -8,6 +7,7 @@ import {
   DAY_MS,
   HOUR_MS,
   MINUTE_MS,
+  type PlayerAction,
   type ReportContextLine,
 } from '@8box/shared';
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
@@ -28,7 +28,7 @@ function isMuted(player: AdminPlayer): boolean {
 }
 
 /** Actions offered for a player, by status (admins get none). */
-function actionsOf(player: AdminPlayer): AdminAction[] {
+function actionsOf(player: AdminPlayer): PlayerAction[] {
   if (player.role === 'admin') {
     return [];
   }
@@ -179,6 +179,18 @@ function BanForm({ onBan, onCancel }: { onBan: (reason: string) => void; onCance
   );
 }
 
+/** What an audit entry adds: a mute length, a reason, or the command typed. */
+function AuditDetail({ entry }: { entry: AdminAuditEntry }) {
+  const formatDuration = useDurationFormat();
+  if (entry.minutes !== null) {
+    return formatDuration(entry.minutes);
+  }
+  if (entry.action === 'command' && entry.reason !== null) {
+    return <code>{entry.reason}</code>;
+  }
+  return entry.reason ?? '—';
+}
+
 /**
  * The admin tab: pending requests, reports (with the chat lines the reporter saw), players and the
  * audit log, reloaded every 30 s and after each action. It shows what the server answers, nothing more.
@@ -195,7 +207,6 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
   const [banning, setBanning] = useState<number | null>(null);
   /** The player whose mute length is being chosen. */
   const [muting, setMuting] = useState<number | null>(null);
-  const formatDuration = useDurationFormat();
 
   const refresh = useCallback(async () => {
     try {
@@ -231,7 +242,7 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
     setBusy(false);
   };
 
-  const act = (player: AdminPlayer, action: AdminAction) => {
+  const act = (player: AdminPlayer, action: PlayerAction) => {
     if (action === 'ban') {
       setBanning(player.id);
       setMuting(null);
@@ -507,10 +518,10 @@ export function AdminPage({ authHeader }: { authHeader: AuthHeader }) {
                     {t(`ui.admin.audited.${entry.action}`)}
                   </td>
                   <td data-label={t('ui.admin.column.target')}>
-                    {entry.targetName ?? `#${entry.targetId}`}
+                    {entry.targetName ?? (entry.targetId === null ? '—' : `#${entry.targetId}`)}
                   </td>
                   <td data-label={t('ui.admin.column.reason')}>
-                    {entry.minutes === null ? (entry.reason ?? '—') : formatDuration(entry.minutes)}
+                    <AuditDetail entry={entry} />
                   </td>
                 </tr>
               ))}

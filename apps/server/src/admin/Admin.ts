@@ -29,7 +29,7 @@ export type AdminResult = { ok: true } | { ok: false; error: AdminError };
 /** The player an action targets, or why it cannot. */
 type TargetCheck = { ok: true; target: PlayerRecord } | { ok: false; error: AdminError };
 
-type StatusAction = Exclude<AdminAction, 'kick' | 'mute' | 'unmute'>;
+type StatusAction = Exclude<AdminAction, 'kick' | 'mute' | 'unmute' | 'command'>;
 
 /** Statuses each action applies to, and the status it gives. */
 const TRANSITIONS: Record<StatusAction, { from: readonly PlayerStatus[]; to: PlayerStatus }> = {
@@ -59,14 +59,32 @@ export interface AdminOptions {
 }
 
 /**
- * The admin tab: the whitelist (approve, deny), bans, kicks, mutes and the reports of players. Each
- * action on a player is written to the audit log and applied at once to the connected player.
+ * The admin tab and the admin commands of the chat: the whitelist (approve, deny), bans, kicks, mutes
+ * and the reports of players. Each action on a player, and each admin command, is written to the audit
+ * log; actions apply at once to the connected player.
  */
 export class Admin {
   private readonly now: () => number;
 
   constructor(private readonly options: AdminOptions) {
     this.now = options.now ?? Date.now;
+  }
+
+  /** The id of the player of a name (whatever its case), for the commands of the chat. */
+  async playerIdOf(name: string): Promise<number | undefined> {
+    return (await this.options.store.findPlayerByName(name))?.playerId;
+  }
+
+  /** Writes an admin command of the chat (`line`, as typed) to the audit log. */
+  async recordCommand(admin: Account, line: string, targetId: number | null): Promise<void> {
+    await this.options.store.record({
+      adminId: admin.playerId,
+      action: 'command',
+      targetId,
+      reason: line,
+      minutes: null,
+    });
+    this.options.log.info({ admin: admin.playerId, line, target: targetId }, 'admin command');
   }
 
   async players(): Promise<AdminPlayer[]> {
@@ -111,8 +129,8 @@ export class Admin {
     return this.changeStatus(admin, targetId, 'deny', null);
   }
 
-  /** `reason` is already trimmed and checked (`banBodySchema`). */
-  ban(admin: Account, targetId: number, reason: string): Promise<AdminResult> {
+  /** `reason` is already trimmed and checked (`banBodySchema`); the chat may give none. */
+  ban(admin: Account, targetId: number, reason: string | null): Promise<AdminResult> {
     return this.changeStatus(admin, targetId, 'ban', reason);
   }
 
@@ -143,8 +161,8 @@ export class Admin {
     return this.change(admin, targetId, { mutedUntil: null }, { action: 'unmute' });
   }
 
-  /** Disconnects a player, who can come back. */
-  async kick(admin: Account, targetId: number): Promise<AdminResult> {
+  /** Disconnects a player, who can come back; `reason` goes to the audit log. */
+  async kick(admin: Account, targetId: number, reason: string | null = null): Promise<AdminResult> {
     const check = await this.checkTarget(admin, targetId);
     if (!check.ok) {
       return check;
@@ -156,7 +174,7 @@ export class Admin {
       adminId: admin.playerId,
       action: 'kick',
       targetId,
-      reason: null,
+      reason,
       minutes: null,
     });
     this.options.log.info(

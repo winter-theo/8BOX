@@ -1,0 +1,1 @@
+ALTER TABLE "admin_audit" ALTER COLUMN "target_id" DROP NOT NULL;

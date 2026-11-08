@@ -1,5 +1,4 @@
 import {
-  ADMIN_ACTIONS,
   type AdminAuditResponse,
   type AdminError,
   type AdminMe,
@@ -7,6 +6,7 @@ import {
   type AdminReportsResponse,
   banBodySchema,
   muteBodySchema,
+  PLAYER_ACTIONS,
   REPORT_ACTIONS,
 } from '@8box/shared';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
@@ -26,7 +26,7 @@ export interface AdminRoutesOptions {
 
 const actionParamsSchema = z.strictObject({
   id: z.coerce.number().int().positive(),
-  action: z.enum(ADMIN_ACTIONS),
+  action: z.enum(PLAYER_ACTIONS),
 });
 
 const reportParamsSchema = z.strictObject({

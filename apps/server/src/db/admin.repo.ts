@@ -1,4 +1,4 @@
-import { count, desc, eq } from 'drizzle-orm';
+import { count, desc, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { AdminStore, PlayerRecord } from '../admin/store';
 import { type PlayerRow, toAccount } from './accounts.repo';
@@ -18,6 +18,13 @@ export function pgAdminStore(db: Database): AdminStore {
     },
     async findPlayer(playerId) {
       const [row] = await db.select().from(players).where(eq(players.id, playerId));
+      return row && toRecord(row);
+    },
+    async findPlayerByName(name) {
+      const [row] = await db
+        .select()
+        .from(players)
+        .where(sql`lower(${players.name}) = lower(${name})`);
       return row && toRecord(row);
     },
     async countPending() {
@@ -61,7 +68,7 @@ export function pgAdminStore(db: Database): AdminStore {
         })
         .from(adminAudit)
         .innerJoin(admin, eq(admin.id, adminAudit.adminId))
-        .innerJoin(target, eq(target.id, adminAudit.targetId))
+        .leftJoin(target, eq(target.id, adminAudit.targetId))
         .orderBy(desc(adminAudit.createdAt), desc(adminAudit.id))
         .limit(limit);
     },

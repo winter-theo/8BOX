@@ -14,8 +14,10 @@ export interface AuditRecord {
   action: AdminAction;
   adminId: number;
   adminName: string | null;
-  targetId: number;
+  /** Null for a command aimed at nobody. */
+  targetId: number | null;
   targetName: string | null;
+  /** Ban or kick reason; for a `command`, the line typed. */
   reason: string | null;
   /** Length of a mute, in minutes. */
   minutes: number | null;
@@ -34,6 +36,8 @@ export interface AdminStore {
   /** Every player, the most recent first. */
   listPlayers(): Promise<PlayerRecord[]>;
   findPlayer(playerId: number): Promise<PlayerRecord | undefined>;
+  /** The player of a name, whatever its case. */
+  findPlayerByName(name: string): Promise<PlayerRecord | undefined>;
   countPending(): Promise<number>;
   /** Changes an account and writes the action to the audit log, together. */
   changeAccount(
@@ -41,7 +45,7 @@ export interface AdminStore {
     change: AccountChange,
     audit: NewAuditRecord,
   ): Promise<PlayerRecord>;
-  /** Writes an action that changes nothing else (a kick). */
+  /** Writes an action that changes nothing else (a kick, a command). */
   record(audit: NewAuditRecord): Promise<void>;
   /** The most recent actions first. */
   listAudit(limit: number): Promise<AuditRecord[]>;
@@ -62,6 +66,11 @@ export class MemoryAdminStore implements AdminStore {
     return account && this.toRecord(account);
   }
 
+  async findPlayerByName(name: string) {
+    const account = await this.accounts.findByName(name);
+    return account && this.toRecord(account);
+  }
+
   async countPending() {
     return this.accounts.accounts.filter((account) => account.status === 'pending').length;
   }
@@ -73,17 +82,22 @@ export class MemoryAdminStore implements AdminStore {
   }
 
   async record(audit: NewAuditRecord) {
+    // Names are read at once, so that entries keep the order of the calls.
     this.audit.unshift({
       ...audit,
       id: this.audit.length + 1,
       at: new Date(),
-      adminName: (await this.findPlayer(audit.adminId))?.name ?? null,
-      targetName: (await this.findPlayer(audit.targetId))?.name ?? null,
+      adminName: this.nameOf(audit.adminId),
+      targetName: audit.targetId === null ? null : this.nameOf(audit.targetId),
     });
   }
 
   async listAudit(limit: number) {
     return this.audit.slice(0, limit);
+  }
+
+  private nameOf(playerId: number): string | null {
+    return this.accounts.accounts.find((account) => account.playerId === playerId)?.name ?? null;
   }
 
   private toRecord(account: Account): PlayerRecord {

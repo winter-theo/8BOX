@@ -95,7 +95,7 @@
         "admin": "Admin",
         "action": "Action",
         "target": "Player",
-        "reason": "Reason",
+        "reason": "Details",
         "reporter": "Reported by"
       },
       "noName": "(no name chosen yet)",
@@ -125,7 +125,8 @@
         "unban": "unbanned",
         "kick": "kicked",
         "mute": "muted",
-        "unmute": "unmuted"
+        "unmute": "unmuted",
+        "command": "command"
       },
       "reportStatus": {
         "open": "to handle",

@@ -95,7 +95,7 @@
         "admin": "Admin",
         "action": "Action",
         "target": "Joueur",
-        "reason": "Raison",
+        "reason": "Détail",
         "reporter": "Signalé par"
       },
       "noName": "(pseudo pas encore choisi)",
@@ -125,7 +125,8 @@
         "unban": "débanni",
         "kick": "expulsé",
         "mute": "rendu muet",
-        "unmute": "parole rendue"
+        "unmute": "parole rendue",
+        "command": "commande"
       },
       "reportStatus": {
         "open": "à traiter",

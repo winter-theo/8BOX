@@ -1,5 +1,6 @@
 import type { Content, GameConfig } from '@8box/shared';
 import type { FastifyBaseLogger } from 'fastify';
+import type { Admin } from '../admin/Admin';
 import type { NetServer } from '../net/net';
 import type { Persistence } from '../persistence/Persistence';
 import type { ReportStore } from '../reports/store';
@@ -32,6 +33,8 @@ export interface ServerContext {
   readonly persistence: Persistence;
   /** Reports of players, read by the admin tab (the database; promises, never awaited in a tick). */
   readonly reports: ReportStore;
+  /** Whitelist, sanctions and audit log (the admin tab and the admin commands). */
+  readonly admin: Admin;
   /** Actions on the world: shared definitions, and the `perform` each owning module registers. */
   readonly actions: ServerActions;
   /** Chat commands (`/tp`, `/msg`…): each module registers its own; the chat module runs them. */

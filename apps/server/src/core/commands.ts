@@ -333,9 +333,16 @@ function resolvePlayers(
   return { args: new CommandArgs(values, sessions) };
 }
 
+/** The account id of the first player in the game a command names, for its audit entry. */
+function targetOf(specs: readonly ArgSpec[], args: CommandArgs): number | null {
+  const index = specs.findIndex((spec) => spec.kind === 'player');
+  return index < 0 ? null : (args.optionalPlayer(index)?.account?.playerId ?? null);
+}
+
 /**
  * Runs a command line typed by a player in the game: unknown to them (`unknownCommand`), used the
- * wrong way (`usage`), naming something that does not exist, or run.
+ * wrong way (`usage`), naming something that does not exist, or run. An admin command is written to
+ * the audit log (outside the tick), unless it writes its own entry (the sanctions).
  */
 export function executeCommand(ctx: ServerContext, session: Session, line: string): void {
   const { account, name, player } = session;
@@ -349,10 +356,16 @@ export function executeCommand(ctx: ServerContext, session: Session, line: strin
     return;
   }
   const { def, form } = parsed;
-  const resolved = resolvePlayers(ctx, def.forms[form] ?? [], parsed.values);
+  const specs = def.forms[form] ?? [];
+  const resolved = resolvePlayers(ctx, specs, parsed.values);
   if ('notice' in resolved) {
     reply(resolved.notice);
     return;
+  }
+  if (def.permission === 'admin' && !def.auditsItself) {
+    ctx.admin
+      .recordCommand(account, line, targetOf(specs, resolved.args))
+      .catch((error: unknown) => ctx.log.error({ err: error, line }, 'command audit failed'));
   }
   def.run({
     session,
