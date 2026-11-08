@@ -9,6 +9,7 @@ import { MemoryReportStore, type ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import { ServerActions } from './actions';
 import { WorldClock } from './clock';
+import { CommandRegistry } from './commands';
 import { EntityStore } from './entities';
 import { createEventBus } from './events';
 import { GameLoop, type TickStats } from './loop';
@@ -101,6 +102,7 @@ export function createContext({
     persistence,
     reports,
     actions: new ServerActions(actions),
+    commands: new CommandRegistry(),
   };
 }
 

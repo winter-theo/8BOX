@@ -6,13 +6,14 @@ import type { ReportStore } from '../reports/store';
 import type { World } from '../world/World';
 import type { ServerActions } from './actions';
 import type { WorldClock } from './clock';
+import type { CommandRegistry } from './commands';
 import type { EntityStore } from './entities';
 import type { EventBus } from './events';
 import type { Scheduler } from './scheduler';
 
 export type Logger = FastifyBaseLogger;
 
-/** Everything a module can use. Later steps add `commands`. */
+/** Everything a module can use. */
 export interface ServerContext {
   readonly config: GameConfig;
   readonly content: Content;
@@ -33,6 +34,8 @@ export interface ServerContext {
   readonly reports: ReportStore;
   /** Actions on the world: shared definitions, and the `perform` each owning module registers. */
   readonly actions: ServerActions;
+  /** Chat commands (`/tp`, `/msg`…): each module registers its own; the chat module runs them. */
+  readonly commands: CommandRegistry;
 }
 
 export interface GameModule {

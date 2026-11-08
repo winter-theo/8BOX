@@ -443,22 +443,58 @@ export type ChatNotice =
   | 'tooFast'
   /** The message is longer than `CHAT.maxMessageLength`. */
   | 'tooLong'
-  /** No player named `name` is in the game (private line) or exists (report). */
+  /** No player named `name` is in the game (private line, command) or exists (report). */
   | 'unknownPlayer'
+  /** Several players in the game have a name starting with `name`: those of `list`. */
+  | 'ambiguousPlayer'
   /** `/r`, but nobody sent a private line to this player yet. */
   | 'noReplyTarget'
-  /** A private line or a report aimed at oneself. */
+  /** A private line, a report or a command aimed at oneself. */
   | 'self'
-  /** A line starting with "/" that is no command. */
+  /** A line starting with "/" that is no command this player may use. */
   | 'unknownCommand'
-  /** `/msg` without a name or a message. */
-  | 'msgUsage'
-  /** `/signaler` without a name or a reason. */
-  | 'reportUsage'
+  /** The command `command` used the wrong way: show how to use it. */
+  | 'usage'
+  /** `/aide`: the commands this player may use (`list`, their ids). */
+  | 'help'
+  /** No item has the id `values.arg`. */
+  | 'unknownItem'
+  /** No creature has the id `values.arg`. */
+  | 'unknownCreature'
   /** The report against `name` is recorded. */
   | 'reported'
   /** The report could not be recorded: try again later. */
-  | 'reportFailed';
+  | 'reportFailed'
+  /** An admin command `command` was done (`ui.chat.commands.<id>.done`, with `name`, `thing`, `values`). */
+  | 'done'
+  /** An admin command `command` could not be done, for `reason`. */
+  | 'refused'
+  /** `/who`: the players in the game (`list`). */
+  | 'who'
+  /** `/annonce`: the admin `name` tells every player `values.text`. */
+  | 'announcement'
+  /** `/admin`: the admin mode of this player is now on, or off. */
+  | 'adminModeOn'
+  | 'adminModeOff';
+
+/** Why an admin command could not be done (`refused`). */
+export type CommandRefusal =
+  /** The target is another admin. */
+  | 'targetIsAdmin'
+  /** The target's status does not allow it (ban someone banned, unmute someone not muted…). */
+  | 'wrongStatus'
+  /** `/give`: nothing fits in the target's inventory. */
+  | 'inventoryFull'
+  /** `/heal`, `/tphere`: the target is dead. */
+  | 'dead'
+  /** `/tp`: the point is outside the world. */
+  | 'outside'
+  /** `/tp`, `/tphere`: the point is in a wall or deep water (fine in admin mode). */
+  | 'blocked'
+  /** `/spawnmob`: no free tile around the admin. */
+  | 'noRoom'
+  /** Something went wrong on the server (a save, the database): try again later. */
+  | 'failed';
 
 export interface ChatNoticeMessage {
   t: 'chatNotice';
@@ -467,6 +503,16 @@ export interface ChatNoticeMessage {
   name?: string;
   /** `muted`: end of the mute, in ms since 1970. */
   until?: number;
+  /** The command the notice is about (its id: `ui.chat.commands.<id>`). */
+  command?: string;
+  /** Content id (an item, a creature) the notice names: shown with its translated name. */
+  thing?: string;
+  /** Names or command ids the notice lists. */
+  list?: string[];
+  /** Other values its text shows (a count, coordinates, a time, a word typed). */
+  values?: Record<string, string | number>;
+  /** `refused`: why. */
+  reason?: CommandRefusal;
 }
 
 /** The whole inventory of this session's player, sent when it joins and after each change. */

@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 ### Étape 24 : Commandes admin et mode admin (branche `step/24-commandes-admin`)
-- [ ] Registre de commandes (`ctx.commands`) : analyse des arguments, pseudos complétés (préfixe unique),
+- [x] Registre de commandes (`ctx.commands`) : analyse des arguments, pseudos complétés (préfixe unique),
   permissions, `/aide` ; `/msg`, `/r`, `/signaler` passent par le registre ; tests.
 - [ ] `ctx.admin` dans le contexte du jeu ; journal d'audit des commandes (action `command`, cible facultative).
 - [ ] Commandes `/tp`, `/tphere`, `/give`, `/heal`, `/time`, `/who`, `/annonce`, `/save`, `/spawnmob` (dev) ;

@@ -15,4 +15,8 @@ export const ADMIN = {
   muteMaxMinutes: 30 * 24 * 60,
   /** Mute lengths offered by the admin tab (5 min, 15 min, 1 h, 1 day), in minutes. */
   mutePresetsMinutes: [5, 15, 60, 24 * 60],
+  /** Hour of the HUD clock `/time jour` sets, on a 24-hour clock. */
+  timeDayHour: 8,
+  /** Hour of the HUD clock `/time nuit` sets, on a 24-hour clock. */
+  timeNightHour: 22,
 } as const;

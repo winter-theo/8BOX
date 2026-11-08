@@ -179,7 +179,7 @@
       "close": "Close the chat",
       "from": "from {{name}}",
       "to": "to {{name}}",
-      "emptyProximity": "Players within {{radius}} tiles hear you. Commands: /msg, /r, /report.",
+      "emptyProximity": "Players within {{radius}} tiles hear you. Type /help to see the commands.",
       "emptyPrivate": "Type /msg name message to talk to a player, wherever they are.",
       "notice": {
         "muted": "An admin muted you until {{time}}.",
@@ -188,12 +188,123 @@
         "unknownPlayer": "{{name}} cannot be found or is not in the game.",
         "noReplyTarget": "Nobody has sent you a private message yet.",
         "self": "You cannot do that to yourself.",
-        "unknownCommand": "Unknown command. Commands: /msg, /r, /report.",
-        "msgUsage": "Type /msg name message (or /r message to reply).",
-        "reportUsage": "Type /report name reason.",
+        "unknownCommand": "Unknown command. Type /help to see the commands.",
         "reported": "Report against {{name}} sent. Thank you!",
-        "reportFailed": "The report could not be sent: try again later."
-      }
+        "reportFailed": "The report could not be sent: try again later.",
+        "ambiguousPlayer": "Several players start with \"{{name}}\": {{list}}.",
+        "usage": "Usage: {{usage}}",
+        "help": "Commands:",
+        "unknownItem": "No item \"{{arg}}\".",
+        "unknownCreature": "No creature \"{{arg}}\".",
+        "who": "Online ({{count}}): {{list}}.",
+        "announcement": "Announcement from {{name}}: {{text}}",
+        "adminModeOn": "Admin mode on: the others cannot see you, you walk through walls, nothing hurts you and monsters ignore you.",
+        "adminModeOff": "Admin mode off."
+      },
+      "refused": {
+        "targetIsAdmin": "Not on another admin.",
+        "inventoryFull": "{{name}}'s inventory is full.",
+        "dead": "{{name}} is dead: wait until they come back to life.",
+        "outside": "This point is outside the world.",
+        "blocked": "This point is blocked (a wall, deep water…). In admin mode, you can go there.",
+        "noRoom": "No free room around you.",
+        "failed": "The command failed: try again later."
+      },
+      "commands": {
+        "help": {
+          "usage": "/help",
+          "help": "the commands you can use"
+        },
+        "msg": {
+          "usage": "/msg <player> <message>",
+          "help": "private message to a player"
+        },
+        "reply": {
+          "usage": "/r <message>",
+          "help": "answer the last private message"
+        },
+        "report": {
+          "usage": "/report <player> <reason>",
+          "help": "report a player to the admins"
+        },
+        "tp": {
+          "usage": "/tp <player> or /tp <x> <y> [layer]",
+          "help": "teleport yourself",
+          "done": "You are now at ({{x}}, {{y}})."
+        },
+        "tphere": {
+          "usage": "/tphere <player>",
+          "help": "bring a player to you",
+          "done": "{{name}} came to you."
+        },
+        "give": {
+          "usage": "/give <player> <item> [count]",
+          "help": "give items (e.g. /give Ana oak_log 10)",
+          "done": "{{name}} gets {{count}} × {{thing}}."
+        },
+        "heal": {
+          "usage": "/heal [player]",
+          "help": "restore health and hunger",
+          "done": "{{name}} is healed."
+        },
+        "time": {
+          "usage": "/time <hh:mm | day | night>",
+          "help": "set the time of day",
+          "done": "It is now {{clock}}."
+        },
+        "who": {
+          "usage": "/who",
+          "help": "the players online"
+        },
+        "announce": {
+          "usage": "/announce <text>",
+          "help": "message to every player"
+        },
+        "save": {
+          "usage": "/save",
+          "help": "save right now",
+          "done": "World saved."
+        },
+        "spawnmob": {
+          "usage": "/spawnmob <creature> [count]",
+          "help": "spawn monsters near you (dev)",
+          "done": "Spawned: {{count}} × {{thing}}."
+        },
+        "kick": {
+          "usage": "/kick <player> [reason]",
+          "help": "kick out of the game",
+          "done": "{{name}} is kicked out."
+        },
+        "ban": {
+          "usage": "/ban <player> [reason]",
+          "help": "ban",
+          "done": "{{name}} is banned.",
+          "wrongStatus": "{{name}} is already banned."
+        },
+        "unban": {
+          "usage": "/unban <player>",
+          "help": "unban",
+          "done": "{{name}} is no longer banned.",
+          "wrongStatus": "{{name}} is not banned."
+        },
+        "mute": {
+          "usage": "/mute <player> <minutes>",
+          "help": "mute",
+          "done": "{{name}} is muted for {{minutes}} min.",
+          "wrongStatus": "{{name}} has no access to the game."
+        },
+        "unmute": {
+          "usage": "/unmute <player>",
+          "help": "give the chat back",
+          "done": "{{name}} can talk again.",
+          "wrongStatus": "{{name}} is not muted."
+        },
+        "admin": {
+          "usage": "/admin",
+          "help": "admin mode: invisible, through walls, invulnerable"
+        }
+      },
+      "helpLine": "{{usage}}: {{help}}"
     },
     "dev": {
       "chunks_one": "{{count}} chunk loaded",

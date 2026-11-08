@@ -750,6 +750,8 @@ html.page-admin #root {
 .chat-entry--notice {
   color: #f2c94c;
   font-style: italic;
+  /* Notices of several lines (`/aide`) keep their line breaks. */
+  white-space: pre-line;
 }
 
 .chat-entry--hint {
@@ -1490,4 +1492,10 @@ html.page-admin #root {
 .crafting--touch .craft-step,
 .crafting--touch .craft-button {
   min-height: 48px;
+}
+
+.chat-entry--announcement {
+  color: #f29b4c;
+  font-style: normal;
+  font-weight: bold;
 }
