@@ -4,7 +4,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 
 ## En cours
 ### Étape 25 : Test en ligne gratuit
-- [ ] Mode tout-en-un : `SERVE_CLIENT=1`, le serveur sert le client compilé (même adresse).
+- [x] Mode tout-en-un : `SERVE_CLIENT=1`, le serveur sert le client compilé (même adresse).
 - [ ] `Dockerfile` multi-étapes, `docker-compose.test.yml` (serveur + base), `pnpm test:online`.
 - [ ] Test de fumée : le serveur démarre, `/health` répond, un bot se connecte et bouge.
 - [ ] Écran « Serveur indisponible » avec nouvelle tentative automatique.

@@ -1,10 +1,16 @@
 import { PROTOCOL_VERSION } from '@8box/shared';
 import { lagFromQuery } from './urlOptions';
 
-const DEFAULT_SERVER_URL = 'http://localhost:3000';
+/** The server of `pnpm dev`. */
+const DEV_SERVER_URL = 'http://localhost:3000';
 
-/** Base HTTP URL of the game server; the WebSocket URL is derived from it. */
-export const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || DEFAULT_SERVER_URL;
+/**
+ * Base HTTP URL of the game server; the WebSocket URL is derived from it. Without VITE_SERVER_URL, a
+ * built client talks to the address it was loaded from: the server serves it (`SERVE_CLIENT=1`).
+ */
+export const SERVER_URL: string =
+  import.meta.env.VITE_SERVER_URL ||
+  (import.meta.env.DEV ? DEV_SERVER_URL : window.location.origin);
 
 /** Clerk publishable key; undefined when Google sign-in is not set up (dev login only). */
 export const CLERK_PUBLISHABLE_KEY: string | undefined =

@@ -10,6 +10,7 @@ describe('parseEnv', () => {
       LOG_LEVEL: 'info',
       ALLOWED_ORIGINS: ['http://localhost:5173'],
       DEV_AUTH: false,
+      SERVE_CLIENT: false,
       TIME_SCALE: 1,
       WORLD_SEED: undefined,
       DATABASE_URL: 'postgres://8box:8box@localhost:5432/8box',

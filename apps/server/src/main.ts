@@ -135,6 +135,7 @@ const app = buildApp({
     accounts,
     devAuth,
   },
+  ...(env.SERVE_CLIENT && { serveClient: {} }),
 });
 
 /** Stops the game, writes what is not saved yet (waiting a little at most), then quits. */
