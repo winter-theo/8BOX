@@ -10,6 +10,7 @@ describe('parseEnv', () => {
       LOG_LEVEL: 'info',
       ALLOWED_ORIGINS: ['http://localhost:5173'],
       DEV_AUTH: false,
+      SERVE_CLIENT: false,
       TIME_SCALE: 1,
       WORLD_SEED: undefined,
       DATABASE_URL: 'postgres://8box:8box@localhost:5432/8box',
@@ -17,6 +18,17 @@ describe('parseEnv', () => {
       CLERK_SECRET_KEY: undefined,
       CLERK_JWT_KEY: undefined,
     });
+  });
+
+  it('takes an empty variable as unset', () => {
+    const env = parseEnv({ WORLD_SEED: '', CLERK_JWT_KEY: '', PORT: '', ALLOWED_ORIGINS: '' });
+    expect(env.WORLD_SEED).toBeUndefined();
+    expect(env.CLERK_JWT_KEY).toBeUndefined();
+    expect(env.PORT).toBe(3000);
+    expect(env.ALLOWED_ORIGINS).toEqual(['http://localhost:5173']);
+    expect(() =>
+      parseEnv({ NODE_ENV: 'production', DATABASE_URL: 'postgres://x', CLERK_SECRET_KEY: '' }),
+    ).toThrow(/CLERK_SECRET_KEY/);
   });
 
   it('reads the admin emails as a list', () => {

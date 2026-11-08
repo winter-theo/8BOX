@@ -1,0 +1,50 @@
+# Online test (step 25): the server, which also serves the client, and its own database, on this computer.
+# A Cloudflare tunnel gives it a public address (docs/GUIDE.md, "Faire tester des amis").
+# `pnpm test:online` builds and starts it, `pnpm test:online:stop` stops it, `pnpm test:online:logs` follows
+# the server logs. The settings come from .env.online (copy .env.online.example).
+# Separate from the dev database of docker-compose.yml: its own project name, its own volume.
+name: 8box-online
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: 8box
+      POSTGRES_PASSWORD: 8box
+      POSTGRES_DB: 8box
+    # No port on the computer: only the server reaches it.
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/18/.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U 8box -d 8box']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:?Set VITE_CLERK_PUBLISHABLE_KEY in .env.online}
+    environment:
+      DATABASE_URL: postgres://8box:8box@db:5432/8box
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:?Set CLERK_SECRET_KEY in .env.online}
+      CLERK_JWT_KEY: ${CLERK_JWT_KEY:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+      WORLD_SEED: ${WORLD_SEED:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      # The tunnel connects here: cloudflared tunnel --url http://localhost:8080
+      - '127.0.0.1:8080:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    # Time to save the world on `docker compose stop` (the server waits 10 s at most for its writes).
+    stop_grace_period: 30s
+
+volumes:
+  db-data:

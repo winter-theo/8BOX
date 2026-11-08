@@ -57,8 +57,7 @@ body {
   background: #4ade80;
 }
 
-.connection-banner--connecting .connection-banner__dot,
-.connection-banner--reconnecting .connection-banner__dot {
+.connection-banner--connecting .connection-banner__dot {
   background: #f87171;
 }
 

@@ -251,6 +251,9 @@ importers:
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       ws:
         specifier: ^8.22.0
         version: 8.22.0
@@ -270,9 +273,6 @@ importers:
       pino-pretty:
         specifier: ^13.2.0
         version: 13.2.0
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
 
   packages/shared:
     dependencies:

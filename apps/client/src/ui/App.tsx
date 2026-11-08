@@ -20,6 +20,7 @@ import { MobileControls } from './mobile/MobileControls';
 import { RotatePhone } from './mobile/RotatePhone';
 import { PhaserGame } from './PhaserGame';
 import { RejectedScreen } from './RejectedScreen';
+import { ServerUnavailableScreen } from './ServerUnavailableScreen';
 import { SkinSelect } from './SkinSelect';
 import { DeathScreen } from './survival/DeathScreen';
 import { Vitals } from './survival/Vitals';
@@ -49,6 +50,7 @@ export function App() {
       {status === 'idle' && <LoginScreen />}
       {status === 'account' && <AccountScreen />}
       {status === 'rejected' && <RejectedScreen />}
+      {status === 'reconnecting' && <ServerUnavailableScreen />}
       <div className="top-right">
         {status === 'online' && <AdminModeBadge />}
         {status === 'online' && <Clock />}

@@ -97,6 +97,7 @@ beforeEach(() => {
   useSessionStore.setState({
     status: 'idle',
     pingMs: null,
+    retryAt: null,
     player: null,
     rejectReason: null,
     loadedChunks: 0,
@@ -205,6 +206,51 @@ describe('GameClient', () => {
     lastSocket().drop();
     vi.advanceTimersByTime(NET.reconnectDelayMs);
     expect(sockets).toHaveLength(9);
+  });
+
+  it('tells when it tries again, and tries at once on demand', () => {
+    vi.setSystemTime(10_000);
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    expect(state().retryAt).toBeNull();
+
+    lastSocket().drop();
+    expect(state()).toMatchObject({
+      status: 'reconnecting',
+      retryAt: 10_000 + NET.reconnectDelayMs,
+    });
+
+    client.retryNow();
+    expect(sockets).toHaveLength(2);
+    expect(state()).toMatchObject({ status: 'reconnecting', retryAt: null });
+    // An attempt is under way: nothing more to do, and the old timer is gone.
+    client.retryNow();
+    vi.advanceTimersByTime(NET.reconnectDelayMs);
+    expect(sockets).toHaveLength(2);
+
+    lastSocket().drop();
+    expect(state().retryAt).toBe(Date.now() + NET.reconnectDelayMs * 2);
+    vi.advanceTimersByTime(NET.reconnectDelayMs * 2);
+    lastSocket().open();
+    lastSocket().receive({
+      t: 'welcome',
+      you: { entity: 1, name: 'Ana', skin: 'theo', position: SPAWN },
+      tick: 1,
+    });
+    expect(state()).toMatchObject({ status: 'online', retryAt: null });
+  });
+
+  it('forgets a waiting attempt once disconnected on purpose', () => {
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    lastSocket().drop();
+
+    client.disconnect();
+    client.retryNow();
+    vi.advanceTimersByTime(60_000);
+
+    expect(state()).toMatchObject({ status: 'idle', retryAt: null });
+    expect(sockets).toHaveLength(1);
   });
 
   it('stops after a refusal and keeps the reason', () => {

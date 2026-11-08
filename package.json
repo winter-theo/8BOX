@@ -19,6 +19,9 @@
     "db:down": "docker compose down",
     "db:generate": "pnpm --filter @8box/server exec drizzle-kit generate",
     "db:migrate": "pnpm --filter @8box/server exec drizzle-kit migrate",
+    "test:online": "docker compose -f docker-compose.test.yml --env-file .env.online up -d --build --wait",
+    "test:online:stop": "docker compose -f docker-compose.test.yml --env-file .env.online stop",
+    "test:online:logs": "docker compose -f docker-compose.test.yml --env-file .env.online logs -f server",
     "tools:map": "tsx apps/server/src/tools/map.ts",
     "tools:bots": "tsx apps/server/src/tools/bots.ts",
     "tools:tiles": "tsx apps/client/scripts/tilesPreview.ts"

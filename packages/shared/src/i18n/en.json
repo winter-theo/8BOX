@@ -6,7 +6,6 @@
     "connection": {
       "connecting": "Connecting…",
       "online": "Connected",
-      "reconnecting": "Offline · reconnecting…",
       "ping": "{{ms}} ms"
     },
     "login": {
@@ -51,6 +50,13 @@
       "unavailable": "The server cannot take players right now.",
       "reload": "Reload",
       "back": "Back"
+    },
+    "unavailable": {
+      "title": "Server unavailable",
+      "text": "The server does not answer: it may be off or restarting. The game connects again by itself as soon as it is back.",
+      "retryIn": "Trying again in {{seconds}} s",
+      "retrying": "Connecting…",
+      "retryNow": "Try again now"
     },
     "admin": {
       "link": "Admin",

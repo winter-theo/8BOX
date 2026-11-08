@@ -30,6 +30,11 @@ const envSchema = z
       .enum(['0', '1'])
       .default('0')
       .transform((value) => value === '1'),
+    /** `1`: the server also serves the built client (`apps/client/dist`), on the same address. */
+    SERVE_CLIENT: z
+      .enum(['0', '1'])
+      .default('0')
+      .transform((value) => value === '1'),
     /** Dev: world time runs this many times faster than real time (60: a day lasts 1 min). */
     TIME_SCALE: z.coerce.number().positive().max(10_000).default(1),
     /** PostgreSQL connection URL. Required in production. */
@@ -65,8 +70,10 @@ const envSchema = z
 
 export type Env = z.infer<typeof envSchema>;
 
+/** Reads the environment. An empty variable counts as unset (`WORLD_SEED=` in a file, or from Docker). */
 export function parseEnv(source: Record<string, string | undefined>): Env {
-  const result = envSchema.safeParse(source);
+  const set = Object.fromEntries(Object.entries(source).filter(([, value]) => value !== ''));
+  const result = envSchema.safeParse(set);
   if (!result.success) {
     throw new Error(`Invalid environment variables:\n${z.prettifyError(result.error)}`);
   }

@@ -135,12 +135,17 @@ const app = buildApp({
     accounts,
     devAuth,
   },
+  ...(env.SERVE_CLIENT && { serveClient: {} }),
 });
 
-/** Stops the game, writes what is not saved yet (waiting a little at most), then quits. */
+/**
+ * Stops the game, closes the connections (each player who leaves is saved), writes what is not saved yet
+ * (waiting a little at most), then quits.
+ */
 async function shutDown(signal: string): Promise<void> {
   log.info({ signal }, 'shutting down');
   game.stop();
+  await app.close();
   saveEverything(game.ctx);
   const timeout = new Promise<'timeout'>((resolve) => {
     setTimeout(() => resolve('timeout'), CONFIG.persistence.shutdownFlushTimeoutMs).unref();
@@ -149,7 +154,6 @@ async function shutDown(signal: string): Promise<void> {
     log.error({ pending: writes.pending }, 'shutdown: some data could not be saved');
   }
   await store.close();
-  await app.close();
 }
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

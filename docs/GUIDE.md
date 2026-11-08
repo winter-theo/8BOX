@@ -57,9 +57,47 @@ En développement, l'instance Clerk fonctionne sur n'importe quelle adresse, ave
 Le paquet à utiliser est `@clerk/react` (Clerk Core 3) ; l'ancien `@clerk/clerk-react` est obsolète.
 
 ## Faire tester des amis (étape 25)
-- Le serveur tourne sur ton PC (Docker) et un tunnel Cloudflare gratuit lui donne une adresse publique.
-- Ton PC doit rester allumé pendant les sessions. Une dizaine de joueurs, sans frais.
-- L'étape 25 complète cette section avec les commandes exactes.
+Le jeu tourne sur ton PC dans Docker (le serveur et sa base), et un tunnel Cloudflare gratuit lui donne une adresse
+publique en `https://….trycloudflare.com`. Le serveur sert aussi le jeu : une seule adresse à partager. Ton PC doit
+rester allumé pendant les sessions. Une dizaine de joueurs, sans frais.
+
+### Une fois pour toutes
+1. Installe `cloudflared` : `winget install --id Cloudflare.cloudflared`, puis ouvre un nouveau terminal et vérifie
+   avec `cloudflared --version`.
+2. Copie `.env.online.example` en `.env.online` (à la racine du dépôt, jamais commité) et remplis-le :
+   - `VITE_CLERK_PUBLISHABLE_KEY` et `CLERK_SECRET_KEY` : les clés de ton instance Clerk « development », les mêmes
+     que dans `apps/client/.env` et `apps/server/.env` ;
+   - `ADMIN_EMAILS` : ton email Google, pour être admin et approuver tes amis.
+3. Ce monde est séparé de celui de `pnpm dev` : il a sa propre base, dans le volume Docker `8box-online_db-data`.
+
+### À chaque session
+1. Lance Docker Desktop.
+2. Dans un premier terminal : `cloudflared tunnel --url http://localhost:8080`. Après quelques secondes, il affiche
+   une adresse du type `https://mots-au-hasard.trycloudflare.com`. Laisse ce terminal ouvert : le fermer coupe le
+   tunnel. L'adresse change à chaque lancement.
+3. Dans `.env.online`, mets cette adresse dans `ALLOWED_ORIGINS`, après celle de ton PC, sans `/` à la fin :
+   `ALLOWED_ORIGINS=http://localhost:8080,https://mots-au-hasard.trycloudflare.com`.
+4. Dans un second terminal, à la racine du dépôt : `pnpm test:online`. La première fois, la construction de l'image
+   prend quelques minutes ; ensuite, seul ce qui a changé est refait. La commande rend la main quand le serveur répond.
+5. Vérifie : `https://mots-au-hasard.trycloudflare.com/health` affiche `{"ok":true,…}`, et l'adresse seule ouvre le
+   jeu. Connecte-toi avec Google.
+6. Envoie l'adresse à tes amis. Chacun se connecte avec Google et choisit son pseudo, puis attend ton accord : bouton
+   « Admin » en haut à droite (ou `/admin`), « Approuver ».
+7. Fin de session : `pnpm test:online:stop` (le monde est sauvegardé), puis Ctrl+C dans le terminal du tunnel.
+
+### Bon à savoir
+- Arrêter ou redémarrer les conteneurs, Docker Desktop ou le PC ne perd rien : tout est dans le volume Docker. Les
+  joueurs connectés voient « Serveur indisponible », puis le jeu se reconnecte tout seul au retour du serveur.
+- Après un `git pull`, relance `pnpm test:online` : l'image est reconstruite et le serveur redémarre.
+- Journal du serveur : `pnpm test:online:logs` (Ctrl+C pour en sortir).
+- Un ami reste sur « Serveur indisponible » : regarde le journal. `websocket rejected: origin not allowed` veut dire
+  que l'adresse du tunnel manque dans `ALLOWED_ORIGINS` (étape 3, puis `pnpm test:online`).
+- Une page d'erreur Cloudflare (502, 1033) : le serveur ou le tunnel est arrêté.
+- Le badge « Development mode » de Clerk est normal : c'est l'instance de développement.
+- Le tunnel rapide est fait pour tester : 200 requêtes simultanées au plus, une adresse qui change, aucune garantie.
+  La mise en ligne durable, c'est l'étape 26.
+- Pour repartir d'un monde neuf : `docker compose -f docker-compose.test.yml --env-file .env.online down -v`
+  efface ce monde pour de bon (le `-v` supprime le volume).
 
 ## Mise en production (étape 26)
 - Un nom de domaine : compte une dizaine de dollars par an.
