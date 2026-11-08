@@ -85,9 +85,12 @@ export class CommandRegistry {
     return def && allows(role, def.permission) ? def : undefined;
   }
 
-  /** Commands a role may use, in registration order. */
+  /** Commands a role may use (`/aide`): those of every player first, then by id. */
   available(role: PlayerRole): CommandDef[] {
-    return this.defs.filter((def) => allows(role, def.permission));
+    const rank = (def: CommandDef) => (def.permission === 'player' ? 0 : 1);
+    return this.defs
+      .filter((def) => allows(role, def.permission))
+      .sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id));
   }
 }
 

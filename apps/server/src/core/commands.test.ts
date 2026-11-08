@@ -145,11 +145,11 @@ describe('command permissions', () => {
     expect(commands.available('player').map(({ id }) => id)).toEqual(['help']);
     expect(commands.available('admin').map(({ id }) => id)).toEqual([
       'help',
-      'tp',
       'give',
+      'kick',
       'spawnmob',
       'time',
-      'kick',
+      'tp',
     ]);
   });
 
