@@ -164,7 +164,11 @@ export const spawningModule: GameModule = {
       const world = surfaceSpawnWorld(ctx);
       const surface = players.filter((p) => p.layer === LAYER.surface);
       for (const player of surface) {
-        if (ctx.entities.has(player.entity, 'dead')) {
+        // Monsters ignore a player in admin mode: none appears for them.
+        if (
+          ctx.entities.has(player.entity, 'dead') ||
+          ctx.entities.has(player.entity, 'adminMode')
+        ) {
           continue;
         }
         const own = [...lives.values()].filter((life) => life.owner === player.entity).length;

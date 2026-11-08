@@ -46,6 +46,8 @@ interface SessionState {
   debugCamera: { x: number; y: number } | null;
   /** Rendering figures (dev mode). */
   debugStats: DebugStats | null;
+  /** The player is in admin mode (`/admin`): invisible, through walls, invulnerable. */
+  adminMode: boolean;
 }
 
 /** Written by the GameClient only; the UI reads it with selectors. */
@@ -58,5 +60,6 @@ export const useSessionStore = create<SessionState>()(() => ({
   loadedChunks: 0,
   playerPosition: null,
   debugCamera: null,
+  adminMode: false,
   debugStats: null,
 }));

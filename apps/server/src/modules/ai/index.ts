@@ -17,7 +17,7 @@ import {
 } from '@8box/shared';
 import { hitEntity } from '../../core/damage';
 import type { AiState, EntityId, Position } from '../../core/entities';
-import type { GameModule, ServerContext } from '../../core/module';
+import type { GameModule } from '../../core/module';
 import { safeZoneOf } from '../../core/safeZone';
 
 /** A monster is on the tile it walks to when this close to its centre, in tiles. */
@@ -101,7 +101,10 @@ export const aiModule: GameModule = {
     };
     // Tiles change all the time: the views read the world, they never copy it.
 
-    /** Whether a player can be chased: alive, on the layer of the monster, out of the safe zone. */
+    /**
+     * Whether a player can be chased: alive, on the layer of the monster, out of the safe zone, not in
+     * admin mode.
+     */
     const chaseable = (player: EntityId, layer: number): Position | undefined => {
       const at = ctx.entities.get(player, 'position');
       if (
@@ -109,6 +112,7 @@ export const aiModule: GameModule = {
         at.layer !== layer ||
         ctx.entities.typeOf(player) !== 'player' ||
         ctx.entities.has(player, 'dead') ||
+        ctx.entities.has(player, 'adminMode') ||
         inSafeZone(zone, at.layer, Math.floor(at.x), Math.floor(at.y))
       ) {
         return undefined;

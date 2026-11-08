@@ -13,12 +13,15 @@ import { Accounts } from '../../accounts/Accounts';
 import { MemoryAccountStore } from '../../accounts/account';
 import { MemoryAdminStore } from '../../admin/store';
 import { executeCommand } from '../../core/commands';
+import { damage } from '../../core/damage';
 import { connectFakeClient, createTestContext, type FakeClient, settle } from '../../core/testing';
 import { chatModule } from '../chat';
+import { chunksModule } from '../chunks';
 import { inventoryModule } from '../inventory';
 import { movementModule } from '../movement';
 import { persistenceModule } from '../persistence';
 import { playersModule } from '../players';
+import { snapshotsModule } from '../snapshots';
 import { spawningModule } from '../spawning';
 import { survivalModule } from '../survival';
 import { timeModule } from '../time';
@@ -37,6 +40,8 @@ function setup(devAuth = true) {
       playersModule,
       timeModule,
       movementModule,
+      chunksModule,
+      snapshotsModule,
       persistenceModule,
       chatModule,
       inventoryModule,
@@ -419,5 +424,69 @@ describe('sanctions', () => {
       { notice: 'done', command: 'unmute', name: 'Bob' },
     ]);
     expect(notices(cleo.client)).toEqual([]);
+  });
+});
+
+describe('admin mode', () => {
+  it('turns on and off with /admin, and the client is told', async () => {
+    const { ctx, join } = setup();
+    const ana = await join('Ana', 'admin');
+    notices(ana.client);
+
+    ana.type('/admin');
+    expect(ctx.entities.has(ana.entity, 'adminMode')).toBe(true);
+    expect(ana.client.received).toContainEqual({ t: 'adminMode', on: true });
+    expect(notices(ana.client)).toEqual([{ notice: 'adminModeOn' }]);
+
+    ana.type('/admin');
+    expect(ctx.entities.has(ana.entity, 'adminMode')).toBe(false);
+    expect(ana.client.received).toContainEqual({ t: 'adminMode', on: false });
+    expect(notices(ana.client)).toEqual([{ notice: 'adminModeOff' }]);
+  });
+
+  it('hides the admin from the other players', async () => {
+    const { ctx, tick, join } = setup();
+    const ana = await join('Ana', 'admin');
+    const bob = await join('Bob');
+    bob.client.send({ t: 'viewport', w: 320, h: 180, zoom: 4 });
+    const lastSnapshot = () => bob.client.received.findLast((m) => m.t === 'snapshot');
+    const seen = () => {
+      const snapshot = lastSnapshot();
+      return snapshot?.t === 'snapshot' ? snapshot.entities.map((e) => e.id) : [];
+    };
+
+    tick();
+    expect(seen()).toContain(ana.entity);
+    ana.type('/admin');
+    tick();
+    expect(seen()).not.toContain(ana.entity);
+    expect(lastSnapshot()).toMatchObject({ gone: [ana.entity] });
+    tick();
+    expect(seen()).not.toContain(ana.entity);
+    expect(ctx.entities.get(ana.entity, 'position')).toBeDefined();
+  });
+
+  it('walks through walls and takes no damage', async () => {
+    const { ctx, tick, join } = setup();
+    const ana = await join('Ana', 'admin');
+    ctx.entities.set(ana.entity, 'position', { layer: LAYER.surface, x: 10.5, y: 10.5 });
+    for (let y = 8; y <= 12; y++) {
+      ctx.world.setTile(LAYER.surface, 12, y, 'object', 'base:wooden_wall');
+    }
+    const walkRight = (ticks: number, from: number) => {
+      for (let i = 0; i < ticks; i++) {
+        ana.client.send({ t: 'input', seq: from + i, dir: 3 });
+        tick();
+      }
+    };
+
+    walkRight(40, 0);
+    expect(ana.position()?.x).toBeLessThan(12);
+    ana.type('/admin');
+    walkRight(40, 40);
+    expect(ana.position()?.x).toBeGreaterThan(13);
+
+    expect(damage(ctx, ana.entity, 5, { cause: 'starvation' })).toBe(0);
+    expect(ctx.entities.get(ana.entity, 'health')).toBe(CONFIG.survival.maxHealth);
   });
 });

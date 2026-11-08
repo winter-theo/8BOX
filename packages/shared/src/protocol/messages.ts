@@ -578,6 +578,15 @@ export interface CraftStateMessage {
   reason?: CraftReason;
 }
 
+/**
+ * The admin mode of this player (`/admin`) turned on or off: the others do not see them, they walk
+ * through walls (the client predicts it with `ghostMovementWorld`) and take no damage.
+ */
+export interface AdminModeMessage {
+  t: 'adminMode';
+  on: boolean;
+}
+
 /** The tool or weapon in hand of this player broke (no use left). */
 export interface ItemBrokenMessage {
   t: 'itemBroken';
@@ -652,7 +661,8 @@ export type ServerMessage =
   | VitalsMessage
   | TimeMessage
   | SwingMessage
-  | DamagedMessage;
+  | DamagedMessage
+  | AdminModeMessage;
 
 /** Player name rules (`PLAYER` config). */
 export function isValidPlayerName(name: string): boolean {

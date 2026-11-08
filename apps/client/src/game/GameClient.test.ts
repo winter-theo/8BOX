@@ -362,6 +362,35 @@ describe('GameClient world streaming', () => {
     expect(view).toMatchObject({ facing: 'right', moving: false });
   });
 
+  it('walks through walls in admin mode, as the server moves it, and shows the badge', () => {
+    const client = createClient();
+    client.connect({ devName: 'Ana' });
+    lastSocket().open();
+    const chunk = new Chunk(0, 16, 16);
+    chunk.slot('ground').fill(tileCode(content, 'base:grass'));
+    chunk.slot('object')[tileIndex(1, 0)] = tileCode(content, 'base:wooden_wall');
+    lastSocket().receive(encodeChunk(chunk, content));
+    welcome();
+    const walk = (inputs: number) => {
+      bus.emit('input.direction', { dir: 3 });
+      vi.advanceTimersByTime(NET.clientInputIntervalMs * inputs);
+      clock += NET.clientInputIntervalMs * (inputs + 1);
+      bus.emit('input.direction', { dir: 0 });
+    };
+
+    walk(4);
+    expect(client.localView()?.x).toBeCloseTo(513 - PLAYER.hitboxSizeTiles / 2);
+    expect(state().adminMode).toBe(false);
+
+    lastSocket().receive({ t: 'adminMode', on: true });
+    expect(state().adminMode).toBe(true);
+    walk(4);
+    expect(client.localView()?.x).toBeGreaterThan(513);
+
+    lastSocket().receive({ t: 'adminMode', on: false });
+    expect(state().adminMode).toBe(false);
+  });
+
   it('delays messages both ways with a simulated latency (dev)', () => {
     const client = new GameClient({
       serverUrl: 'http://localhost:3000',

@@ -166,6 +166,19 @@ body {
   image-rendering: pixelated;
 }
 
+.admin-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid #f29b4c;
+  border-radius: 8px;
+  background: rgb(80 30 0 / 80%);
+  color: #ffd2a8;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
 .top-button {
   display: inline-flex;
   align-items: center;

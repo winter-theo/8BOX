@@ -48,7 +48,7 @@ function entityState(ctx: ServerContext, id: EntityId, known: Known): EntityStat
  * the entities in the chunks it receives, never the others. An entity's name comes the first time the
  * client sees it, its skin then and whenever it changes (its own skin too), and `gone` lists the
  * entities that left its view. Items on the ground come once, with their item id; a monster comes with
- * its creature id the first time.
+ * its creature id the first time. Players in admin mode are never sent to the others.
  */
 export const snapshotsModule: GameModule = {
   id: 'snapshots',
@@ -83,6 +83,10 @@ export const snapshotsModule: GameModule = {
             self,
           );
           for (const id of ids) {
+            // A player in admin mode is seen by nobody (they leave the views they were in).
+            if (ctx.entities.has(id, 'adminMode')) {
+              continue;
+            }
             // Items on the ground never move: sent once, then only their removal (`gone`).
             if (previous.has(id) && ctx.entities.has(id, 'groundItem')) {
               visible.set(id, undefined);

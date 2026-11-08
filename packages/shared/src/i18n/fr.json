@@ -163,7 +163,9 @@
         "reportClosed": "Ce signalement est déjà traité : la liste est actualisée.",
         "invalidBody": "La raison doit faire entre 1 et 200 caractères.",
         "network": "Le serveur ne répond pas."
-      }
+      },
+      "modeBadge": "Mode admin",
+      "modeBadgeTitle": "Invisible pour les autres, à travers les murs, invulnérable. /admin pour en sortir."
     },
     "chat": {
       "title": "Chat",

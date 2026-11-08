@@ -163,7 +163,9 @@
         "reportClosed": "This report was already handled: the list is refreshed.",
         "invalidBody": "The reason must be 1 to 200 characters long.",
         "network": "The server does not answer."
-      }
+      },
+      "modeBadge": "Admin mode",
+      "modeBadgeTitle": "Invisible to the others, through walls, invulnerable. /admin to leave it."
     },
     "chat": {
       "title": "Chat",

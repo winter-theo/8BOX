@@ -72,10 +72,11 @@ function valuesOf(command: string, call: CommandCall): Pick<CommandNotice, 'valu
 }
 
 /**
- * Admin commands of the chat that belong to no other system: `/who`, and the sanctions (`/kick`,
- * `/ban`, `/unban`, `/mute`, `/unmute`), which go through the Admin like those of the admin tab. The
- * other admin commands live in the module of what they change (`/tp` in movement, `/give` in
- * inventory…).
+ * Admin commands of the chat that belong to no other system: `/who`, `/admin` and the sanctions
+ * (`/kick`, `/ban`, `/unban`, `/mute`, `/unmute`), which go through the Admin like those of the admin
+ * tab. The admin mode is the `adminMode` component: the movement, snapshots, ai and spawning modules
+ * and `damage` read it. The other admin commands live in the module of what they change (`/tp` in
+ * movement, `/give` in inventory…).
  */
 export const adminModule: GameModule = {
   id: 'admin',
@@ -94,6 +95,24 @@ export const adminModule: GameModule = {
       run: ({ reply }) => {
         const names = playingSessions(ctx).map((session) => session.name ?? '');
         reply({ notice: 'who', list: names.sort((a, b) => a.localeCompare(b)) });
+      },
+    });
+
+    // `/admin`: admin mode on or off (off again when the admin leaves the game).
+    ctx.commands.add({
+      id: 'admin',
+      names: ['admin'],
+      permission: 'admin',
+      forms: [[]],
+      run: ({ session, entity, reply }) => {
+        const on = !ctx.entities.has(entity, 'adminMode');
+        if (on) {
+          ctx.entities.set(entity, 'adminMode', true);
+        } else {
+          ctx.entities.delete(entity, 'adminMode');
+        }
+        ctx.net.send(session, { t: 'adminMode', on });
+        reply({ notice: on ? 'adminModeOn' : 'adminModeOff' });
       },
     });
 

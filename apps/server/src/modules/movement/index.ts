@@ -2,6 +2,7 @@ import {
   boxIsFree,
   chunkCoord,
   createMovementWorld,
+  ghostMovementWorld,
   LAYER,
   type LayerId,
   type MovementInput,
@@ -59,6 +60,8 @@ export const movementModule: GameModule = {
   init(ctx) {
     const queues = new Map<EntityId, InputQueue>();
     const worlds = new Map<LayerId, MovementWorld>();
+    /** Admin mode: only the edges of the world stop the player. */
+    const ghostWorld = ghostMovementWorld((x, y) => ctx.world.isInside(x, y));
     const worldOf = (layer: LayerId) => {
       let world = worlds.get(layer);
       if (!world) {
@@ -204,7 +207,7 @@ export const movementModule: GameModule = {
             { x: position.x, y: position.y, facing },
             input,
             dt,
-            worldOf(position.layer as LayerId),
+            ctx.entities.has(entity, 'adminMode') ? ghostWorld : worldOf(position.layer as LayerId),
             ctx.config.player,
           );
           const moved = next.x !== position.x || next.y !== position.y;

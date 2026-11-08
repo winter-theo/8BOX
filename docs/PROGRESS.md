@@ -10,7 +10,7 @@ Tenu par Claude Code. Le plus récent en haut de l'historique.
 - [x] Commandes `/tp`, `/tphere`, `/give`, `/heal`, `/time`, `/who`, `/annonce`, `/save`, `/spawnmob` (dev) ;
   tests de `/tp` et `/give`.
 - [x] Sanctions en jeu : `/kick`, `/ban`, `/unban`, `/mute`, `/unmute`.
-- [ ] Mode admin `/admin` : invisible, traverse les murs, invulnérable, ignoré des monstres ; badge.
+- [x] Mode admin `/admin` : invisible, traverse les murs, invulnérable, ignoré des monstres ; badge.
 - [ ] Client : avis traduits (aide, qui est en ligne, annonces), onglet admin (commandes du journal).
 - [ ] Retrait du debug provisoire : `devGive` et son panneau, route `POST /dev/tile`.
 
