@@ -1,5 +1,6 @@
-import { baseContent, CONFIG, loadContent, PROTOCOL_VERSION } from '@8box/shared';
+import { baseContent, CONFIG, i18nResources, loadContent, PROTOCOL_VERSION } from '@8box/shared';
 import { describe, expect, it, vi } from 'vitest';
+import { MODULES } from '../modules';
 import {
   type CommandCall,
   type CommandDef,
@@ -296,5 +297,21 @@ describe('command audit', () => {
       { action: 'command', adminName: 'Ana', targetName: null, reason: '/nap' },
       { action: 'command', adminName: 'Ana', targetName: 'Bob', reason: '/poke bo' },
     ]);
+  });
+});
+
+describe('commands of the game', () => {
+  it('each have their usage and help in French and in English', () => {
+    const { ctx } = createTestContext({ devAuth: true, modules: MODULES });
+    const ids = ctx.commands.available('admin').map(({ id }) => id);
+    expect(ids).toContain('spawnmob');
+    for (const resources of [i18nResources.fr, i18nResources.en]) {
+      const commands = resources.translation.ui.chat.commands as Record<string, unknown>;
+      for (const id of ids) {
+        expect(commands[id], id).toEqual(
+          expect.objectContaining({ usage: expect.any(String), help: expect.any(String) }),
+        );
+      }
+    }
   });
 });
